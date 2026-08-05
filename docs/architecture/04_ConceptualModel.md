@@ -1,6 +1,6 @@
 # Enterprise Data Governance Platform
 
-# 03. Conceptual Data Model
+# 04. Conceptual Platform Model
 
 **Version:** 1.0
 
