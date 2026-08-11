@@ -1,9 +1,8 @@
 services:
+
   postgres:
     image: postgres:17
-
     container_name: governance_postgres
-
     restart: unless-stopped
 
     environment:
@@ -16,6 +15,37 @@ services:
 
     volumes:
       - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U governance_admin -d enterprise_governance"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+
+    container_name: governance_backend
+
+    restart: unless-stopped
+
+    environment:
+      DATABASE_URL: postgresql+psycopg2://governance_admin:governance_password@postgres:5432/enterprise_governance
+
+    ports:
+      - "8000:8000"
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 
 volumes:
   postgres_data:
