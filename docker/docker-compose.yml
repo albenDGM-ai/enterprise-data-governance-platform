@@ -36,6 +36,9 @@ services:
 
     restart: unless-stopped
 
+    volumes:
+      - ../backend:/app
+
     environment:
       DATABASE_URL: postgresql+psycopg2://governance_admin:governance_password@postgres:5432/enterprise_governance
 
