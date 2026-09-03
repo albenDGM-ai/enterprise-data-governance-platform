@@ -13,6 +13,7 @@ from app.models.business_rules import (
 from app.models.data_quality import (
     DataQualityDimension,
 )
+from app.models.lineage_source import DataLineageSource
 from app.models.metadata.api_asset import ApiAsset
 from app.models.metadata.data_asset import DataAsset
 from app.models.metadata.database import Database
@@ -32,6 +33,7 @@ __all__ = [
     "BusinessTerm",
     "DataAsset",
     "DataQualityDimension",
+    "DataLineageSource",
     "Database",
     "DatabaseSchema",
     "DatabaseTable",
