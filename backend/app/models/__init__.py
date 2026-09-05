@@ -59,3 +59,4 @@ __all__ = [
     "Synonym",
     "TableColumn",
 ]
+from app.models.lineage_snapshot import LineageSnapshot
