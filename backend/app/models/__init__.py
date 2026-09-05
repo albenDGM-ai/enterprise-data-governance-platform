@@ -14,6 +14,8 @@ from app.models.data_quality import (
     DataQualityDimension,
 )
 from app.models.lineage_source import DataLineageSource
+from app.models.lineage_process import DataLineageProcess
+from app.models.lineage_flow import DataLineageFlow
 from app.models.lineage_target import DataLineageTarget
 from app.models.metadata.api_asset import ApiAsset
 from app.models.metadata.data_asset import DataAsset
@@ -35,6 +37,8 @@ __all__ = [
     "DataAsset",
     "DataQualityDimension",
     "DataLineageSource",
+    "DataLineageProcess",
+    "DataLineageFlow",
     "DataLineageTarget",
     "Database",
     "DatabaseSchema",
