@@ -17,6 +17,7 @@ from app.models.lineage_source import DataLineageSource
 from app.models.lineage_process import DataLineageProcess
 from app.models.lineage_flow import DataLineageFlow
 from app.models.lineage_target import DataLineageTarget
+from app.models.lineage_transformation import DataLineageTransformation
 from app.models.metadata.api_asset import ApiAsset
 from app.models.metadata.data_asset import DataAsset
 from app.models.metadata.database import Database
@@ -40,6 +41,7 @@ __all__ = [
     "DataLineageProcess",
     "DataLineageFlow",
     "DataLineageTarget",
+    "DataLineageTransformation",
     "Database",
     "DatabaseSchema",
     "DatabaseTable",
