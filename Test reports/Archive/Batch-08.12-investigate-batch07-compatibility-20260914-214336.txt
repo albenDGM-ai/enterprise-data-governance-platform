@@ -1,0 +1,787 @@
+============================================================
+DGM — BATCH 08.12
+Investigate Batch 07 / Batch 08 Compatibility Contract
+Started: Mon Sep 14 09:43:36 PM IST 2026
+============================================================
+
+STEP 1 — Inspect failing Batch 07 test
+"""Focused static and model-contract checks for Batch 07."""
+
+from pathlib import Path
+
+from app.models.lineage_mapping import DataLineageMapping
+from app.models.lineage_target import DataLineageTarget
+from app.schemas.lineage_mapping import LineageMappingCreate, LineageMappingResponse
+from app.schemas.lineage_target import LineageTargetCreate, LineageTargetResponse
+
+
+MIGRATION_PATH = (
+    Path(__file__).parents[1]
+    / "alembic/versions/32b95f7a0662_add_lineage_target_relationships.py"
+)
+
+
+def test_migration_uses_nullable_columns_named_foreign_keys_and_indexes() -> None:
+    source = MIGRATION_PATH.read_text()
+
+    assert "sa.Column('lineage_transformation_id', sa.UUID(), nullable=True)" in source
+    assert "sa.Column('lineage_target_id', sa.UUID(), nullable=True)" in source
+    assert "fk_lineage_target_lineage_transformation_id" in source
+    assert "fk_lineage_mapping_lineage_target_id" in source
+    assert "idx_lineage_target_transformation" in source
+    assert "idx_lineage_mapping_target_id" in source
+    assert "op.execute" not in source
+    assert ".update(" not in source
+
+
+def test_migration_downgrade_removes_mapping_before_target() -> None:
+    source = MIGRATION_PATH.read_text()
+    downgrade = source[source.index("def downgrade") :]
+
+    mapping_fk = downgrade.index("fk_lineage_mapping_lineage_target_id")
+    mapping_index = downgrade.index("idx_lineage_mapping_target_id")
+    mapping_column = downgrade.index("'lineage_mapping', 'lineage_target_id'")
+    target_fk = downgrade.index("fk_lineage_target_lineage_transformation_id")
+    target_index = downgrade.index("idx_lineage_target_transformation")
+    target_column = downgrade.index("'lineage_target', 'lineage_transformation_id'")
+
+    assert mapping_fk < mapping_index < mapping_column < target_fk < target_index < target_column
+
+
+def test_orm_allows_null_legacy_relationships() -> None:
+    assert DataLineageTarget.__table__.c.lineage_transformation_id.nullable is True
+    assert DataLineageMapping.__table__.c.lineage_target_id.nullable is True
+
+
+def test_response_contracts_allow_null_legacy_relationships() -> None:
+    assert LineageTargetResponse.model_fields["lineage_transformation_id"].is_required()
+    assert LineageMappingResponse.model_fields["lineage_target_id"].is_required()
+    assert "None" in str(LineageTargetResponse.model_fields["lineage_transformation_id"].annotation)
+    assert "None" in str(LineageMappingResponse.model_fields["lineage_target_id"].annotation)
+
+
+def test_create_contracts_still_require_relationship_ids() -> None:
+    assert LineageTargetCreate.model_fields["lineage_transformation_id"].is_required()
+    assert LineageMappingCreate.model_fields["lineage_target_id"].is_required()
+STEP 1 PASS
+
+STEP 2 — Locate all nullable assertions for lineage relationship IDs
+backend/tests/test_batch_08_graph_integrity.py:215:def test_legacy_null_relationships_remain_readable() -> None:
+backend/tests/test_batch_08_graph_integrity.py:216:    assert DataLineageTarget.__table__.c.lineage_transformation_id.nullable is False
+backend/tests/test_batch_08_graph_integrity.py:217:    assert DataLineageMapping.__table__.c.lineage_target_id.nullable is False
+backend/tests/test_batch_07_transition_compatibility.py:20:    assert "sa.Column('lineage_transformation_id', sa.UUID(), nullable=True)" in source
+backend/tests/test_batch_07_transition_compatibility.py:21:    assert "sa.Column('lineage_target_id', sa.UUID(), nullable=True)" in source
+backend/tests/test_batch_07_transition_compatibility.py:44:def test_orm_allows_null_legacy_relationships() -> None:
+backend/tests/test_batch_07_transition_compatibility.py:45:    assert DataLineageTarget.__table__.c.lineage_transformation_id.nullable is True
+backend/tests/test_batch_07_transition_compatibility.py:46:    assert DataLineageMapping.__table__.c.lineage_target_id.nullable is True
+backend/tests/test_batch_07_transition_compatibility.py:49:def test_response_contracts_allow_null_legacy_relationships() -> None:
+STEP 2 PASS
+
+STEP 3 — Inspect Batch 07 test file with line numbers
+     1	"""Focused static and model-contract checks for Batch 07."""
+     2	
+     3	from pathlib import Path
+     4	
+     5	from app.models.lineage_mapping import DataLineageMapping
+     6	from app.models.lineage_target import DataLineageTarget
+     7	from app.schemas.lineage_mapping import LineageMappingCreate, LineageMappingResponse
+     8	from app.schemas.lineage_target import LineageTargetCreate, LineageTargetResponse
+     9	
+    10	
+    11	MIGRATION_PATH = (
+    12	    Path(__file__).parents[1]
+    13	    / "alembic/versions/32b95f7a0662_add_lineage_target_relationships.py"
+    14	)
+    15	
+    16	
+    17	def test_migration_uses_nullable_columns_named_foreign_keys_and_indexes() -> None:
+    18	    source = MIGRATION_PATH.read_text()
+    19	
+    20	    assert "sa.Column('lineage_transformation_id', sa.UUID(), nullable=True)" in source
+    21	    assert "sa.Column('lineage_target_id', sa.UUID(), nullable=True)" in source
+    22	    assert "fk_lineage_target_lineage_transformation_id" in source
+    23	    assert "fk_lineage_mapping_lineage_target_id" in source
+    24	    assert "idx_lineage_target_transformation" in source
+    25	    assert "idx_lineage_mapping_target_id" in source
+    26	    assert "op.execute" not in source
+    27	    assert ".update(" not in source
+    28	
+    29	
+    30	def test_migration_downgrade_removes_mapping_before_target() -> None:
+    31	    source = MIGRATION_PATH.read_text()
+    32	    downgrade = source[source.index("def downgrade") :]
+    33	
+    34	    mapping_fk = downgrade.index("fk_lineage_mapping_lineage_target_id")
+    35	    mapping_index = downgrade.index("idx_lineage_mapping_target_id")
+    36	    mapping_column = downgrade.index("'lineage_mapping', 'lineage_target_id'")
+    37	    target_fk = downgrade.index("fk_lineage_target_lineage_transformation_id")
+    38	    target_index = downgrade.index("idx_lineage_target_transformation")
+    39	    target_column = downgrade.index("'lineage_target', 'lineage_transformation_id'")
+    40	
+    41	    assert mapping_fk < mapping_index < mapping_column < target_fk < target_index < target_column
+    42	
+    43	
+    44	def test_orm_allows_null_legacy_relationships() -> None:
+    45	    assert DataLineageTarget.__table__.c.lineage_transformation_id.nullable is True
+    46	    assert DataLineageMapping.__table__.c.lineage_target_id.nullable is True
+    47	
+    48	
+    49	def test_response_contracts_allow_null_legacy_relationships() -> None:
+    50	    assert LineageTargetResponse.model_fields["lineage_transformation_id"].is_required()
+    51	    assert LineageMappingResponse.model_fields["lineage_target_id"].is_required()
+    52	    assert "None" in str(LineageTargetResponse.model_fields["lineage_transformation_id"].annotation)
+    53	    assert "None" in str(LineageMappingResponse.model_fields["lineage_target_id"].annotation)
+    54	
+    55	
+    56	def test_create_contracts_still_require_relationship_ids() -> None:
+    57	    assert LineageTargetCreate.model_fields["lineage_transformation_id"].is_required()
+    58	    assert LineageMappingCreate.model_fields["lineage_target_id"].is_required()
+STEP 3 PASS
+
+STEP 4 — Inspect Batch 08 graph-integrity tests
+     1	"""Focused service-level checks for Batch 08 lineage graph invariants."""
+     2	
+     3	from types import SimpleNamespace
+     4	from uuid import uuid4
+     5	
+     6	import pytest
+     7	
+     8	from app.models.lineage_mapping import DataLineageMapping
+     9	from app.models.lineage_target import DataLineageTarget
+    10	from app.schemas.lineage_mapping import LineageMappingResponse
+    11	from app.schemas.lineage_target import LineageTargetResponse
+    12	from app.services.lineage_mapping_service import LineageMappingService
+    13	from app.services.lineage_target_service import LineageTargetService
+    14	from app.services.lineage_validation import LineageRelationshipValidationError
+    15	
+    16	
+    17	class StubRepository:
+    18	    def __init__(self, records=None):
+    19	        self.records = records or {}
+    20	        self.created = []
+    21	        self.updated = []
+    22	
+    23	    def get_by_id(self, record_id, *, include_inactive=False):
+    24	        return self.records.get(record_id)
+    25	
+    26	    def get_by_attributes(self, *args, **kwargs):
+    27	        return None
+    28	
+    29	    def get_by_name(self, *args, **kwargs):
+    30	        return None
+    31	
+    32	    def create(self, entity):
+    33	        self.created.append(entity)
+    34	        return entity
+    35	
+    36	    def update(self, entity):
+    37	        self.updated.append(entity)
+    38	        return entity
+    39	
+    40	
+    41	def record(record_id, *, is_active=True, lineage_flow_id=None, lineage_transformation_id=None):
+    42	    return SimpleNamespace(
+    43	        lineage_flow_id=lineage_flow_id,
+    44	        lineage_target_id=record_id,
+    45	        lineage_transformation_id=lineage_transformation_id or record_id,
+    46	        is_active=is_active,
+    47	    )
+    48	
+    49	
+    50	def mapping_service(*, flow, target=None, transformations=()):
+    51	    service = LineageMappingService(session=object())
+    52	    service.repository = StubRepository()
+    53	    service.flow_repository = StubRepository({flow.lineage_flow_id: flow})
+    54	    service.target_repository = StubRepository(
+    55	        {} if target is None else {target.lineage_target_id: target}
+    56	    )
+    57	    service.transformation_repository = StubRepository(
+    58	        {item.lineage_transformation_id: item for item in transformations}
+    59	    )
+    60	    return service
+    61	
+    62	
+    63	def create_mapping(service, *, flow_id, target_id, transformation_id=None):
+    64	    return service.create(
+    65	        lineage_flow_id=flow_id,
+    66	        lineage_target_id=target_id,
+    67	        lineage_transformation_id=transformation_id,
+    68	        source_attribute="source.customer_id",
+    69	        target_attribute="target.customer_id",
+    70	        mapping_type="DIRECT",
+    71	        status="ACTIVE",
+    72	        created_by="batch-08-test",
+    73	    )
+    74	
+    75	
+    76	def test_valid_mapping_uses_the_target_transformation_flow() -> None:
+    77	    flow_id = uuid4()
+    78	    transformation_id = uuid4()
+    79	    target_id = uuid4()
+    80	    flow = SimpleNamespace(lineage_flow_id=flow_id, is_active=True)
+    81	    transformation = record(transformation_id, lineage_flow_id=flow_id)
+    82	    target = record(target_id, lineage_transformation_id=transformation_id)
+    83	    service = mapping_service(
+    84	        flow=flow,
+    85	        target=target,
+    86	        transformations=(transformation,),
+    87	    )
+    88	
+    89	    mapping = create_mapping(
+    90	        service,
+    91	        flow_id=flow_id,
+    92	        target_id=target_id,
+    93	        transformation_id=transformation_id,
+    94	    )
+    95	
+    96	    assert mapping.lineage_flow_id == flow_id
+    97	    assert service.repository.created == [mapping]
+    98	
+    99	
+   100	def test_cross_flow_target_mapping_is_rejected_before_persistence() -> None:
+   101	    flow_a_id, flow_b_id, transformation_id, target_id = (uuid4() for _ in range(4))
+   102	    service = mapping_service(
+   103	        flow=SimpleNamespace(lineage_flow_id=flow_a_id, is_active=True),
+   104	        target=record(target_id, lineage_transformation_id=transformation_id),
+   105	        transformations=(record(transformation_id, lineage_flow_id=flow_b_id),),
+   106	    )
+   107	
+   108	    with pytest.raises(LineageRelationshipValidationError, match="different Lineage Flow"):
+   109	        create_mapping(service, flow_id=flow_a_id, target_id=target_id)
+   110	
+   111	    assert service.repository.created == []
+   112	
+   113	
+   114	def test_cross_flow_mapping_transformation_is_rejected() -> None:
+   115	    flow_a_id, flow_b_id, transformation_id, target_id = (uuid4() for _ in range(4))
+   116	    target_transformation = uuid4()
+   117	    service = mapping_service(
+   118	        flow=SimpleNamespace(lineage_flow_id=flow_a_id, is_active=True),
+   119	        target=record(target_id, lineage_transformation_id=target_transformation),
+   120	        transformations=(
+   121	            record(target_transformation, lineage_flow_id=flow_a_id),
+   122	            record(transformation_id, lineage_flow_id=flow_b_id),
+   123	        ),
+   124	    )
+   125	
+   126	    with pytest.raises(LineageRelationshipValidationError, match="different Lineage Flow"):
+   127	        create_mapping(
+   128	            service,
+   129	            flow_id=flow_a_id,
+   130	            target_id=target_id,
+   131	            transformation_id=transformation_id,
+   132	        )
+   133	
+   134	
+   135	def test_mapping_transformation_must_own_its_target() -> None:
+   136	    flow_id, target_transformation_id, supplied_transformation_id, target_id = (
+   137	        uuid4() for _ in range(4)
+   138	    )
+   139	    service = mapping_service(
+   140	        flow=SimpleNamespace(lineage_flow_id=flow_id, is_active=True),
+   141	        target=record(target_id, lineage_transformation_id=target_transformation_id),
+   142	        transformations=(
+   143	            record(target_transformation_id, lineage_flow_id=flow_id),
+   144	            record(supplied_transformation_id, lineage_flow_id=flow_id),
+   145	        ),
+   146	    )
+   147	
+   148	    with pytest.raises(LineageRelationshipValidationError, match="does not own"):
+   149	        create_mapping(
+   150	            service,
+   151	            flow_id=flow_id,
+   152	            target_id=target_id,
+   153	            transformation_id=supplied_transformation_id,
+   154	        )
+   155	
+   156	
+   157	def test_inactive_parent_relationships_are_rejected() -> None:
+   158	    flow_id, transformation_id, target_id = (uuid4() for _ in range(3))
+   159	    service = mapping_service(
+   160	        flow=SimpleNamespace(lineage_flow_id=flow_id, is_active=False),
+   161	        target=record(target_id, lineage_transformation_id=transformation_id),
+   162	        transformations=(record(transformation_id, lineage_flow_id=flow_id),),
+   163	    )
+   164	
+   165	    with pytest.raises(LineageRelationshipValidationError, match="Flow is inactive"):
+   166	        create_mapping(service, flow_id=flow_id, target_id=target_id)
+   167	
+   168	    target_service = LineageTargetService(session=object())
+   169	    target_service.repository = StubRepository()
+   170	    target_service.flow_repository = StubRepository({flow_id: SimpleNamespace(is_active=True)})
+   171	    target_service.transformation_repository = StubRepository(
+   172	        {transformation_id: record(transformation_id, is_active=False, lineage_flow_id=flow_id)}
+   173	    )
+   174	    with pytest.raises(LineageRelationshipValidationError, match="Transformation is inactive"):
+   175	        target_service.create(
+   176	            lineage_transformation_id=transformation_id,
+   177	            target_name="customer",
+   178	            target_type="TABLE",
+   179	            system_name="warehouse",
+   180	            business_domain="sales",
+   181	            owner="steward",
+   182	            status="ACTIVE",
+   183	            created_by="batch-08-test",
+   184	        )
+   185	
+   186	
+   187	def test_update_rejects_a_cross_flow_replacement() -> None:
+   188	    flow_a_id, flow_b_id, transformation_a_id, transformation_b_id, target_a_id, target_b_id = (
+   189	        uuid4() for _ in range(6)
+   190	    )
+   191	    service = mapping_service(
+   192	        flow=SimpleNamespace(lineage_flow_id=flow_a_id, is_active=True),
+   193	        target=record(target_b_id, lineage_transformation_id=transformation_b_id),
+   194	        transformations=(record(transformation_b_id, lineage_flow_id=flow_b_id),),
+   195	    )
+   196	    entity = SimpleNamespace(
+   197	        lineage_mapping_id=uuid4(),
+   198	        lineage_flow_id=flow_a_id,
+   199	        lineage_target_id=target_a_id,
+   200	        lineage_transformation_id=transformation_a_id,
+   201	        source_attribute="source.customer_id",
+   202	        target_attribute="target.customer_id",
+   203	    )
+   204	
+   205	    with pytest.raises(LineageRelationshipValidationError, match="different Lineage Flow"):
+   206	        service.update(
+   207	            entity,
+   208	            modified_by="batch-08-test",
+   209	            lineage_target_id=target_b_id,
+   210	        )
+   211	
+   212	    assert service.repository.updated == []
+   213	
+   214	
+   215	def test_legacy_null_relationships_remain_readable() -> None:
+   216	    assert DataLineageTarget.__table__.c.lineage_transformation_id.nullable is False
+   217	    assert DataLineageMapping.__table__.c.lineage_target_id.nullable is False
+   218	    assert "None" in str(LineageTargetResponse.model_fields["lineage_transformation_id"].annotation)
+   219	    assert "None" in str(LineageMappingResponse.model_fields["lineage_target_id"].annotation)
+   220	
+   221	
+   222	def test_transformation_update_contract_does_not_expose_flow_reassignment() -> None:
+   223	    from app.schemas.lineage_transformation import LineageTransformationUpdate
+   224	
+   225	    fields = LineageTransformationUpdate.model_fields
+   226	
+   227	    assert "lineage_flow_id" not in fields
+   228	    assert "sequence_number" in fields
+   229	    assert "transformation_name" in fields
+   230	    assert "transformation_type" in fields
+   231	    assert "description" in fields
+   232	    assert "expression" in fields
+   233	    assert "status" in fields
+STEP 4 PASS
+
+STEP 5 — Inspect lineage model relationship definitions
+----- lineage_target.py -----
+     1	import uuid
+     2	
+     3	from sqlalchemy import Boolean, ForeignKey, Index, String, TIMESTAMP, UniqueConstraint
+     4	from sqlalchemy.dialects.postgresql import UUID
+     5	from sqlalchemy.orm import Mapped, mapped_column
+     6	
+     7	from app.db.base import Base
+     8	
+     9	
+    10	class DataLineageTarget(Base):
+    11	    __tablename__ = "lineage_target"
+    12	
+    13	    lineage_target_id: Mapped[uuid.UUID] = mapped_column(
+    14	        UUID(as_uuid=True),
+    15	        primary_key=True,
+    16	    )
+    17	    lineage_transformation_id: Mapped[uuid.UUID] = mapped_column(
+    18	        UUID(as_uuid=True),
+    19	        ForeignKey("lineage_transformation.lineage_transformation_id"),
+    20	        nullable=False,
+    21	    )
+    22	    target_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    23	    target_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    24	    system_name: Mapped[str] = mapped_column(String(150), nullable=False)
+    25	    business_domain: Mapped[str] = mapped_column(String(150), nullable=False)
+    26	    owner: Mapped[str] = mapped_column(String(100), nullable=False)
+    27	    status: Mapped[str] = mapped_column(String(30), nullable=False)
+    28	    created_by: Mapped[str] = mapped_column(String(100), nullable=False)
+    29	    created_date: Mapped[object] = mapped_column(TIMESTAMP, nullable=False)
+    30	    modified_by: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    31	    modified_date: Mapped[object | None] = mapped_column(TIMESTAMP, nullable=True)
+    32	    is_active: Mapped[bool] = mapped_column(
+    33	        Boolean,
+    34	        nullable=False,
+    35	        server_default="TRUE",
+    36	    )
+    37	
+    38	    __table_args__ = (
+    39	        UniqueConstraint(
+    40	            "target_name",
+    41	            "system_name",
+    42	            name="uq_lineage_target_name_system",
+    43	        ),
+    44	        Index("idx_lineage_target_transformation", "lineage_transformation_id"),
+    45	        Index("idx_lineage_target_name", "target_name"),
+    46	        Index("idx_lineage_target_type", "target_type"),
+    47	        Index("idx_lineage_target_system", "system_name"),
+    48	        Index("idx_lineage_target_status", "status"),
+    49	    )
+
+----- lineage_mapping.py -----
+     1	import uuid
+     2	from datetime import datetime
+     3	
+     4	from sqlalchemy import Boolean, ForeignKey, Index, String, TIMESTAMP, Text, UniqueConstraint
+     5	from sqlalchemy.dialects.postgresql import UUID
+     6	from sqlalchemy.orm import Mapped, mapped_column
+     7	
+     8	from app.db.base import Base
+     9	
+    10	
+    11	class DataLineageMapping(Base):
+    12	    __tablename__ = "lineage_mapping"
+    13	
+    14	    lineage_mapping_id: Mapped[uuid.UUID] = mapped_column(
+    15	        UUID(as_uuid=True),
+    16	        primary_key=True,
+    17	    )
+    18	    lineage_target_id: Mapped[uuid.UUID] = mapped_column(
+    19	        UUID(as_uuid=True),
+    20	        ForeignKey("lineage_target.lineage_target_id"),
+    21	        nullable=False,
+    22	    )
+    23	    lineage_flow_id: Mapped[uuid.UUID] = mapped_column(
+    24	        UUID(as_uuid=True),
+    25	        ForeignKey("lineage_flow.lineage_flow_id"),
+    26	        nullable=False,
+    27	    )
+    28	    lineage_transformation_id: Mapped[uuid.UUID | None] = mapped_column(
+    29	        UUID(as_uuid=True),
+    30	        ForeignKey("lineage_transformation.lineage_transformation_id"),
+    31	        nullable=True,
+    32	    )
+    33	    source_attribute: Mapped[str] = mapped_column(String(255), nullable=False)
+    34	    target_attribute: Mapped[str] = mapped_column(String(255), nullable=False)
+    35	    mapping_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    36	    status: Mapped[str] = mapped_column(String(30), nullable=False)
+    37	    created_by: Mapped[str] = mapped_column(String(100), nullable=False)
+    38	    created_date: Mapped[datetime] = mapped_column(TIMESTAMP, nullable=False)
+    39	    modified_by: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    40	    modified_date: Mapped[datetime | None] = mapped_column(TIMESTAMP, nullable=True)
+    41	    is_active: Mapped[bool] = mapped_column(
+    42	        Boolean,
+    43	        nullable=False,
+    44	        server_default="TRUE",
+    45	    )
+    46	
+    47	    __table_args__ = (
+    48	        UniqueConstraint(
+    49	            "lineage_flow_id",
+    50	            "source_attribute",
+    51	            "target_attribute",
+    52	            name="uq_lineage_mapping_flow_source_target",
+    53	        ),
+    54	        Index("idx_lineage_mapping_target_id", "lineage_target_id"),
+    55	        Index("idx_lineage_mapping_flow", "lineage_flow_id"),
+    56	        Index("idx_lineage_mapping_source", "source_attribute"),
+    57	        Index("idx_lineage_mapping_target", "target_attribute"),
+    58	        Index("idx_lineage_mapping_status", "status"),
+    59	    )
+STEP 5 PASS
+
+STEP 6 — Inspect migration history relevant to Batch 07/08
+----- 9a792fae7ed7 -----
+"""create lineage mapping
+
+Revision ID: 9a792fae7ed7
+Revises: 042f36c0fcb4
+Create Date: 2026-09-05 14:11:12.485826
+
+"""
+from typing import Sequence, Union
+
+from alembic import op
+import sqlalchemy as sa
+
+
+# revision identifiers, used by Alembic.
+revision: str = '9a792fae7ed7'
+down_revision: Union[str, Sequence[str], None] = '042f36c0fcb4'
+branch_labels: Union[str, Sequence[str], None] = None
+depends_on: Union[str, Sequence[str], None] = None
+
+
+def upgrade() -> None:
+    """Upgrade schema."""
+    # ### commands auto generated by Alembic - please adjust! ###
+    op.create_table('lineage_mapping',
+    sa.Column('lineage_mapping_id', sa.UUID(), nullable=False),
+    sa.Column('lineage_flow_id', sa.UUID(), nullable=False),
+    sa.Column('lineage_transformation_id', sa.UUID(), nullable=True),
+    sa.Column('source_attribute', sa.String(length=255), nullable=False),
+    sa.Column('target_attribute', sa.String(length=255), nullable=False),
+    sa.Column('mapping_type', sa.String(length=50), nullable=False),
+    sa.Column('status', sa.String(length=30), nullable=False),
+    sa.Column('created_by', sa.String(length=100), nullable=False),
+    sa.Column('created_date', sa.TIMESTAMP(), nullable=False),
+    sa.Column('modified_by', sa.String(length=100), nullable=True),
+    sa.Column('modified_date', sa.TIMESTAMP(), nullable=True),
+    sa.Column('is_active', sa.Boolean(), server_default='TRUE', nullable=False),
+    sa.ForeignKeyConstraint(['lineage_flow_id'], ['lineage_flow.lineage_flow_id'], ),
+    sa.ForeignKeyConstraint(['lineage_transformation_id'], ['lineage_transformation.lineage_transformation_id'], ),
+    sa.PrimaryKeyConstraint('lineage_mapping_id'),
+    sa.UniqueConstraint('lineage_flow_id', 'source_attribute', 'target_attribute', name='uq_lineage_mapping_flow_source_target')
+    )
+    op.create_index('idx_lineage_mapping_flow', 'lineage_mapping', ['lineage_flow_id'], unique=False)
+    op.create_index('idx_lineage_mapping_source', 'lineage_mapping', ['source_attribute'], unique=False)
+    op.create_index('idx_lineage_mapping_status', 'lineage_mapping', ['status'], unique=False)
+    op.create_index('idx_lineage_mapping_target', 'lineage_mapping', ['target_attribute'], unique=False)
+    # ### end Alembic commands ###
+
+
+def downgrade() -> None:
+    """Downgrade schema."""
+    # ### commands auto generated by Alembic - please adjust! ###
+    op.drop_index('idx_lineage_mapping_target', table_name='lineage_mapping')
+    op.drop_index('idx_lineage_mapping_status', table_name='lineage_mapping')
+    op.drop_index('idx_lineage_mapping_source', table_name='lineage_mapping')
+    op.drop_index('idx_lineage_mapping_flow', table_name='lineage_mapping')
+    op.drop_table('lineage_mapping')
+    # ### end Alembic commands ###
+
+----- 32b95f7a0662 -----
+"""add lineage target relationships
+
+Revision ID: 32b95f7a0662
+Revises: afddcea9037e
+Create Date: 2026-09-06 14:45:26.612094
+
+"""
+from typing import Sequence, Union
+
+from alembic import op
+import sqlalchemy as sa
+
+
+# revision identifiers, used by Alembic.
+revision: str = '32b95f7a0662'
+down_revision: Union[str, Sequence[str], None] = 'afddcea9037e'
+branch_labels: Union[str, Sequence[str], None] = None
+depends_on: Union[str, Sequence[str], None] = None
+
+
+def upgrade() -> None:
+    """Upgrade schema."""
+    op.add_column(
+        'lineage_target',
+        sa.Column('lineage_transformation_id', sa.UUID(), nullable=True),
+    )
+    op.create_index('idx_lineage_target_transformation', 'lineage_target', ['lineage_transformation_id'], unique=False)
+    op.create_foreign_key(
+        'fk_lineage_target_lineage_transformation_id',
+        'lineage_target',
+        'lineage_transformation',
+        ['lineage_transformation_id'],
+        ['lineage_transformation_id'],
+    )
+    op.add_column(
+        'lineage_mapping',
+        sa.Column('lineage_target_id', sa.UUID(), nullable=True),
+    )
+    op.create_index('idx_lineage_mapping_target_id', 'lineage_mapping', ['lineage_target_id'], unique=False)
+    op.create_foreign_key(
+        'fk_lineage_mapping_lineage_target_id',
+        'lineage_mapping',
+        'lineage_target',
+        ['lineage_target_id'],
+        ['lineage_target_id'],
+    )
+
+
+def downgrade() -> None:
+    """Downgrade schema."""
+    op.drop_constraint(
+        'fk_lineage_mapping_lineage_target_id',
+        'lineage_mapping',
+        type_='foreignkey',
+    )
+    op.drop_index('idx_lineage_mapping_target_id', table_name='lineage_mapping')
+    op.drop_column('lineage_mapping', 'lineage_target_id')
+    op.drop_constraint(
+        'fk_lineage_target_lineage_transformation_id',
+        'lineage_target',
+        type_='foreignkey',
+    )
+    op.drop_index('idx_lineage_target_transformation', table_name='lineage_target')
+    op.drop_column('lineage_target', 'lineage_transformation_id')
+
+----- e2d453a0ad03 -----
+"""enforce lineage relationship not null
+
+Revision ID: e2d453a0ad03
+Revises: 32b95f7a0662
+Create Date: 2026-09-14 21:40:21
+"""
+
+from typing import Sequence, Union
+
+from alembic import op
+import sqlalchemy as sa
+
+
+# revision identifiers, used by Alembic.
+revision: str = "e2d453a0ad03"
+down_revision: Union[str, Sequence[str], None] = "32b95f7a0662"
+branch_labels: Union[str, Sequence[str], None] = None
+depends_on: Union[str, Sequence[str], None] = None
+
+
+def upgrade() -> None:
+    """Enforce required lineage relationships."""
+
+    op.alter_column(
+        "lineage_mapping",
+        "lineage_target_id",
+        existing_type=sa.UUID(),
+        nullable=False,
+    )
+
+    op.alter_column(
+        "lineage_target",
+        "lineage_transformation_id",
+        existing_type=sa.UUID(),
+        nullable=False,
+    )
+
+
+def downgrade() -> None:
+    """Restore historical nullable relationship definitions."""
+
+    op.alter_column(
+        "lineage_target",
+        "lineage_transformation_id",
+        existing_type=sa.UUID(),
+        nullable=True,
+    )
+
+    op.alter_column(
+        "lineage_mapping",
+        "lineage_target_id",
+        existing_type=sa.UUID(),
+        nullable=True,
+    )
+STEP 6 PASS
+
+STEP 7 — Inspect current schema definitions for legacy nullable response behavior
+backend/app/schemas/lineage_target.py:10:    lineage_transformation_id: UUID
+backend/app/schemas/lineage_target.py:20:    lineage_transformation_id: UUID | None = None
+backend/app/schemas/lineage_target.py:30:    lineage_transformation_id: UUID
+backend/app/schemas/lineage_target.py:42:    lineage_target_id: UUID
+backend/app/schemas/lineage_target.py:43:    lineage_transformation_id: UUID | None
+backend/app/schemas/lineage_discovery.py:12:    lineage_transformation_id: UUID | None
+backend/app/schemas/lineage_discovery.py:23:    lineage_target_id: UUID
+backend/app/schemas/lineage_discovery.py:24:    lineage_transformation_id: UUID
+backend/app/schemas/lineage_discovery.py:38:    lineage_transformation_id: UUID
+backend/app/schemas/lineage_transformation.py:41:    lineage_transformation_id: UUID
+backend/app/schemas/lineage_mapping.py:11:    lineage_target_id: UUID
+backend/app/schemas/lineage_mapping.py:12:    lineage_transformation_id: UUID | None = None
+backend/app/schemas/lineage_mapping.py:20:    lineage_target_id: UUID | None = None
+backend/app/schemas/lineage_mapping.py:21:    lineage_transformation_id: UUID | None = None
+backend/app/schemas/lineage_mapping.py:30:    lineage_target_id: UUID
+backend/app/schemas/lineage_mapping.py:31:    lineage_transformation_id: UUID | None = None
+backend/app/schemas/lineage_mapping.py:43:    lineage_target_id: UUID | None
+backend/app/schemas/lineage_mapping.py:44:    lineage_transformation_id: UUID | None
+STEP 7 PASS
+
+STEP 8 — Verify actual database nullability
+{'table_name': 'lineage_mapping', 'column_name': 'lineage_target_id', 'is_nullable': 'NO'}
+{'table_name': 'lineage_target', 'column_name': 'lineage_transformation_id', 'is_nullable': 'NO'}
+
+Alembic version:
+e2d453a0ad03
+STEP 8 database inspection complete
+STEP 8 PASS
+
+STEP 9 — Run only Batch 07 compatibility tests
+..F..                                                                    [100%]
+=================================== FAILURES ===================================
+__________________ test_orm_allows_null_legacy_relationships ___________________
+
+    def test_orm_allows_null_legacy_relationships() -> None:
+>       assert DataLineageTarget.__table__.c.lineage_transformation_id.nullable is True
+E       AssertionError: assert False is True
+E        +  where False = Column('lineage_transformation_id', UUID(), ForeignKey('lineage_transformation.lineage_transformation_id'), table=<lineage_target>, nullable=False).nullable
+E        +    where Column('lineage_transformation_id', UUID(), ForeignKey('lineage_transformation.lineage_transformation_id'), table=<lineage_target>, nullable=False) = <sqlalchemy.sql.base.ReadOnlyColumnCollection object at 0x7dea14893600>.lineage_transformation_id
+E        +      where <sqlalchemy.sql.base.ReadOnlyColumnCollection object at 0x7dea14893600> = Table('lineage_target', MetaData(), Column('lineage_target_id', UUID(), table=<lineage_target>, primary_key=True, null...oolean(), table=<lineage_target>, nullable=False, server_default=DefaultClause('TRUE', for_update=False)), schema=None).c
+E        +        where Table('lineage_target', MetaData(), Column('lineage_target_id', UUID(), table=<lineage_target>, primary_key=True, null...oolean(), table=<lineage_target>, nullable=False, server_default=DefaultClause('TRUE', for_update=False)), schema=None) = DataLineageTarget.__table__
+
+backend/tests/test_batch_07_transition_compatibility.py:45: AssertionError
+=========================== short test summary info ============================
+FAILED backend/tests/test_batch_07_transition_compatibility.py::test_orm_allows_null_legacy_relationships
+1 failed, 4 passed in 0.69s
+
+Batch 07 compatibility tests: FAIL — expected investigation result.
+
+STEP 10 — Run Batch 08 tests again for comparison
+........                                                                 [100%]
+8 passed in 0.69s
+Batch 08 graph-integrity tests: PASS
+STEP 10 PASS
+
+STEP 11 — Final read-only status
+ M backend/alembic/env.py
+ M backend/app/main.py
+ M backend/app/models/lineage_mapping.py
+ M backend/app/models/lineage_target.py
+ M backend/app/services/lineage_mapping_service.py
+ M backend/app/services/lineage_target_service.py
+ M backend/app/services/lineage_transformation_service.py
+ M docs/architecture/logical/DataLineageLogicalModel.md
+ M docs/architecture/physical/DataLineagePhysicalModel.md
+?? AGENTS.md
+?? "Test reports/"
+?? backend/alembic/env.py.before-08.8D
+?? backend/alembic/env.py.before-08.8E-20260914-210936
+?? backend/alembic/env.py.before-08.8E-20260914-211116
+?? backend/alembic/env.py.before-08.8J
+?? backend/alembic/env.py.before-08.8K
+?? backend/alembic/env.py.before-08.8L
+?? backend/alembic/env.py.before-08.8M
+?? backend/alembic/env.py.before-08.8N
+?? backend/alembic/env.py.before-08.8O
+?? backend/alembic/env.py.before-08.8Q
+?? backend/alembic/env.py.before-08.8S
+?? backend/alembic/env.py.before-08.8T
+?? backend/alembic/env.py.before-08.8U
+?? backend/alembic/env.py.before-08.8V
+?? backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py
+?? backend/alembic/versions/e2d453a0ad03_enforce_lineage_relationship_not_null.py
+?? backend/app/api/
+?? backend/app/models/lineage_mapping.py.before-08.8J
+?? backend/app/models/lineage_mapping.py.before_68
+?? backend/app/models/lineage_target.py.before-08.8J
+?? backend/app/models/lineage_target.py.before_68
+?? backend/app/schemas/
+?? backend/app/services/lineage_discovery_service.py
+?? backend/app/services/lineage_discovery_service.py.before_76
+?? backend/app/services/lineage_mapping_service.py.before_68
+?? backend/app/services/lineage_target_service.py.before_68
+?? backend/app/services/lineage_validation.py
+?? backend/tests/
+?? docs/architecture/05_LogicalModel.md.before_83
+?? docs/architecture/06_PhysicalModel.md.before_83
+?? docs/architecture/07_API_Design.md.before_83
+?? docs/architecture/08_UI_Design.md.before_83
+?? docs/architecture/api/DataLineageAPI.md.before_83
+?? docs/architecture/logical/DataLineageLogicalModel.md.before_83
+?? docs/architecture/physical/DataLineagePhysicalModel.md.before_83
+?? docs/architecture/ui/DataLineageUI.md.before_83
+
+============================================================
+BATCH 08.12 COMPLETED
+============================================================
+No source files modified.
+No database changes made.
+Batch 07 compatibility contract captured.
+Batch 08 graph contract captured.
+Report: Test reports/Batch-08.12-investigate-batch07-compatibility-20260914-214336.txt
+============================================================

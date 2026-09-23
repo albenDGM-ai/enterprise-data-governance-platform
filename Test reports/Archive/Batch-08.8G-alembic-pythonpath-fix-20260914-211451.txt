@@ -1,0 +1,62 @@
+============================================================
+DGM — BATCH 08.8G
+Alembic Python Path Fix
+Started: Mon Sep 14 09:14:51 PM IST 2026
+============================================================
+
+STEP 1 — Verify environment
+/home/alben/Projects/enterprise-data-governance-platform
+feature/project-foundation
+Python 3.14.4
+alembic 1.20.0
+STEP 1 PASS
+
+STEP 2 — Verify app import WITHOUT PYTHONPATH
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import app
+ModuleNotFoundError: No module named 'app'
+Expected: app is not available without backend on PYTHONPATH.
+
+STEP 3 — Verify app import WITH PYTHONPATH=backend
+app import: PASS
+settings import: PASS
+STEP 3 PASS
+
+STEP 4 — Configure database connection
+PYTHONPATH=/home/alben/Projects/enterprise-data-governance-platform/backend
+DATABASE_URL host=127.0.0.1 port=5432
+STEP 4 PASS
+
+STEP 5 — Verify Alembic current with corrected Python path
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+32b95f7a0662 (head)
+STEP 5 PASS
+
+STEP 6 — Run Alembic check
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.schemas
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.tables
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.types
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.constraints
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.defaults
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.comments
+No new upgrade operations detected.
+Alembic check: PASS
+No unintended upgrade operations detected.
+STEP 6 PASS
+
+STEP 7 — Run Batch 08 graph-integrity tests
+........                                                                 [100%]
+8 passed in 0.77s
+STEP 7 PASS
+
+STEP 8 — Verify ORM relationship requirements
+lineage_mapping.lineage_target_id nullable = True
+lineage_target.lineage_transformation_id nullable = True
+Traceback (most recent call last):
+  File "<stdin>", line 10, in <module>
+AssertionError
+STEP 8 FAILED

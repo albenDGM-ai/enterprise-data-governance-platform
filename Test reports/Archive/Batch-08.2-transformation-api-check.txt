@@ -1,0 +1,617 @@
+============================================================
+DGM — Batch 08.2
+Transformation API Contract Check
+============================================================
+
+---------------- 1. Transformation schemas ----------------
+from datetime import datetime
+from uuid import UUID
+
+from pydantic import ConfigDict
+
+from app.schemas.common import APIBaseSchema
+
+
+class LineageTransformationCreate(APIBaseSchema):
+    lineage_flow_id: UUID
+    sequence_number: int
+    transformation_name: str
+    transformation_type: str
+    description: str | None = None
+    expression: str | None = None
+    status: str
+
+
+class LineageTransformationUpdate(APIBaseSchema):
+    sequence_number: int | None = None
+    transformation_name: str | None = None
+    transformation_type: str | None = None
+    description: str | None = None
+    expression: str | None = None
+    status: str | None = None
+
+
+class LineageTransformationReplace(APIBaseSchema):
+    lineage_flow_id: UUID
+    sequence_number: int
+    transformation_name: str
+    transformation_type: str
+    description: str | None = None
+    expression: str | None = None
+    status: str
+
+
+class LineageTransformationResponse(APIBaseSchema):
+    model_config = ConfigDict(from_attributes=True)
+
+    lineage_transformation_id: UUID
+    lineage_flow_id: UUID
+    sequence_number: int
+    transformation_name: str
+    transformation_type: str
+    description: str | None = None
+    expression: str | None = None
+    status: str
+    created_by: str
+    created_date: datetime
+    modified_by: str | None = None
+    modified_date: datetime | None = None
+    is_active: bool
+
+---------------- 2. Transformation routes ----------------
+1163-    try:
+1164-        entity = service.delete(
+1165-            entity,
+1166-            modified_by=x_user,
+1167-        )
+1168-        service.session.commit()
+1169-        service.session.refresh(entity)
+1170-        return entity
+1171-    except Exception:
+1172-        service.session.rollback()
+1173-        raise
+1174-
+1175-
+1176-def get_transformation_service(
+1177-    db: Session = Depends(get_db),
+1178-) -> LineageTransformationService:
+1179-    return LineageTransformationService(db)
+1180-
+1181-
+1182-@router.post(
+1183:    "/transformations",
+1184-    response_model=LineageTransformationResponse,
+1185-    status_code=status.HTTP_201_CREATED,
+1186-)
+1187:def create_transformation(
+1188-    payload: LineageTransformationCreate,
+1189-    x_user: str = Header(..., alias="X-User"),
+1190-    service: LineageTransformationService = Depends(get_transformation_service),
+1191-) -> LineageTransformationResponse:
+1192-    try:
+1193-        entity = service.create(
+1194-            lineage_flow_id=payload.lineage_flow_id,
+1195-            sequence_number=payload.sequence_number,
+1196-            transformation_name=payload.transformation_name,
+1197-            transformation_type=payload.transformation_type,
+1198-            description=payload.description,
+1199-            expression=payload.expression,
+1200-            status=payload.status,
+1201-            created_by=x_user,
+1202-        )
+1203-        service.session.commit()
+1204-        service.session.refresh(entity)
+1205-        return entity
+1206-    except LineageRelationshipValidationError as exc:
+1207-        service.session.rollback()
+1208-        raise HTTPException(
+1209-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+1210-            detail=str(exc),
+1211-        ) from exc
+1212-    except ValueError as exc:
+1213-        service.session.rollback()
+1214-        raise HTTPException(
+1215-            status_code=status.HTTP_409_CONFLICT,
+1216-            detail=str(exc),
+1217-        ) from exc
+1218-    except Exception:
+1219-        service.session.rollback()
+1220-        raise
+1221-
+1222-
+1223-@router.get(
+1224:    "/transformations",
+1225-    response_model=list[LineageTransformationResponse],
+1226-)
+1227-def list_transformations(
+1228-    lineage_flow_id: UUID | None = None,
+1229-    transformation_type: str | None = None,
+1230-    status: str | None = None,
+1231-    include_inactive: bool = False,
+1232-    service: LineageTransformationService = Depends(get_transformation_service),
+1233-) -> list[LineageTransformationResponse]:
+1234-    return service.list(
+1235-        lineage_flow_id=lineage_flow_id,
+1236-        transformation_type=transformation_type,
+1237-        status=status,
+1238-        include_inactive=include_inactive,
+1239-    )
+1240-
+1241-
+1242-@router.get(
+1243:    "/transformations/by-flow/{lineage_flow_id}/sequence/{sequence_number}",
+1244-    response_model=LineageTransformationResponse,
+1245-)
+1246-def get_transformation_by_flow_and_sequence(
+1247-    lineage_flow_id: UUID,
+1248-    sequence_number: int,
+1249-    include_inactive: bool = False,
+1250-    service: LineageTransformationService = Depends(get_transformation_service),
+1251-) -> LineageTransformationResponse:
+1252-    entity = service.get_by_flow_and_sequence(
+1253-        lineage_flow_id,
+1254-        sequence_number,
+1255-        include_inactive=include_inactive,
+1256-    )
+1257-
+1258-    if entity is None:
+1259-        raise HTTPException(
+1260-            status_code=status.HTTP_404_NOT_FOUND,
+1261-            detail="Lineage Transformation not found.",
+1262-        )
+1263-
+1264-    return entity
+1265-
+1266-
+1267-@router.get(
+1268:    "/transformations/{lineage_transformation_id}",
+1269-    response_model=LineageTransformationResponse,
+1270-)
+1271-def get_transformation(
+1272-    lineage_transformation_id: UUID,
+1273-    include_inactive: bool = False,
+1274-    service: LineageTransformationService = Depends(get_transformation_service),
+1275-) -> LineageTransformationResponse:
+1276-    entity = service.get(
+1277-        lineage_transformation_id,
+1278-        include_inactive=include_inactive,
+1279-    )
+1280-
+1281-    if entity is None:
+1282-        raise HTTPException(
+1283-            status_code=status.HTTP_404_NOT_FOUND,
+1284-            detail="Lineage Transformation not found.",
+1285-        )
+1286-
+1287-    return entity
+1288-
+1289-
+1290-@router.put(
+1291:    "/transformations/{lineage_transformation_id}",
+1292-    response_model=LineageTransformationResponse,
+1293-)
+1294:def replace_transformation(
+1295-    lineage_transformation_id: UUID,
+1296-    payload: LineageTransformationReplace,
+1297-    x_user: str = Header(..., alias="X-User"),
+1298-    service: LineageTransformationService = Depends(get_transformation_service),
+1299-) -> LineageTransformationResponse:
+1300-    entity = service.get(lineage_transformation_id)
+1301-
+1302-    if entity is None:
+1303-        raise HTTPException(
+1304-            status_code=status.HTTP_404_NOT_FOUND,
+1305-            detail="Lineage Transformation not found.",
+1306-        )
+1307-
+1308-    if payload.lineage_flow_id != entity.lineage_flow_id:
+1309-        raise HTTPException(
+1310-            status_code=status.HTTP_400_BAD_REQUEST,
+1311-            detail="Changing lineage_flow_id is not supported by the current service contract.",
+1312-        )
+1313-
+1314-    try:
+1315-        entity = service.update(
+1316-            entity,
+1317-            modified_by=x_user,
+1318-            sequence_number=payload.sequence_number,
+1319-            transformation_name=payload.transformation_name,
+1320-            transformation_type=payload.transformation_type,
+1321-            description=payload.description,
+1322-            expression=payload.expression,
+1323-            status=payload.status,
+1324-        )
+1325-        service.session.commit()
+1326-        service.session.refresh(entity)
+1327-        return entity
+1328-    except ValueError as exc:
+1329-        service.session.rollback()
+1330-        raise HTTPException(
+1331-            status_code=status.HTTP_409_CONFLICT,
+1332-            detail=str(exc),
+1333-        ) from exc
+1334-    except Exception:
+1335-        service.session.rollback()
+1336-        raise
+1337-
+1338-
+1339-@router.patch(
+1340:    "/transformations/{lineage_transformation_id}",
+1341-    response_model=LineageTransformationResponse,
+1342-)
+1343:def update_transformation(
+1344-    lineage_transformation_id: UUID,
+1345-    payload: LineageTransformationUpdate,
+1346-    x_user: str = Header(..., alias="X-User"),
+1347-    service: LineageTransformationService = Depends(get_transformation_service),
+1348-) -> LineageTransformationResponse:
+1349-    entity = service.get(lineage_transformation_id)
+1350-
+1351-    if entity is None:
+1352-        raise HTTPException(
+1353-            status_code=status.HTTP_404_NOT_FOUND,
+1354-            detail="Lineage Transformation not found.",
+1355-        )
+1356-
+1357-    try:
+1358-        entity = service.update(
+1359-            entity,
+1360-            modified_by=x_user,
+1361-            sequence_number=payload.sequence_number,
+1362-            transformation_name=payload.transformation_name,
+1363-            transformation_type=payload.transformation_type,
+1364-            description=payload.description,
+1365-            expression=payload.expression,
+1366-            status=payload.status,
+1367-        )
+1368-        service.session.commit()
+1369-        service.session.refresh(entity)
+1370-        return entity
+1371-    except ValueError as exc:
+1372-        service.session.rollback()
+1373-        raise HTTPException(
+1374-            status_code=status.HTTP_409_CONFLICT,
+1375-            detail=str(exc),
+1376-        ) from exc
+1377-    except Exception:
+1378-        service.session.rollback()
+1379-        raise
+1380-
+1381-
+1382-@router.delete(
+1383:    "/transformations/{lineage_transformation_id}",
+1384-    response_model=LineageTransformationResponse,
+1385-)
+1386:def delete_transformation(
+1387-    lineage_transformation_id: UUID,
+1388-    x_user: str = Header(..., alias="X-User"),
+1389-    service: LineageTransformationService = Depends(get_transformation_service),
+1390-) -> LineageTransformationResponse:
+1391-    entity = service.get(lineage_transformation_id)
+1392-
+1393-    if entity is None:
+1394-        raise HTTPException(
+1395-            status_code=status.HTTP_404_NOT_FOUND,
+1396-            detail="Lineage Transformation not found.",
+1397-        )
+1398-
+1399-    try:
+1400-        entity = service.delete(
+1401-            entity,
+1402-            modified_by=x_user,
+1403-        )
+1404-        service.session.commit()
+1405-        service.session.refresh(entity)
+1406-        return entity
+1407-    except Exception:
+1408-        service.session.rollback()
+1409-        raise
+1410-
+1411-
+1412-# ---------------------------------------------------------------------------
+1413-# Impact Analysis
+1414-# ---------------------------------------------------------------------------
+1415-
+1416-def get_impact_analysis_service(
+1417-    db: Session = Depends(get_db),
+1418-) -> ImpactAnalysisService:
+1419-    return ImpactAnalysisService(db)
+1420-
+1421-
+1422-@router.post(
+1423-    "/impact-analyses",
+1424-    response_model=ImpactAnalysisResponse,
+1425-    status_code=status.HTTP_201_CREATED,
+1426-)
+1427-def create_impact_analysis(
+1428-    payload: ImpactAnalysisCreate,
+1429-    x_user: str = Header(..., alias="X-User"),
+1430-    service: ImpactAnalysisService = Depends(get_impact_analysis_service),
+1431-) -> ImpactAnalysisResponse:
+1432-    try:
+1433-        entity = service.create(
+1434-            lineage_mapping_id=payload.lineage_mapping_id,
+1435-            analysis_number=payload.analysis_number,
+1436-            source_asset=payload.source_asset,
+1437-            impact_scope=payload.impact_scope,
+1438-            affected_objects=payload.affected_objects,
+1439-            analysis_date=payload.analysis_date,
+1440-            requested_by=payload.requested_by,
+1441-            status=payload.status,
+1442-            created_by=x_user,
+1443-        )
+1444-        service.session.commit()
+1445-        service.session.refresh(entity)
+1446-        return entity
+1447-    except ValueError as exc:
+1448-        service.session.rollback()
+1449-        raise HTTPException(
+1450-            status_code=status.HTTP_409_CONFLICT,
+1451-            detail=str(exc),
+1452-        ) from exc
+1453-    except Exception:
+1454-        service.session.rollback()
+1455-        raise
+1456-
+1457-
+1458-@router.get(
+1459-    "/impact-analyses/{impact_analysis_id}",
+1460-    response_model=ImpactAnalysisResponse,
+1461-)
+1462-def get_impact_analysis(
+1463-    impact_analysis_id: UUID,
+1464-    service: ImpactAnalysisService = Depends(get_impact_analysis_service),
+1465-) -> ImpactAnalysisResponse:
+1466-    entity = service.get(impact_analysis_id)
+1467-
+1468-    if entity is None:
+1469-        raise HTTPException(
+1470-            status_code=status.HTTP_404_NOT_FOUND,
+1471-            detail="Impact Analysis not found.",
+1472-        )
+1473-
+1474-    return entity
+1475-
+1476-
+1477-@router.get(
+1478-    "/impact-analyses",
+1479-    response_model=list[ImpactAnalysisResponse],
+1480-)
+1481-def list_impact_analyses(
+1482-    lineage_mapping_id: UUID | None = None,
+1483-    impact_scope: str | None = None,
+1484-    status: str | None = None,
+1485-    requested_by: str | None = None,
+1486-    analysis_date_from: str | None = None,
+
+---------------- 3. Transformation service update ----------------
+110-            expression=expression,
+111-            status=status,
+112-            created_by=created_by,
+113-            created_date=datetime.now(timezone.utc).replace(tzinfo=None),
+114-            is_active=True,
+115-        )
+116-
+117-        self.repository.create(entity)
+118-        return entity
+119-
+120:    def update(
+121-        self,
+122-        entity: DataLineageTransformation,
+123-        *,
+124-        modified_by: str,
+125-        sequence_number: int | None = None,
+126-        transformation_name: str | None = None,
+127-        transformation_type: str | None = None,
+128-        description: str | None = None,
+129-        expression: str | None = None,
+130-        status: str | None = None,
+131-    ) -> DataLineageTransformation:
+132-        new_sequence_number = (
+133-            sequence_number
+134-            if sequence_number is not None
+135-            else entity.sequence_number
+136-        )
+137-
+138-        duplicate = self.repository.get_by_flow_and_sequence(
+139-            entity.lineage_flow_id,
+140-            new_sequence_number,
+141-            include_inactive=True,
+142-        )
+143-        if duplicate is not None and duplicate.lineage_transformation_id != entity.lineage_transformation_id:
+144-            raise ValueError(
+145-                "A Lineage Transformation with the same flow and sequence "
+146-                "number already exists."
+147-            )
+148-
+149-        if sequence_number is not None:
+150-            entity.sequence_number = sequence_number
+151-        if transformation_name is not None:
+152-            entity.transformation_name = transformation_name
+153-        if transformation_type is not None:
+154-            entity.transformation_type = transformation_type
+155-        if description is not None:
+156-            entity.description = description
+157-        if expression is not None:
+158-            entity.expression = expression
+159-        if status is not None:
+160-            entity.status = status
+161-
+162-        entity.modified_by = modified_by
+163-        entity.modified_date = datetime.now(timezone.utc).replace(tzinfo=None)
+164-
+165-        self.repository.update(entity)
+166-        return entity
+167-
+168-    def delete(
+169-        self,
+170-        entity: DataLineageTransformation,
+171-        *,
+172-        modified_by: str,
+173-    ) -> DataLineageTransformation:
+174-        return self.repository.soft_delete(
+175-            entity,
+176-            modified_by=modified_by,
+177-        )
+
+---------------- 4. All transformation flow references ----------------
+backend/app/api/routers/lineage.py:139:    "/flows/{lineage_flow_id}",
+backend/app/api/routers/lineage.py:143:    lineage_flow_id: UUID,
+backend/app/api/routers/lineage.py:148:        lineage_flow_id,
+backend/app/api/routers/lineage.py:187:    "/flows/{lineage_flow_id}",
+backend/app/api/routers/lineage.py:191:    lineage_flow_id: UUID,
+backend/app/api/routers/lineage.py:196:    entity = service.get(lineage_flow_id)
+backend/app/api/routers/lineage.py:232:    "/flows/{lineage_flow_id}",
+backend/app/api/routers/lineage.py:236:    lineage_flow_id: UUID,
+backend/app/api/routers/lineage.py:241:    entity = service.get(lineage_flow_id)
+backend/app/api/routers/lineage.py:277:    "/flows/{lineage_flow_id}",
+backend/app/api/routers/lineage.py:281:    lineage_flow_id: UUID,
+backend/app/api/routers/lineage.py:285:    entity = service.get(lineage_flow_id)
+backend/app/api/routers/lineage.py:974:            lineage_flow_id=payload.lineage_flow_id,
+backend/app/api/routers/lineage.py:1008:    lineage_flow_id: UUID | None = None,
+backend/app/api/routers/lineage.py:1016:        lineage_flow_id=lineage_flow_id,
+backend/app/api/routers/lineage.py:1069:            lineage_flow_id=payload.lineage_flow_id,
+backend/app/api/routers/lineage.py:1194:            lineage_flow_id=payload.lineage_flow_id,
+backend/app/api/routers/lineage.py:1228:    lineage_flow_id: UUID | None = None,
+backend/app/api/routers/lineage.py:1235:        lineage_flow_id=lineage_flow_id,
+backend/app/api/routers/lineage.py:1243:    "/transformations/by-flow/{lineage_flow_id}/sequence/{sequence_number}",
+backend/app/api/routers/lineage.py:1247:    lineage_flow_id: UUID,
+backend/app/api/routers/lineage.py:1253:        lineage_flow_id,
+backend/app/api/routers/lineage.py:1308:    if payload.lineage_flow_id != entity.lineage_flow_id:
+backend/app/api/routers/lineage.py:1311:            detail="Changing lineage_flow_id is not supported by the current service contract.",
+backend/app/api/routers/lineage.py:1648:            lineage_flow_id=payload.lineage_flow_id,
+backend/app/api/routers/lineage.py:1698:    lineage_flow_id: UUID | None = None,
+backend/app/api/routers/lineage.py:1704:        lineage_flow_id=lineage_flow_id,
+backend/app/api/routers/lineage.py:1846:            lineage_flow_id=payload.lineage_flow_id,
+backend/app/api/routers/lineage.py:1894:    lineage_flow_id: UUID | None = None,
+backend/app/api/routers/lineage.py:1915:        lineage_flow_id=lineage_flow_id,
+backend/app/api/routers/lineage.py:2046:    lineage_flow_id: UUID | None = None,
+backend/app/api/routers/lineage.py:2055:        lineage_flow_id=lineage_flow_id,
+backend/app/schemas/lineage_discovery.py:78:    lineage_flow_id: UUID
+backend/app/schemas/lineage_transformation.py:10:    lineage_flow_id: UUID
+backend/app/schemas/lineage_transformation.py:29:    lineage_flow_id: UUID
+backend/app/schemas/lineage_transformation.py:42:    lineage_flow_id: UUID
+backend/app/schemas/lineage_snapshot.py:10:    lineage_flow_id: UUID
+backend/app/schemas/lineage_snapshot.py:17:    lineage_flow_id: UUID | None = None
+backend/app/schemas/lineage_snapshot.py:24:    lineage_flow_id: UUID
+backend/app/schemas/lineage_snapshot.py:34:    lineage_flow_id: UUID
+backend/app/schemas/lineage_version.py:10:    lineage_flow_id: UUID
+backend/app/schemas/lineage_version.py:19:    lineage_flow_id: UUID | None = None
+backend/app/schemas/lineage_version.py:28:    lineage_flow_id: UUID
+backend/app/schemas/lineage_version.py:40:    lineage_flow_id: UUID
+backend/app/schemas/lineage_flow.py:45:    lineage_flow_id: UUID
+backend/app/schemas/lineage_mapping.py:10:    lineage_flow_id: UUID
+backend/app/schemas/lineage_mapping.py:29:    lineage_flow_id: UUID
+backend/app/schemas/lineage_mapping.py:42:    lineage_flow_id: UUID
+backend/app/services/lineage_transformation_service.py:24:    def _validate_flow(self, lineage_flow_id: uuid.UUID) -> None:
+backend/app/services/lineage_transformation_service.py:26:            lineage_flow_id,
+backend/app/services/lineage_transformation_service.py:51:        lineage_flow_id: uuid.UUID,
+backend/app/services/lineage_transformation_service.py:57:            lineage_flow_id,
+backend/app/services/lineage_transformation_service.py:65:        lineage_flow_id: uuid.UUID | None = None,
+backend/app/services/lineage_transformation_service.py:71:            lineage_flow_id=lineage_flow_id,
+backend/app/services/lineage_transformation_service.py:80:        lineage_flow_id: uuid.UUID,
+backend/app/services/lineage_transformation_service.py:89:        self._validate_flow(lineage_flow_id)
+backend/app/services/lineage_transformation_service.py:92:            lineage_flow_id,
+backend/app/services/lineage_transformation_service.py:105:            lineage_flow_id=lineage_flow_id,
+backend/app/services/lineage_transformation_service.py:139:            entity.lineage_flow_id,
+
+---------------- 5. Existing tests ----------------
+backend/tests/test_batch_08_graph_integrity.py.before_83:41:def record(record_id, *, is_active=True, lineage_flow_id=None, lineage_transformation_id=None):
+backend/tests/test_batch_08_graph_integrity.py.before_83:43:        lineage_flow_id=lineage_flow_id,
+backend/tests/test_batch_08_graph_integrity.py.before_83:53:    service.flow_repository = StubRepository({flow.lineage_flow_id: flow})
+backend/tests/test_batch_08_graph_integrity.py.before_83:65:        lineage_flow_id=flow_id,
+backend/tests/test_batch_08_graph_integrity.py.before_83:80:    flow = SimpleNamespace(lineage_flow_id=flow_id, is_active=True)
+backend/tests/test_batch_08_graph_integrity.py.before_83:81:    transformation = record(transformation_id, lineage_flow_id=flow_id)
+backend/tests/test_batch_08_graph_integrity.py.before_83:96:    assert mapping.lineage_flow_id == flow_id
+backend/tests/test_batch_08_graph_integrity.py.before_83:103:        flow=SimpleNamespace(lineage_flow_id=flow_a_id, is_active=True),
+backend/tests/test_batch_08_graph_integrity.py.before_83:105:        transformations=(record(transformation_id, lineage_flow_id=flow_b_id),),
+backend/tests/test_batch_08_graph_integrity.py.before_83:118:        flow=SimpleNamespace(lineage_flow_id=flow_a_id, is_active=True),
+backend/tests/test_batch_08_graph_integrity.py.before_83:121:            record(target_transformation, lineage_flow_id=flow_a_id),
+backend/tests/test_batch_08_graph_integrity.py.before_83:122:            record(transformation_id, lineage_flow_id=flow_b_id),
+backend/tests/test_batch_08_graph_integrity.py.before_83:140:        flow=SimpleNamespace(lineage_flow_id=flow_id, is_active=True),
+backend/tests/test_batch_08_graph_integrity.py.before_83:143:            record(target_transformation_id, lineage_flow_id=flow_id),
+backend/tests/test_batch_08_graph_integrity.py.before_83:144:            record(supplied_transformation_id, lineage_flow_id=flow_id),
+backend/tests/test_batch_08_graph_integrity.py.before_83:160:        flow=SimpleNamespace(lineage_flow_id=flow_id, is_active=False),
+backend/tests/test_batch_08_graph_integrity.py.before_83:162:        transformations=(record(transformation_id, lineage_flow_id=flow_id),),
+backend/tests/test_batch_08_graph_integrity.py.before_83:172:        {transformation_id: record(transformation_id, is_active=False, lineage_flow_id=flow_id)}
+backend/tests/test_batch_08_graph_integrity.py.before_83:192:        flow=SimpleNamespace(lineage_flow_id=flow_a_id, is_active=True),
+backend/tests/test_batch_08_graph_integrity.py.before_83:194:        transformations=(record(transformation_b_id, lineage_flow_id=flow_b_id),),
+backend/tests/test_batch_08_graph_integrity.py.before_83:198:        lineage_flow_id=flow_a_id,
+backend/tests/test_batch_08_graph_integrity.py:41:def record(record_id, *, is_active=True, lineage_flow_id=None, lineage_transformation_id=None):
+backend/tests/test_batch_08_graph_integrity.py:43:        lineage_flow_id=lineage_flow_id,
+backend/tests/test_batch_08_graph_integrity.py:53:    service.flow_repository = StubRepository({flow.lineage_flow_id: flow})
+backend/tests/test_batch_08_graph_integrity.py:65:        lineage_flow_id=flow_id,
+backend/tests/test_batch_08_graph_integrity.py:80:    flow = SimpleNamespace(lineage_flow_id=flow_id, is_active=True)
+backend/tests/test_batch_08_graph_integrity.py:81:    transformation = record(transformation_id, lineage_flow_id=flow_id)
+backend/tests/test_batch_08_graph_integrity.py:96:    assert mapping.lineage_flow_id == flow_id
+backend/tests/test_batch_08_graph_integrity.py:103:        flow=SimpleNamespace(lineage_flow_id=flow_a_id, is_active=True),
+backend/tests/test_batch_08_graph_integrity.py:105:        transformations=(record(transformation_id, lineage_flow_id=flow_b_id),),
+backend/tests/test_batch_08_graph_integrity.py:118:        flow=SimpleNamespace(lineage_flow_id=flow_a_id, is_active=True),
+backend/tests/test_batch_08_graph_integrity.py:121:            record(target_transformation, lineage_flow_id=flow_a_id),
+backend/tests/test_batch_08_graph_integrity.py:122:            record(transformation_id, lineage_flow_id=flow_b_id),
+backend/tests/test_batch_08_graph_integrity.py:140:        flow=SimpleNamespace(lineage_flow_id=flow_id, is_active=True),
+backend/tests/test_batch_08_graph_integrity.py:143:            record(target_transformation_id, lineage_flow_id=flow_id),
+backend/tests/test_batch_08_graph_integrity.py:144:            record(supplied_transformation_id, lineage_flow_id=flow_id),
+backend/tests/test_batch_08_graph_integrity.py:160:        flow=SimpleNamespace(lineage_flow_id=flow_id, is_active=False),
+backend/tests/test_batch_08_graph_integrity.py:162:        transformations=(record(transformation_id, lineage_flow_id=flow_id),),
+backend/tests/test_batch_08_graph_integrity.py:172:        {transformation_id: record(transformation_id, is_active=False, lineage_flow_id=flow_id)}
+backend/tests/test_batch_08_graph_integrity.py:192:        flow=SimpleNamespace(lineage_flow_id=flow_a_id, is_active=True),
+backend/tests/test_batch_08_graph_integrity.py:194:        transformations=(record(transformation_b_id, lineage_flow_id=flow_b_id),),
+backend/tests/test_batch_08_graph_integrity.py:198:        lineage_flow_id=flow_a_id,
+backend/tests/test_batch_08_graph_integrity.py:222:def test_transformation_update_contract_does_not_expose_flow_reassignment() -> None:
+backend/tests/test_batch_08_graph_integrity.py:223:    from app.schemas.lineage_transformation import LineageTransformationUpdate
+backend/tests/test_batch_08_graph_integrity.py:225:    fields = LineageTransformationUpdate.model_fields
+backend/tests/test_batch_08_graph_integrity.py:227:    assert "lineage_flow_id" not in fields
+
+---------------- 6. Git diff ----------------
+diff --git a/backend/app/services/lineage_transformation_service.py b/backend/app/services/lineage_transformation_service.py
+index f11b1e5..beb7c93 100644
+--- a/backend/app/services/lineage_transformation_service.py
++++ b/backend/app/services/lineage_transformation_service.py
+@@ -6,9 +6,11 @@ from datetime import datetime, timezone
+ from sqlalchemy.orm import Session
+ 
+ from app.models.lineage_transformation import DataLineageTransformation
++from app.repositories.lineage_flow_repository import LineageFlowRepository
+ from app.repositories.lineage_transformation_repository import (
+     LineageTransformationRepository,
+ )
++from app.services.lineage_validation import LineageRelationshipValidationError
+ 
+ 
+ class LineageTransformationService:
+@@ -17,6 +19,21 @@ class LineageTransformationService:
+     def __init__(self, session: Session) -> None:
+         self.session = session
+         self.repository = LineageTransformationRepository(session)
++        self.flow_repository = LineageFlowRepository(session)
++
++    def _validate_flow(self, lineage_flow_id: uuid.UUID) -> None:
++        flow = self.flow_repository.get_by_id(
++            lineage_flow_id,
++            include_inactive=True,
++        )
++        if flow is None:
++            raise LineageRelationshipValidationError(
++                "The supplied Lineage Flow does not exist."
++            )
++        if not flow.is_active:
++            raise LineageRelationshipValidationError(
++                "The supplied Lineage Flow is inactive."
++            )
+ 
+     def get(
+         self,
+@@ -69,6 +86,8 @@ class LineageTransformationService:
+         status: str,
+         created_by: str,
+     ) -> DataLineageTransformation:
++        self._validate_flow(lineage_flow_id)
++
+         existing = self.repository.get_by_flow_and_sequence(
+             lineage_flow_id,
+             sequence_number,
+
+============================================================
+BATCH 08.2 CHECK COMPLETE
+============================================================

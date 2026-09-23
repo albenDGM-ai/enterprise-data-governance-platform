@@ -1,0 +1,884 @@
+============================================================
+DGM — BATCH 08.8I
+Database Constraint History Investigation — READ ONLY
+Started: Mon Sep 14 09:17:53 PM IST 2026
+============================================================
+
+STEP 1 — Environment and Git state
+/home/alben/Projects/enterprise-data-governance-platform
+feature/project-foundation
+
+ M backend/alembic/env.py
+ M backend/app/models/lineage_mapping.py
+ M backend/app/models/lineage_target.py
+?? backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py
+STEP 1 PASS
+
+STEP 2 — Search all Alembic migrations for these columns
+backend/alembic/versions/9a792fae7ed7_create_lineage_mapping.py:27:    sa.Column('lineage_transformation_id', sa.UUID(), nullable=True),
+backend/alembic/versions/9a792fae7ed7_create_lineage_mapping.py:38:    sa.ForeignKeyConstraint(['lineage_transformation_id'], ['lineage_transformation.lineage_transformation_id'], ),
+backend/alembic/versions/042f36c0fcb4_create_lineage_transformation.py:25:    sa.Column('lineage_transformation_id', sa.UUID(), nullable=False),
+backend/alembic/versions/042f36c0fcb4_create_lineage_transformation.py:39:    sa.PrimaryKeyConstraint('lineage_transformation_id'),
+backend/alembic/versions/9d6657445897_create_lineage_target.py:25:    sa.Column('lineage_target_id', sa.UUID(), nullable=False),
+backend/alembic/versions/9d6657445897_create_lineage_target.py:37:    sa.PrimaryKeyConstraint('lineage_target_id'),
+backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py:25:        sa.Column('lineage_transformation_id', sa.UUID(), nullable=True),
+backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py:27:    op.create_index('idx_lineage_target_transformation', 'lineage_target', ['lineage_transformation_id'], unique=False)
+backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py:29:        'fk_lineage_target_lineage_transformation_id',
+backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py:32:        ['lineage_transformation_id'],
+backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py:33:        ['lineage_transformation_id'],
+backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py:37:        sa.Column('lineage_target_id', sa.UUID(), nullable=True),
+backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py:39:    op.create_index('idx_lineage_mapping_target_id', 'lineage_mapping', ['lineage_target_id'], unique=False)
+backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py:41:        'fk_lineage_mapping_lineage_target_id',
+backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py:44:        ['lineage_target_id'],
+backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py:45:        ['lineage_target_id'],
+backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py:52:        'fk_lineage_mapping_lineage_target_id',
+backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py:57:    op.drop_column('lineage_mapping', 'lineage_target_id')
+backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py:59:        'fk_lineage_target_lineage_transformation_id',
+backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py:64:    op.drop_column('lineage_target', 'lineage_transformation_id')
+STEP 2 PASS
+
+STEP 3 — Search migration files for explicit nullable changes
+backend/alembic/versions/f7b06a6d8fc1_create_lineage_process_and_flow.py:25:    sa.Column('lineage_process_id', sa.UUID(), nullable=False),
+backend/alembic/versions/f7b06a6d8fc1_create_lineage_process_and_flow.py:26:    sa.Column('process_name', sa.String(length=255), nullable=False),
+backend/alembic/versions/f7b06a6d8fc1_create_lineage_process_and_flow.py:27:    sa.Column('process_type', sa.String(length=100), nullable=False),
+backend/alembic/versions/f7b06a6d8fc1_create_lineage_process_and_flow.py:28:    sa.Column('technology', sa.String(length=100), nullable=False),
+backend/alembic/versions/f7b06a6d8fc1_create_lineage_process_and_flow.py:29:    sa.Column('schedule', sa.String(length=100), nullable=True),
+backend/alembic/versions/f7b06a6d8fc1_create_lineage_process_and_flow.py:30:    sa.Column('owner', sa.String(length=100), nullable=False),
+backend/alembic/versions/f7b06a6d8fc1_create_lineage_process_and_flow.py:31:    sa.Column('status', sa.String(length=30), nullable=False),
+backend/alembic/versions/f7b06a6d8fc1_create_lineage_process_and_flow.py:32:    sa.Column('created_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/f7b06a6d8fc1_create_lineage_process_and_flow.py:33:    sa.Column('created_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/f7b06a6d8fc1_create_lineage_process_and_flow.py:34:    sa.Column('modified_by', sa.String(length=100), nullable=True),
+backend/alembic/versions/f7b06a6d8fc1_create_lineage_process_and_flow.py:35:    sa.Column('modified_date', sa.TIMESTAMP(), nullable=True),
+backend/alembic/versions/f7b06a6d8fc1_create_lineage_process_and_flow.py:36:    sa.Column('is_active', sa.Boolean(), server_default='TRUE', nullable=False),
+backend/alembic/versions/f7b06a6d8fc1_create_lineage_process_and_flow.py:44:    sa.Column('lineage_flow_id', sa.UUID(), nullable=False),
+backend/alembic/versions/f7b06a6d8fc1_create_lineage_process_and_flow.py:45:    sa.Column('lineage_source_id', sa.UUID(), nullable=False),
+backend/alembic/versions/f7b06a6d8fc1_create_lineage_process_and_flow.py:46:    sa.Column('lineage_process_id', sa.UUID(), nullable=False),
+backend/alembic/versions/f7b06a6d8fc1_create_lineage_process_and_flow.py:47:    sa.Column('flow_name', sa.String(length=255), nullable=False),
+backend/alembic/versions/f7b06a6d8fc1_create_lineage_process_and_flow.py:48:    sa.Column('flow_type', sa.String(length=50), nullable=False),
+backend/alembic/versions/f7b06a6d8fc1_create_lineage_process_and_flow.py:49:    sa.Column('direction', sa.String(length=30), nullable=False),
+backend/alembic/versions/f7b06a6d8fc1_create_lineage_process_and_flow.py:50:    sa.Column('frequency', sa.String(length=50), nullable=False),
+backend/alembic/versions/f7b06a6d8fc1_create_lineage_process_and_flow.py:51:    sa.Column('owner', sa.String(length=100), nullable=False),
+backend/alembic/versions/f7b06a6d8fc1_create_lineage_process_and_flow.py:52:    sa.Column('status', sa.String(length=30), nullable=False),
+backend/alembic/versions/f7b06a6d8fc1_create_lineage_process_and_flow.py:53:    sa.Column('created_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/f7b06a6d8fc1_create_lineage_process_and_flow.py:54:    sa.Column('created_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/f7b06a6d8fc1_create_lineage_process_and_flow.py:55:    sa.Column('modified_by', sa.String(length=100), nullable=True),
+backend/alembic/versions/f7b06a6d8fc1_create_lineage_process_and_flow.py:56:    sa.Column('modified_date', sa.TIMESTAMP(), nullable=True),
+backend/alembic/versions/f7b06a6d8fc1_create_lineage_process_and_flow.py:57:    sa.Column('is_active', sa.Boolean(), server_default='TRUE', nullable=False),
+backend/alembic/versions/342b1ccc2068_create_data_quality_issue.py:25:    sa.Column('data_quality_issue_id', sa.UUID(), nullable=False),
+backend/alembic/versions/342b1ccc2068_create_data_quality_issue.py:26:    sa.Column('data_quality_result_id', sa.UUID(), nullable=False),
+backend/alembic/versions/342b1ccc2068_create_data_quality_issue.py:27:    sa.Column('issue_number', sa.String(length=50), nullable=False),
+backend/alembic/versions/342b1ccc2068_create_data_quality_issue.py:28:    sa.Column('issue_type', sa.String(length=100), nullable=False),
+backend/alembic/versions/342b1ccc2068_create_data_quality_issue.py:29:    sa.Column('severity', sa.String(length=30), nullable=False),
+backend/alembic/versions/342b1ccc2068_create_data_quality_issue.py:30:    sa.Column('description', sa.Text(), nullable=False),
+backend/alembic/versions/342b1ccc2068_create_data_quality_issue.py:31:    sa.Column('business_impact', sa.Text(), nullable=True),
+backend/alembic/versions/342b1ccc2068_create_data_quality_issue.py:32:    sa.Column('owner', sa.String(length=100), nullable=False),
+backend/alembic/versions/342b1ccc2068_create_data_quality_issue.py:33:    sa.Column('detected_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/342b1ccc2068_create_data_quality_issue.py:34:    sa.Column('status', sa.String(length=30), nullable=False),
+backend/alembic/versions/342b1ccc2068_create_data_quality_issue.py:35:    sa.Column('created_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/342b1ccc2068_create_data_quality_issue.py:36:    sa.Column('created_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/342b1ccc2068_create_data_quality_issue.py:37:    sa.Column('modified_by', sa.String(length=100), nullable=True),
+backend/alembic/versions/342b1ccc2068_create_data_quality_issue.py:38:    sa.Column('modified_date', sa.TIMESTAMP(), nullable=True),
+backend/alembic/versions/342b1ccc2068_create_data_quality_issue.py:39:    sa.Column('is_active', sa.Boolean(), server_default='TRUE', nullable=False),
+backend/alembic/versions/20bb4f730956_create_rule_category_and_rule_type.py:25:    sa.Column('rule_category_id', sa.UUID(), nullable=False),
+backend/alembic/versions/20bb4f730956_create_rule_category_and_rule_type.py:26:    sa.Column('category_name', sa.String(length=200), nullable=False),
+backend/alembic/versions/20bb4f730956_create_rule_category_and_rule_type.py:27:    sa.Column('display_name', sa.String(length=200), nullable=False),
+backend/alembic/versions/20bb4f730956_create_rule_category_and_rule_type.py:28:    sa.Column('description', sa.Text(), nullable=True),
+backend/alembic/versions/20bb4f730956_create_rule_category_and_rule_type.py:29:    sa.Column('owner', sa.String(length=100), nullable=False),
+backend/alembic/versions/20bb4f730956_create_rule_category_and_rule_type.py:30:    sa.Column('steward', sa.String(length=100), nullable=False),
+backend/alembic/versions/20bb4f730956_create_rule_category_and_rule_type.py:31:    sa.Column('status', sa.String(length=30), nullable=False),
+backend/alembic/versions/20bb4f730956_create_rule_category_and_rule_type.py:32:    sa.Column('created_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/20bb4f730956_create_rule_category_and_rule_type.py:33:    sa.Column('created_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/20bb4f730956_create_rule_category_and_rule_type.py:34:    sa.Column('modified_by', sa.String(length=100), nullable=True),
+backend/alembic/versions/20bb4f730956_create_rule_category_and_rule_type.py:35:    sa.Column('modified_date', sa.TIMESTAMP(), nullable=True),
+backend/alembic/versions/20bb4f730956_create_rule_category_and_rule_type.py:36:    sa.Column('is_active', sa.Boolean(), server_default='TRUE', nullable=False),
+backend/alembic/versions/20bb4f730956_create_rule_category_and_rule_type.py:44:    sa.Column('rule_type_id', sa.UUID(), nullable=False),
+backend/alembic/versions/20bb4f730956_create_rule_category_and_rule_type.py:45:    sa.Column('rule_type_name', sa.String(length=100), nullable=False),
+backend/alembic/versions/20bb4f730956_create_rule_category_and_rule_type.py:46:    sa.Column('display_name', sa.String(length=150), nullable=False),
+backend/alembic/versions/20bb4f730956_create_rule_category_and_rule_type.py:47:    sa.Column('description', sa.Text(), nullable=True),
+backend/alembic/versions/20bb4f730956_create_rule_category_and_rule_type.py:48:    sa.Column('execution_engine', sa.String(length=100), nullable=True),
+backend/alembic/versions/20bb4f730956_create_rule_category_and_rule_type.py:49:    sa.Column('status', sa.String(length=30), nullable=False),
+backend/alembic/versions/20bb4f730956_create_rule_category_and_rule_type.py:50:    sa.Column('created_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/20bb4f730956_create_rule_category_and_rule_type.py:51:    sa.Column('created_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/20bb4f730956_create_rule_category_and_rule_type.py:52:    sa.Column('modified_by', sa.String(length=100), nullable=True),
+backend/alembic/versions/20bb4f730956_create_rule_category_and_rule_type.py:53:    sa.Column('modified_date', sa.TIMESTAMP(), nullable=True),
+backend/alembic/versions/20bb4f730956_create_rule_category_and_rule_type.py:54:    sa.Column('is_active', sa.Boolean(), server_default='TRUE', nullable=False),
+backend/alembic/versions/92e2c553f3f4_create_business_rule.py:25:    sa.Column('business_rule_id', sa.UUID(), nullable=False),
+backend/alembic/versions/92e2c553f3f4_create_business_rule.py:26:    sa.Column('rule_category_id', sa.UUID(), nullable=False),
+backend/alembic/versions/92e2c553f3f4_create_business_rule.py:27:    sa.Column('rule_type_id', sa.UUID(), nullable=False),
+backend/alembic/versions/92e2c553f3f4_create_business_rule.py:28:    sa.Column('rule_code', sa.String(length=50), nullable=False),
+backend/alembic/versions/92e2c553f3f4_create_business_rule.py:29:    sa.Column('rule_name', sa.String(length=255), nullable=False),
+backend/alembic/versions/92e2c553f3f4_create_business_rule.py:30:    sa.Column('description', sa.Text(), nullable=True),
+backend/alembic/versions/92e2c553f3f4_create_business_rule.py:31:    sa.Column('severity', sa.String(length=30), nullable=False),
+backend/alembic/versions/92e2c553f3f4_create_business_rule.py:32:    sa.Column('priority', sa.Integer(), nullable=False),
+backend/alembic/versions/92e2c553f3f4_create_business_rule.py:33:    sa.Column('execution_order', sa.Integer(), nullable=False),
+backend/alembic/versions/92e2c553f3f4_create_business_rule.py:34:    sa.Column('owner', sa.String(length=100), nullable=False),
+backend/alembic/versions/92e2c553f3f4_create_business_rule.py:35:    sa.Column('steward', sa.String(length=100), nullable=False),
+backend/alembic/versions/92e2c553f3f4_create_business_rule.py:36:    sa.Column('effective_date', sa.Date(), nullable=False),
+backend/alembic/versions/92e2c553f3f4_create_business_rule.py:37:    sa.Column('expiry_date', sa.Date(), nullable=True),
+backend/alembic/versions/92e2c553f3f4_create_business_rule.py:38:    sa.Column('status', sa.String(length=30), nullable=False),
+backend/alembic/versions/92e2c553f3f4_create_business_rule.py:39:    sa.Column('created_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/92e2c553f3f4_create_business_rule.py:40:    sa.Column('created_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/92e2c553f3f4_create_business_rule.py:41:    sa.Column('modified_by', sa.String(length=100), nullable=True),
+backend/alembic/versions/92e2c553f3f4_create_business_rule.py:42:    sa.Column('modified_date', sa.TIMESTAMP(), nullable=True),
+backend/alembic/versions/92e2c553f3f4_create_business_rule.py:43:    sa.Column('is_active', sa.Boolean(), server_default='TRUE', nullable=False),
+backend/alembic/versions/6da871e5e4ff_create_table_column.py:25:    sa.Column('table_column_id', sa.UUID(), nullable=False),
+backend/alembic/versions/6da871e5e4ff_create_table_column.py:26:    sa.Column('database_table_id', sa.UUID(), nullable=False),
+backend/alembic/versions/6da871e5e4ff_create_table_column.py:27:    sa.Column('column_name', sa.String(length=200), nullable=False),
+backend/alembic/versions/6da871e5e4ff_create_table_column.py:28:    sa.Column('display_name', sa.String(length=200), nullable=False),
+backend/alembic/versions/6da871e5e4ff_create_table_column.py:29:    sa.Column('description', sa.Text(), nullable=True),
+backend/alembic/versions/6da871e5e4ff_create_table_column.py:30:    sa.Column('logical_data_type', sa.String(length=50), nullable=False),
+backend/alembic/versions/6da871e5e4ff_create_table_column.py:31:    sa.Column('nullable', sa.Boolean(), nullable=False),
+backend/alembic/versions/6da871e5e4ff_create_table_column.py:32:    sa.Column('primary_key_flag', sa.Boolean(), nullable=False),
+backend/alembic/versions/6da871e5e4ff_create_table_column.py:33:    sa.Column('foreign_key_flag', sa.Boolean(), nullable=False),
+backend/alembic/versions/6da871e5e4ff_create_table_column.py:34:    sa.Column('classification', sa.String(length=50), nullable=False),
+backend/alembic/versions/6da871e5e4ff_create_table_column.py:35:    sa.Column('critical_data_element_flag', sa.Boolean(), nullable=False),
+backend/alembic/versions/6da871e5e4ff_create_table_column.py:36:    sa.Column('ordinal_position', sa.Integer(), nullable=False),
+backend/alembic/versions/6da871e5e4ff_create_table_column.py:37:    sa.Column('created_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/6da871e5e4ff_create_table_column.py:38:    sa.Column('created_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/6da871e5e4ff_create_table_column.py:39:    sa.Column('modified_by', sa.String(length=100), nullable=True),
+backend/alembic/versions/6da871e5e4ff_create_table_column.py:40:    sa.Column('modified_date', sa.TIMESTAMP(), nullable=True),
+backend/alembic/versions/6da871e5e4ff_create_table_column.py:41:    sa.Column('is_active', sa.Boolean(), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:25:    sa.Column('rule_action_id', sa.UUID(), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:26:    sa.Column('business_rule_id', sa.UUID(), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:27:    sa.Column('sequence_number', sa.Integer(), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:28:    sa.Column('action_type', sa.String(length=100), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:29:    sa.Column('action_parameters', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:30:    sa.Column('description', sa.Text(), nullable=True),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:31:    sa.Column('status', sa.String(length=30), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:32:    sa.Column('created_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:33:    sa.Column('created_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:34:    sa.Column('modified_by', sa.String(length=100), nullable=True),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:35:    sa.Column('modified_date', sa.TIMESTAMP(), nullable=True),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:36:    sa.Column('is_active', sa.Boolean(), server_default='TRUE', nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:45:    sa.Column('rule_condition_id', sa.UUID(), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:46:    sa.Column('business_rule_id', sa.UUID(), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:47:    sa.Column('sequence_number', sa.Integer(), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:48:    sa.Column('left_operand', sa.String(length=255), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:49:    sa.Column('operator', sa.String(length=50), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:50:    sa.Column('right_operand', sa.String(length=255), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:51:    sa.Column('logical_operator', sa.String(length=10), nullable=True),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:52:    sa.Column('description', sa.Text(), nullable=True),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:53:    sa.Column('status', sa.String(length=30), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:54:    sa.Column('created_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:55:    sa.Column('created_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:56:    sa.Column('modified_by', sa.String(length=100), nullable=True),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:57:    sa.Column('modified_date', sa.TIMESTAMP(), nullable=True),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:58:    sa.Column('is_active', sa.Boolean(), server_default='TRUE', nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:67:    sa.Column('rule_dependency_id', sa.UUID(), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:68:    sa.Column('parent_business_rule_id', sa.UUID(), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:69:    sa.Column('dependent_business_rule_id', sa.UUID(), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:70:    sa.Column('dependency_type', sa.String(length=50), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:71:    sa.Column('description', sa.Text(), nullable=True),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:72:    sa.Column('status', sa.String(length=30), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:73:    sa.Column('created_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:74:    sa.Column('created_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:75:    sa.Column('modified_by', sa.String(length=100), nullable=True),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:76:    sa.Column('modified_date', sa.TIMESTAMP(), nullable=True),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:77:    sa.Column('is_active', sa.Boolean(), server_default='TRUE', nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:87:    sa.Column('rule_execution_context_id', sa.UUID(), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:88:    sa.Column('business_rule_id', sa.UUID(), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:89:    sa.Column('context_name', sa.String(length=100), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:90:    sa.Column('trigger_event', sa.String(length=100), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:91:    sa.Column('execution_frequency', sa.String(length=50), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:92:    sa.Column('status', sa.String(length=30), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:93:    sa.Column('created_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:94:    sa.Column('created_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:95:    sa.Column('modified_by', sa.String(length=100), nullable=True),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:96:    sa.Column('modified_date', sa.TIMESTAMP(), nullable=True),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:97:    sa.Column('is_active', sa.Boolean(), server_default='TRUE', nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:106:    sa.Column('rule_mapping_id', sa.UUID(), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:107:    sa.Column('business_rule_id', sa.UUID(), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:108:    sa.Column('target_object_type', sa.String(length=50), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:109:    sa.Column('target_object_identifier', sa.UUID(), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:110:    sa.Column('mapping_type', sa.String(length=50), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:111:    sa.Column('status', sa.String(length=30), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:112:    sa.Column('created_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:113:    sa.Column('created_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:114:    sa.Column('modified_by', sa.String(length=100), nullable=True),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:115:    sa.Column('modified_date', sa.TIMESTAMP(), nullable=True),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:116:    sa.Column('is_active', sa.Boolean(), server_default='TRUE', nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:126:    sa.Column('rule_version_id', sa.UUID(), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:127:    sa.Column('business_rule_id', sa.UUID(), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:128:    sa.Column('version_number', sa.String(length=20), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:129:    sa.Column('change_summary', sa.Text(), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:130:    sa.Column('effective_date', sa.Date(), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:131:    sa.Column('expiry_date', sa.Date(), nullable=True),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:132:    sa.Column('approved_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:133:    sa.Column('approved_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:134:    sa.Column('status', sa.String(length=30), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:135:    sa.Column('created_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:136:    sa.Column('created_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:137:    sa.Column('modified_by', sa.String(length=100), nullable=True),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:138:    sa.Column('modified_date', sa.TIMESTAMP(), nullable=True),
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py:139:    sa.Column('is_active', sa.Boolean(), server_default='TRUE', nullable=False),
+backend/alembic/versions/9a792fae7ed7_create_lineage_mapping.py:25:    sa.Column('lineage_mapping_id', sa.UUID(), nullable=False),
+backend/alembic/versions/9a792fae7ed7_create_lineage_mapping.py:26:    sa.Column('lineage_flow_id', sa.UUID(), nullable=False),
+backend/alembic/versions/9a792fae7ed7_create_lineage_mapping.py:27:    sa.Column('lineage_transformation_id', sa.UUID(), nullable=True),
+backend/alembic/versions/9a792fae7ed7_create_lineage_mapping.py:28:    sa.Column('source_attribute', sa.String(length=255), nullable=False),
+backend/alembic/versions/9a792fae7ed7_create_lineage_mapping.py:29:    sa.Column('target_attribute', sa.String(length=255), nullable=False),
+backend/alembic/versions/9a792fae7ed7_create_lineage_mapping.py:30:    sa.Column('mapping_type', sa.String(length=50), nullable=False),
+backend/alembic/versions/9a792fae7ed7_create_lineage_mapping.py:31:    sa.Column('status', sa.String(length=30), nullable=False),
+backend/alembic/versions/9a792fae7ed7_create_lineage_mapping.py:32:    sa.Column('created_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/9a792fae7ed7_create_lineage_mapping.py:33:    sa.Column('created_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/9a792fae7ed7_create_lineage_mapping.py:34:    sa.Column('modified_by', sa.String(length=100), nullable=True),
+backend/alembic/versions/9a792fae7ed7_create_lineage_mapping.py:35:    sa.Column('modified_date', sa.TIMESTAMP(), nullable=True),
+backend/alembic/versions/9a792fae7ed7_create_lineage_mapping.py:36:    sa.Column('is_active', sa.Boolean(), server_default='TRUE', nullable=False),
+backend/alembic/versions/df4365b60d25_create_api_asset.py:25:    sa.Column('api_asset_id', sa.UUID(), nullable=False),
+backend/alembic/versions/df4365b60d25_create_api_asset.py:26:    sa.Column('source_system_id', sa.UUID(), nullable=False),
+backend/alembic/versions/df4365b60d25_create_api_asset.py:27:    sa.Column('api_name', sa.String(length=255), nullable=False),
+backend/alembic/versions/df4365b60d25_create_api_asset.py:28:    sa.Column('display_name', sa.String(length=255), nullable=False),
+backend/alembic/versions/df4365b60d25_create_api_asset.py:29:    sa.Column('description', sa.Text(), nullable=True),
+backend/alembic/versions/df4365b60d25_create_api_asset.py:30:    sa.Column('api_type', sa.String(length=30), nullable=False),
+backend/alembic/versions/df4365b60d25_create_api_asset.py:31:    sa.Column('api_version', sa.String(length=30), nullable=False),
+backend/alembic/versions/df4365b60d25_create_api_asset.py:32:    sa.Column('base_url', sa.String(length=500), nullable=True),
+backend/alembic/versions/df4365b60d25_create_api_asset.py:33:    sa.Column('owner', sa.String(length=100), nullable=False),
+backend/alembic/versions/df4365b60d25_create_api_asset.py:34:    sa.Column('status', sa.String(length=30), nullable=False),
+backend/alembic/versions/df4365b60d25_create_api_asset.py:35:    sa.Column('created_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/df4365b60d25_create_api_asset.py:36:    sa.Column('created_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/df4365b60d25_create_api_asset.py:37:    sa.Column('modified_by', sa.String(length=100), nullable=True),
+backend/alembic/versions/df4365b60d25_create_api_asset.py:38:    sa.Column('modified_date', sa.TIMESTAMP(), nullable=True),
+backend/alembic/versions/df4365b60d25_create_api_asset.py:39:    sa.Column('is_active', sa.Boolean(), nullable=False),
+backend/alembic/versions/ed60600dd4ee_create_business_rule_association.py:25:    sa.Column('business_rule_association_id', sa.UUID(), nullable=False),
+backend/alembic/versions/ed60600dd4ee_create_business_rule_association.py:26:    sa.Column('business_term_id', sa.UUID(), nullable=False),
+backend/alembic/versions/ed60600dd4ee_create_business_rule_association.py:27:    sa.Column('business_rule_id', sa.UUID(), nullable=False),
+backend/alembic/versions/ed60600dd4ee_create_business_rule_association.py:28:    sa.Column('relationship_type', sa.String(length=50), nullable=False),
+backend/alembic/versions/ed60600dd4ee_create_business_rule_association.py:29:    sa.Column('status', sa.String(length=30), nullable=False),
+backend/alembic/versions/ed60600dd4ee_create_business_rule_association.py:30:    sa.Column('created_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/ed60600dd4ee_create_business_rule_association.py:31:    sa.Column('created_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/ed60600dd4ee_create_business_rule_association.py:32:    sa.Column('modified_by', sa.String(length=100), nullable=True),
+backend/alembic/versions/ed60600dd4ee_create_business_rule_association.py:33:    sa.Column('modified_date', sa.TIMESTAMP(), nullable=True),
+backend/alembic/versions/ed60600dd4ee_create_business_rule_association.py:34:    sa.Column('is_active', sa.Boolean(), server_default='TRUE', nullable=False),
+backend/alembic/versions/3612cea475b7_create_database_table.py:25:    sa.Column('database_table_id', sa.UUID(), nullable=False),
+backend/alembic/versions/3612cea475b7_create_database_table.py:26:    sa.Column('database_schema_id', sa.UUID(), nullable=False),
+backend/alembic/versions/3612cea475b7_create_database_table.py:27:    sa.Column('table_name', sa.String(length=200), nullable=False),
+backend/alembic/versions/3612cea475b7_create_database_table.py:28:    sa.Column('display_name', sa.String(length=200), nullable=False),
+backend/alembic/versions/3612cea475b7_create_database_table.py:29:    sa.Column('description', sa.Text(), nullable=True),
+backend/alembic/versions/3612cea475b7_create_database_table.py:30:    sa.Column('table_type', sa.String(length=50), nullable=False),
+backend/alembic/versions/3612cea475b7_create_database_table.py:31:    sa.Column('row_count', sa.BigInteger(), nullable=True),
+backend/alembic/versions/3612cea475b7_create_database_table.py:32:    sa.Column('owner', sa.String(length=100), nullable=False),
+backend/alembic/versions/3612cea475b7_create_database_table.py:33:    sa.Column('classification', sa.String(length=50), nullable=False),
+backend/alembic/versions/3612cea475b7_create_database_table.py:34:    sa.Column('status', sa.String(length=30), nullable=False),
+backend/alembic/versions/3612cea475b7_create_database_table.py:35:    sa.Column('created_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/3612cea475b7_create_database_table.py:36:    sa.Column('created_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/3612cea475b7_create_database_table.py:37:    sa.Column('modified_by', sa.String(length=100), nullable=True),
+backend/alembic/versions/3612cea475b7_create_database_table.py:38:    sa.Column('modified_date', sa.TIMESTAMP(), nullable=True),
+backend/alembic/versions/3612cea475b7_create_database_table.py:39:    sa.Column('is_active', sa.Boolean(), nullable=False),
+backend/alembic/versions/c0e77389503d_create_business_term.py:25:    sa.Column('business_term_id', sa.UUID(), nullable=False),
+backend/alembic/versions/c0e77389503d_create_business_term.py:26:    sa.Column('business_category_id', sa.UUID(), nullable=False),
+backend/alembic/versions/c0e77389503d_create_business_term.py:27:    sa.Column('business_term_name', sa.String(length=255), nullable=False),
+backend/alembic/versions/c0e77389503d_create_business_term.py:28:    sa.Column('display_name', sa.String(length=255), nullable=False),
+backend/alembic/versions/c0e77389503d_create_business_term.py:29:    sa.Column('preferred_definition', sa.Text(), nullable=False),
+backend/alembic/versions/c0e77389503d_create_business_term.py:30:    sa.Column('business_domain', sa.String(length=100), nullable=False),
+backend/alembic/versions/c0e77389503d_create_business_term.py:31:    sa.Column('business_capability', sa.String(length=100), nullable=True),
+backend/alembic/versions/c0e77389503d_create_business_term.py:32:    sa.Column('owner', sa.String(length=100), nullable=False),
+backend/alembic/versions/c0e77389503d_create_business_term.py:33:    sa.Column('steward', sa.String(length=100), nullable=False),
+backend/alembic/versions/c0e77389503d_create_business_term.py:34:    sa.Column('classification', sa.String(length=50), nullable=True),
+backend/alembic/versions/c0e77389503d_create_business_term.py:35:    sa.Column('status', sa.String(length=30), nullable=False),
+backend/alembic/versions/c0e77389503d_create_business_term.py:36:    sa.Column('created_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/c0e77389503d_create_business_term.py:37:    sa.Column('created_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/c0e77389503d_create_business_term.py:38:    sa.Column('modified_by', sa.String(length=100), nullable=True),
+backend/alembic/versions/c0e77389503d_create_business_term.py:39:    sa.Column('modified_date', sa.TIMESTAMP(), nullable=True),
+backend/alembic/versions/c0e77389503d_create_business_term.py:40:    sa.Column('is_active', sa.Boolean(), server_default='TRUE', nullable=False),
+backend/alembic/versions/016d46bca61d_create_database.py:25:    sa.Column('database_id', sa.UUID(), nullable=False),
+backend/alembic/versions/016d46bca61d_create_database.py:26:    sa.Column('source_system_id', sa.UUID(), nullable=False),
+backend/alembic/versions/016d46bca61d_create_database.py:27:    sa.Column('database_name', sa.String(length=150), nullable=False),
+backend/alembic/versions/016d46bca61d_create_database.py:28:    sa.Column('database_type', sa.String(length=50), nullable=False),
+backend/alembic/versions/016d46bca61d_create_database.py:29:    sa.Column('version', sa.String(length=30), nullable=True),
+backend/alembic/versions/016d46bca61d_create_database.py:30:    sa.Column('description', sa.Text(), nullable=True),
+backend/alembic/versions/016d46bca61d_create_database.py:31:    sa.Column('owner', sa.String(length=100), nullable=False),
+backend/alembic/versions/016d46bca61d_create_database.py:32:    sa.Column('status', sa.String(length=30), nullable=False),
+backend/alembic/versions/016d46bca61d_create_database.py:33:    sa.Column('created_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/016d46bca61d_create_database.py:34:    sa.Column('created_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/016d46bca61d_create_database.py:35:    sa.Column('modified_by', sa.String(length=100), nullable=True),
+backend/alembic/versions/016d46bca61d_create_database.py:36:    sa.Column('modified_date', sa.TIMESTAMP(), nullable=True),
+backend/alembic/versions/016d46bca61d_create_database.py:37:    sa.Column('is_active', sa.Boolean(), nullable=False),
+backend/alembic/versions/8b3539847726_create_business_term_relationship.py:25:    sa.Column('business_term_relationship_id', sa.UUID(), nullable=False),
+backend/alembic/versions/8b3539847726_create_business_term_relationship.py:26:    sa.Column('source_business_term_id', sa.UUID(), nullable=False),
+backend/alembic/versions/8b3539847726_create_business_term_relationship.py:27:    sa.Column('target_business_term_id', sa.UUID(), nullable=False),
+backend/alembic/versions/8b3539847726_create_business_term_relationship.py:28:    sa.Column('relationship_type', sa.String(length=50), nullable=False),
+backend/alembic/versions/8b3539847726_create_business_term_relationship.py:29:    sa.Column('description', sa.Text(), nullable=True),
+backend/alembic/versions/8b3539847726_create_business_term_relationship.py:30:    sa.Column('status', sa.String(length=30), nullable=False),
+backend/alembic/versions/8b3539847726_create_business_term_relationship.py:31:    sa.Column('created_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/8b3539847726_create_business_term_relationship.py:32:    sa.Column('created_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/8b3539847726_create_business_term_relationship.py:33:    sa.Column('modified_by', sa.String(length=100), nullable=True),
+backend/alembic/versions/8b3539847726_create_business_term_relationship.py:34:    sa.Column('modified_date', sa.TIMESTAMP(), nullable=True),
+backend/alembic/versions/8b3539847726_create_business_term_relationship.py:35:    sa.Column('is_active', sa.Boolean(), server_default='TRUE', nullable=False),
+backend/alembic/versions/9e41c71eb4a6_create_data_quality_exception.py:25:    sa.Column('data_quality_exception_id', sa.UUID(), nullable=False),
+backend/alembic/versions/9e41c71eb4a6_create_data_quality_exception.py:26:    sa.Column('data_quality_issue_id', sa.UUID(), nullable=False),
+backend/alembic/versions/9e41c71eb4a6_create_data_quality_exception.py:27:    sa.Column('exception_number', sa.String(length=50), nullable=False),
+backend/alembic/versions/9e41c71eb4a6_create_data_quality_exception.py:28:    sa.Column('exception_reason', sa.Text(), nullable=False),
+backend/alembic/versions/9e41c71eb4a6_create_data_quality_exception.py:29:    sa.Column('approved_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/9e41c71eb4a6_create_data_quality_exception.py:30:    sa.Column('approval_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/9e41c71eb4a6_create_data_quality_exception.py:31:    sa.Column('expiry_date', sa.Date(), nullable=True),
+backend/alembic/versions/9e41c71eb4a6_create_data_quality_exception.py:32:    sa.Column('status', sa.String(length=30), nullable=False),
+backend/alembic/versions/9e41c71eb4a6_create_data_quality_exception.py:33:    sa.Column('created_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/9e41c71eb4a6_create_data_quality_exception.py:34:    sa.Column('created_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/9e41c71eb4a6_create_data_quality_exception.py:35:    sa.Column('modified_by', sa.String(length=100), nullable=True),
+backend/alembic/versions/9e41c71eb4a6_create_data_quality_exception.py:36:    sa.Column('modified_date', sa.TIMESTAMP(), nullable=True),
+backend/alembic/versions/9e41c71eb4a6_create_data_quality_exception.py:37:    sa.Column('is_active', sa.Boolean(), server_default='TRUE', nullable=False),
+backend/alembic/versions/afddcea9037e_create_lineage_snapshot.py:25:    sa.Column('lineage_snapshot_id', sa.UUID(), nullable=False),
+backend/alembic/versions/afddcea9037e_create_lineage_snapshot.py:26:    sa.Column('lineage_flow_id', sa.UUID(), nullable=False),
+backend/alembic/versions/afddcea9037e_create_lineage_snapshot.py:27:    sa.Column('snapshot_name', sa.String(length=255), nullable=False),
+backend/alembic/versions/afddcea9037e_create_lineage_snapshot.py:28:    sa.Column('snapshot_date', sa.DateTime(), nullable=False),
+backend/alembic/versions/afddcea9037e_create_lineage_snapshot.py:29:    sa.Column('created_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/afddcea9037e_create_lineage_snapshot.py:30:    sa.Column('status', sa.String(length=30), nullable=False),
+backend/alembic/versions/afddcea9037e_create_lineage_snapshot.py:31:    sa.Column('created_date', sa.DateTime(), nullable=False),
+backend/alembic/versions/afddcea9037e_create_lineage_snapshot.py:32:    sa.Column('modified_by', sa.String(length=100), nullable=True),
+backend/alembic/versions/afddcea9037e_create_lineage_snapshot.py:33:    sa.Column('modified_date', sa.DateTime(), nullable=True),
+backend/alembic/versions/afddcea9037e_create_lineage_snapshot.py:34:    sa.Column('is_active', sa.Boolean(), server_default='TRUE', nullable=False),
+backend/alembic/versions/25d007f0759a_create_data_quality_result.py:25:    sa.Column('data_quality_result_id', sa.UUID(), nullable=False),
+backend/alembic/versions/25d007f0759a_create_data_quality_result.py:26:    sa.Column('data_quality_assessment_id', sa.UUID(), nullable=False),
+backend/alembic/versions/25d007f0759a_create_data_quality_result.py:27:    sa.Column('target_data_asset_id', sa.UUID(), nullable=False),
+backend/alembic/versions/25d007f0759a_create_data_quality_result.py:28:    sa.Column('total_records', sa.BigInteger(), nullable=False),
+backend/alembic/versions/25d007f0759a_create_data_quality_result.py:29:    sa.Column('passed_records', sa.BigInteger(), nullable=False),
+backend/alembic/versions/25d007f0759a_create_data_quality_result.py:30:    sa.Column('failed_records', sa.BigInteger(), nullable=False),
+backend/alembic/versions/25d007f0759a_create_data_quality_result.py:31:    sa.Column('warning_records', sa.BigInteger(), nullable=True),
+backend/alembic/versions/25d007f0759a_create_data_quality_result.py:32:    sa.Column('quality_percentage', sa.Numeric(precision=5, scale=2), nullable=False),
+backend/alembic/versions/25d007f0759a_create_data_quality_result.py:33:    sa.Column('result_status', sa.String(length=30), nullable=False),
+backend/alembic/versions/25d007f0759a_create_data_quality_result.py:34:    sa.Column('execution_duration_ms', sa.BigInteger(), nullable=True),
+backend/alembic/versions/25d007f0759a_create_data_quality_result.py:35:    sa.Column('created_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/25d007f0759a_create_data_quality_result.py:36:    sa.Column('created_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/25d007f0759a_create_data_quality_result.py:37:    sa.Column('modified_by', sa.String(length=100), nullable=True),
+backend/alembic/versions/25d007f0759a_create_data_quality_result.py:38:    sa.Column('modified_date', sa.TIMESTAMP(), nullable=True),
+backend/alembic/versions/25d007f0759a_create_data_quality_result.py:39:    sa.Column('is_active', sa.Boolean(), server_default='TRUE', nullable=False),
+backend/alembic/versions/2feab630255a_create_business_glossary.py:25:    sa.Column('business_glossary_id', sa.UUID(), nullable=False),
+backend/alembic/versions/2feab630255a_create_business_glossary.py:26:    sa.Column('glossary_name', sa.String(length=200), nullable=False),
+backend/alembic/versions/2feab630255a_create_business_glossary.py:27:    sa.Column('display_name', sa.String(length=200), nullable=False),
+backend/alembic/versions/2feab630255a_create_business_glossary.py:28:    sa.Column('description', sa.Text(), nullable=True),
+backend/alembic/versions/2feab630255a_create_business_glossary.py:29:    sa.Column('version', sa.String(length=20), nullable=False),
+backend/alembic/versions/2feab630255a_create_business_glossary.py:30:    sa.Column('status', sa.String(length=30), nullable=False),
+backend/alembic/versions/2feab630255a_create_business_glossary.py:31:    sa.Column('owner', sa.String(length=100), nullable=False),
+backend/alembic/versions/2feab630255a_create_business_glossary.py:32:    sa.Column('steward', sa.String(length=100), nullable=False),
+backend/alembic/versions/2feab630255a_create_business_glossary.py:33:    sa.Column('created_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/2feab630255a_create_business_glossary.py:34:    sa.Column('created_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/2feab630255a_create_business_glossary.py:35:    sa.Column('modified_by', sa.String(length=100), nullable=True),
+backend/alembic/versions/2feab630255a_create_business_glossary.py:36:    sa.Column('modified_date', sa.TIMESTAMP(), nullable=True),
+backend/alembic/versions/2feab630255a_create_business_glossary.py:37:    sa.Column('is_active', sa.Boolean(), server_default='TRUE', nullable=False),
+backend/alembic/versions/e65e6d75a6d4_create_source_system.py:25:    sa.Column('source_system_id', sa.UUID(), nullable=False),
+backend/alembic/versions/e65e6d75a6d4_create_source_system.py:26:    sa.Column('system_code', sa.String(length=50), nullable=False),
+backend/alembic/versions/e65e6d75a6d4_create_source_system.py:27:    sa.Column('system_name', sa.String(length=200), nullable=False),
+backend/alembic/versions/e65e6d75a6d4_create_source_system.py:28:    sa.Column('description', sa.Text(), nullable=True),
+backend/alembic/versions/e65e6d75a6d4_create_source_system.py:29:    sa.Column('system_type', sa.String(length=50), nullable=False),
+backend/alembic/versions/e65e6d75a6d4_create_source_system.py:30:    sa.Column('vendor', sa.String(length=100), nullable=True),
+backend/alembic/versions/e65e6d75a6d4_create_source_system.py:31:    sa.Column('business_domain', sa.String(length=100), nullable=False),
+backend/alembic/versions/e65e6d75a6d4_create_source_system.py:32:    sa.Column('environment', sa.String(length=30), nullable=False),
+backend/alembic/versions/e65e6d75a6d4_create_source_system.py:33:    sa.Column('owner', sa.String(length=100), nullable=False),
+backend/alembic/versions/e65e6d75a6d4_create_source_system.py:34:    sa.Column('steward', sa.String(length=100), nullable=False),
+backend/alembic/versions/e65e6d75a6d4_create_source_system.py:35:    sa.Column('status', sa.String(length=30), nullable=False),
+backend/alembic/versions/e65e6d75a6d4_create_source_system.py:36:    sa.Column('created_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/e65e6d75a6d4_create_source_system.py:37:    sa.Column('created_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/e65e6d75a6d4_create_source_system.py:38:    sa.Column('modified_by', sa.String(length=100), nullable=True),
+backend/alembic/versions/e65e6d75a6d4_create_source_system.py:39:    sa.Column('modified_date', sa.TIMESTAMP(), nullable=True),
+backend/alembic/versions/e65e6d75a6d4_create_source_system.py:40:    sa.Column('is_active', sa.Boolean(), nullable=False),
+backend/alembic/versions/d11b318bfcc5_create_data_asset.py:25:    sa.Column('data_asset_id', sa.UUID(), nullable=False),
+backend/alembic/versions/d11b318bfcc5_create_data_asset.py:26:    sa.Column('asset_type', sa.String(length=30), nullable=False),
+backend/alembic/versions/d11b318bfcc5_create_data_asset.py:27:    sa.Column('asset_identifier', sa.UUID(), nullable=False),
+backend/alembic/versions/d11b318bfcc5_create_data_asset.py:28:    sa.Column('asset_name', sa.String(length=255), nullable=False),
+backend/alembic/versions/d11b318bfcc5_create_data_asset.py:29:    sa.Column('display_name', sa.String(length=255), nullable=False),
+backend/alembic/versions/d11b318bfcc5_create_data_asset.py:30:    sa.Column('description', sa.Text(), nullable=True),
+backend/alembic/versions/d11b318bfcc5_create_data_asset.py:31:    sa.Column('owner', sa.String(length=100), nullable=False),
+backend/alembic/versions/d11b318bfcc5_create_data_asset.py:32:    sa.Column('steward', sa.String(length=100), nullable=False),
+backend/alembic/versions/d11b318bfcc5_create_data_asset.py:33:    sa.Column('classification', sa.String(length=50), nullable=False),
+backend/alembic/versions/d11b318bfcc5_create_data_asset.py:34:    sa.Column('critical_data_element_flag', sa.Boolean(), nullable=False),
+backend/alembic/versions/d11b318bfcc5_create_data_asset.py:35:    sa.Column('status', sa.String(length=30), nullable=False),
+backend/alembic/versions/d11b318bfcc5_create_data_asset.py:36:    sa.Column('created_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/d11b318bfcc5_create_data_asset.py:37:    sa.Column('created_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/d11b318bfcc5_create_data_asset.py:38:    sa.Column('modified_by', sa.String(length=100), nullable=True),
+backend/alembic/versions/d11b318bfcc5_create_data_asset.py:39:    sa.Column('modified_date', sa.TIMESTAMP(), nullable=True),
+backend/alembic/versions/d11b318bfcc5_create_data_asset.py:40:    sa.Column('is_active', sa.Boolean(), nullable=False),
+backend/alembic/versions/923a1d298733_create_data_quality_dimension.py:25:    sa.Column('data_quality_dimension_id', sa.UUID(), nullable=False),
+backend/alembic/versions/923a1d298733_create_data_quality_dimension.py:26:    sa.Column('dimension_name', sa.String(length=100), nullable=False),
+backend/alembic/versions/923a1d298733_create_data_quality_dimension.py:27:    sa.Column('display_name', sa.String(length=150), nullable=False),
+backend/alembic/versions/923a1d298733_create_data_quality_dimension.py:28:    sa.Column('description', sa.Text(), nullable=True),
+backend/alembic/versions/923a1d298733_create_data_quality_dimension.py:29:    sa.Column('owner', sa.String(length=100), nullable=False),
+backend/alembic/versions/923a1d298733_create_data_quality_dimension.py:30:    sa.Column('status', sa.String(length=30), nullable=False),
+backend/alembic/versions/923a1d298733_create_data_quality_dimension.py:31:    sa.Column('created_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/923a1d298733_create_data_quality_dimension.py:32:    sa.Column('created_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/923a1d298733_create_data_quality_dimension.py:33:    sa.Column('modified_by', sa.String(length=100), nullable=True),
+backend/alembic/versions/923a1d298733_create_data_quality_dimension.py:34:    sa.Column('modified_date', sa.TIMESTAMP(), nullable=True),
+backend/alembic/versions/923a1d298733_create_data_quality_dimension.py:35:    sa.Column('is_active', sa.Boolean(), server_default='TRUE', nullable=False),
+backend/alembic/versions/042f36c0fcb4_create_lineage_transformation.py:25:    sa.Column('lineage_transformation_id', sa.UUID(), nullable=False),
+backend/alembic/versions/042f36c0fcb4_create_lineage_transformation.py:26:    sa.Column('lineage_flow_id', sa.UUID(), nullable=False),
+backend/alembic/versions/042f36c0fcb4_create_lineage_transformation.py:27:    sa.Column('sequence_number', sa.Integer(), nullable=False),
+backend/alembic/versions/042f36c0fcb4_create_lineage_transformation.py:28:    sa.Column('transformation_name', sa.String(length=255), nullable=False),
+backend/alembic/versions/042f36c0fcb4_create_lineage_transformation.py:29:    sa.Column('transformation_type', sa.String(length=100), nullable=False),
+backend/alembic/versions/042f36c0fcb4_create_lineage_transformation.py:30:    sa.Column('description', sa.Text(), nullable=True),
+backend/alembic/versions/042f36c0fcb4_create_lineage_transformation.py:31:    sa.Column('expression', sa.Text(), nullable=True),
+backend/alembic/versions/042f36c0fcb4_create_lineage_transformation.py:32:    sa.Column('status', sa.String(length=30), nullable=False),
+backend/alembic/versions/042f36c0fcb4_create_lineage_transformation.py:33:    sa.Column('created_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/042f36c0fcb4_create_lineage_transformation.py:34:    sa.Column('created_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/042f36c0fcb4_create_lineage_transformation.py:35:    sa.Column('modified_by', sa.String(length=100), nullable=True),
+backend/alembic/versions/042f36c0fcb4_create_lineage_transformation.py:36:    sa.Column('modified_date', sa.TIMESTAMP(), nullable=True),
+backend/alembic/versions/042f36c0fcb4_create_lineage_transformation.py:37:    sa.Column('is_active', sa.Boolean(), server_default='TRUE', nullable=False),
+backend/alembic/versions/bf1ab5ccdf2a_create_business_definition_acronym_synonym.py:25:    sa.Column('acronym_id', sa.UUID(), nullable=False),
+backend/alembic/versions/bf1ab5ccdf2a_create_business_definition_acronym_synonym.py:26:    sa.Column('business_term_id', sa.UUID(), nullable=False),
+backend/alembic/versions/bf1ab5ccdf2a_create_business_definition_acronym_synonym.py:27:    sa.Column('acronym', sa.String(length=50), nullable=False),
+backend/alembic/versions/bf1ab5ccdf2a_create_business_definition_acronym_synonym.py:28:    sa.Column('description', sa.Text(), nullable=True),
+backend/alembic/versions/bf1ab5ccdf2a_create_business_definition_acronym_synonym.py:29:    sa.Column('status', sa.String(length=30), nullable=False),
+backend/alembic/versions/bf1ab5ccdf2a_create_business_definition_acronym_synonym.py:30:    sa.Column('created_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/bf1ab5ccdf2a_create_business_definition_acronym_synonym.py:31:    sa.Column('created_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/bf1ab5ccdf2a_create_business_definition_acronym_synonym.py:32:    sa.Column('modified_by', sa.String(length=100), nullable=True),
+backend/alembic/versions/bf1ab5ccdf2a_create_business_definition_acronym_synonym.py:33:    sa.Column('modified_date', sa.TIMESTAMP(), nullable=True),
+backend/alembic/versions/bf1ab5ccdf2a_create_business_definition_acronym_synonym.py:34:    sa.Column('is_active', sa.Boolean(), server_default='TRUE', nullable=False),
+backend/alembic/versions/bf1ab5ccdf2a_create_business_definition_acronym_synonym.py:42:    sa.Column('business_definition_id', sa.UUID(), nullable=False),
+backend/alembic/versions/bf1ab5ccdf2a_create_business_definition_acronym_synonym.py:43:    sa.Column('business_term_id', sa.UUID(), nullable=False),
+backend/alembic/versions/bf1ab5ccdf2a_create_business_definition_acronym_synonym.py:44:    sa.Column('definition_text', sa.Text(), nullable=False),
+backend/alembic/versions/bf1ab5ccdf2a_create_business_definition_acronym_synonym.py:45:    sa.Column('definition_source', sa.String(length=255), nullable=True),
+backend/alembic/versions/bf1ab5ccdf2a_create_business_definition_acronym_synonym.py:46:    sa.Column('version', sa.String(length=20), nullable=False),
+backend/alembic/versions/bf1ab5ccdf2a_create_business_definition_acronym_synonym.py:47:    sa.Column('effective_date', sa.Date(), nullable=False),
+backend/alembic/versions/bf1ab5ccdf2a_create_business_definition_acronym_synonym.py:48:    sa.Column('expiry_date', sa.Date(), nullable=True),
+backend/alembic/versions/bf1ab5ccdf2a_create_business_definition_acronym_synonym.py:49:    sa.Column('approved_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/bf1ab5ccdf2a_create_business_definition_acronym_synonym.py:50:    sa.Column('approved_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/bf1ab5ccdf2a_create_business_definition_acronym_synonym.py:51:    sa.Column('status', sa.String(length=30), nullable=False),
+backend/alembic/versions/bf1ab5ccdf2a_create_business_definition_acronym_synonym.py:52:    sa.Column('created_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/bf1ab5ccdf2a_create_business_definition_acronym_synonym.py:53:    sa.Column('created_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/bf1ab5ccdf2a_create_business_definition_acronym_synonym.py:54:    sa.Column('modified_by', sa.String(length=100), nullable=True),
+backend/alembic/versions/bf1ab5ccdf2a_create_business_definition_acronym_synonym.py:55:    sa.Column('modified_date', sa.TIMESTAMP(), nullable=True),
+backend/alembic/versions/bf1ab5ccdf2a_create_business_definition_acronym_synonym.py:56:    sa.Column('is_active', sa.Boolean(), server_default='TRUE', nullable=False),
+backend/alembic/versions/bf1ab5ccdf2a_create_business_definition_acronym_synonym.py:64:    sa.Column('synonym_id', sa.UUID(), nullable=False),
+backend/alembic/versions/bf1ab5ccdf2a_create_business_definition_acronym_synonym.py:65:    sa.Column('business_term_id', sa.UUID(), nullable=False),
+backend/alembic/versions/bf1ab5ccdf2a_create_business_definition_acronym_synonym.py:66:    sa.Column('synonym', sa.String(length=255), nullable=False),
+backend/alembic/versions/bf1ab5ccdf2a_create_business_definition_acronym_synonym.py:67:    sa.Column('status', sa.String(length=30), nullable=False),
+backend/alembic/versions/bf1ab5ccdf2a_create_business_definition_acronym_synonym.py:68:    sa.Column('created_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/bf1ab5ccdf2a_create_business_definition_acronym_synonym.py:69:    sa.Column('created_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/bf1ab5ccdf2a_create_business_definition_acronym_synonym.py:70:    sa.Column('modified_by', sa.String(length=100), nullable=True),
+backend/alembic/versions/bf1ab5ccdf2a_create_business_definition_acronym_synonym.py:71:    sa.Column('modified_date', sa.TIMESTAMP(), nullable=True),
+backend/alembic/versions/bf1ab5ccdf2a_create_business_definition_acronym_synonym.py:72:    sa.Column('is_active', sa.Boolean(), server_default='TRUE', nullable=False),
+backend/alembic/versions/9d6657445897_create_lineage_target.py:25:    sa.Column('lineage_target_id', sa.UUID(), nullable=False),
+backend/alembic/versions/9d6657445897_create_lineage_target.py:26:    sa.Column('target_name', sa.String(length=255), nullable=False),
+backend/alembic/versions/9d6657445897_create_lineage_target.py:27:    sa.Column('target_type', sa.String(length=100), nullable=False),
+backend/alembic/versions/9d6657445897_create_lineage_target.py:28:    sa.Column('system_name', sa.String(length=150), nullable=False),
+backend/alembic/versions/9d6657445897_create_lineage_target.py:29:    sa.Column('business_domain', sa.String(length=150), nullable=False),
+backend/alembic/versions/9d6657445897_create_lineage_target.py:30:    sa.Column('owner', sa.String(length=100), nullable=False),
+backend/alembic/versions/9d6657445897_create_lineage_target.py:31:    sa.Column('status', sa.String(length=30), nullable=False),
+backend/alembic/versions/9d6657445897_create_lineage_target.py:32:    sa.Column('created_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/9d6657445897_create_lineage_target.py:33:    sa.Column('created_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/9d6657445897_create_lineage_target.py:34:    sa.Column('modified_by', sa.String(length=100), nullable=True),
+backend/alembic/versions/9d6657445897_create_lineage_target.py:35:    sa.Column('modified_date', sa.TIMESTAMP(), nullable=True),
+backend/alembic/versions/9d6657445897_create_lineage_target.py:36:    sa.Column('is_active', sa.Boolean(), server_default='TRUE', nullable=False),
+backend/alembic/versions/c1e2cd64a9cf_create_database_view.py:25:    sa.Column('database_view_id', sa.UUID(), nullable=False),
+backend/alembic/versions/c1e2cd64a9cf_create_database_view.py:26:    sa.Column('database_schema_id', sa.UUID(), nullable=False),
+backend/alembic/versions/c1e2cd64a9cf_create_database_view.py:27:    sa.Column('view_name', sa.String(length=200), nullable=False),
+backend/alembic/versions/c1e2cd64a9cf_create_database_view.py:28:    sa.Column('display_name', sa.String(length=200), nullable=False),
+backend/alembic/versions/c1e2cd64a9cf_create_database_view.py:29:    sa.Column('description', sa.Text(), nullable=True),
+backend/alembic/versions/c1e2cd64a9cf_create_database_view.py:30:    sa.Column('view_type', sa.String(length=50), nullable=False),
+backend/alembic/versions/c1e2cd64a9cf_create_database_view.py:31:    sa.Column('sql_definition', sa.Text(), nullable=True),
+backend/alembic/versions/c1e2cd64a9cf_create_database_view.py:32:    sa.Column('owner', sa.String(length=100), nullable=False),
+backend/alembic/versions/c1e2cd64a9cf_create_database_view.py:33:    sa.Column('status', sa.String(length=30), nullable=False),
+backend/alembic/versions/c1e2cd64a9cf_create_database_view.py:34:    sa.Column('created_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/c1e2cd64a9cf_create_database_view.py:35:    sa.Column('created_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/c1e2cd64a9cf_create_database_view.py:36:    sa.Column('modified_by', sa.String(length=100), nullable=True),
+backend/alembic/versions/c1e2cd64a9cf_create_database_view.py:37:    sa.Column('modified_date', sa.TIMESTAMP(), nullable=True),
+backend/alembic/versions/c1e2cd64a9cf_create_database_view.py:38:    sa.Column('is_active', sa.Boolean(), nullable=False),
+backend/alembic/versions/1fd4c6984cb4_create_lineage_source.py:25:    sa.Column('lineage_source_id', sa.UUID(), nullable=False),
+backend/alembic/versions/1fd4c6984cb4_create_lineage_source.py:26:    sa.Column('source_name', sa.String(length=255), nullable=False),
+backend/alembic/versions/1fd4c6984cb4_create_lineage_source.py:27:    sa.Column('source_type', sa.String(length=100), nullable=False),
+backend/alembic/versions/1fd4c6984cb4_create_lineage_source.py:28:    sa.Column('system_name', sa.String(length=150), nullable=False),
+backend/alembic/versions/1fd4c6984cb4_create_lineage_source.py:29:    sa.Column('business_domain', sa.String(length=150), nullable=False),
+backend/alembic/versions/1fd4c6984cb4_create_lineage_source.py:30:    sa.Column('owner', sa.String(length=100), nullable=False),
+backend/alembic/versions/1fd4c6984cb4_create_lineage_source.py:31:    sa.Column('status', sa.String(length=30), nullable=False),
+backend/alembic/versions/1fd4c6984cb4_create_lineage_source.py:32:    sa.Column('created_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/1fd4c6984cb4_create_lineage_source.py:33:    sa.Column('created_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/1fd4c6984cb4_create_lineage_source.py:34:    sa.Column('modified_by', sa.String(length=100), nullable=True),
+backend/alembic/versions/1fd4c6984cb4_create_lineage_source.py:35:    sa.Column('modified_date', sa.TIMESTAMP(), nullable=True),
+backend/alembic/versions/1fd4c6984cb4_create_lineage_source.py:36:    sa.Column('is_active', sa.Boolean(), server_default='TRUE', nullable=False),
+backend/alembic/versions/629dd9af1ed7_create_database_schema.py:25:    sa.Column('database_schema_id', sa.UUID(), nullable=False),
+backend/alembic/versions/629dd9af1ed7_create_database_schema.py:26:    sa.Column('database_id', sa.UUID(), nullable=False),
+backend/alembic/versions/629dd9af1ed7_create_database_schema.py:27:    sa.Column('schema_name', sa.String(length=150), nullable=False),
+backend/alembic/versions/629dd9af1ed7_create_database_schema.py:28:    sa.Column('description', sa.Text(), nullable=True),
+backend/alembic/versions/629dd9af1ed7_create_database_schema.py:29:    sa.Column('owner', sa.String(length=100), nullable=False),
+backend/alembic/versions/629dd9af1ed7_create_database_schema.py:30:    sa.Column('status', sa.String(length=30), nullable=False),
+backend/alembic/versions/629dd9af1ed7_create_database_schema.py:31:    sa.Column('created_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/629dd9af1ed7_create_database_schema.py:32:    sa.Column('created_date', sa.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+backend/alembic/versions/629dd9af1ed7_create_database_schema.py:33:    sa.Column('modified_by', sa.String(length=100), nullable=True),
+backend/alembic/versions/629dd9af1ed7_create_database_schema.py:34:    sa.Column('modified_date', sa.TIMESTAMP(), nullable=True),
+backend/alembic/versions/629dd9af1ed7_create_database_schema.py:35:    sa.Column('is_active', sa.Boolean(), server_default=sa.text('TRUE'), nullable=False),
+backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py:25:        sa.Column('lineage_transformation_id', sa.UUID(), nullable=True),
+backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py:37:        sa.Column('lineage_target_id', sa.UUID(), nullable=True),
+backend/alembic/versions/2ee5cf35e17a_create_data_quality_assessment.py:25:    sa.Column('data_quality_assessment_id', sa.UUID(), nullable=False),
+backend/alembic/versions/2ee5cf35e17a_create_data_quality_assessment.py:26:    sa.Column('data_quality_rule_id', sa.UUID(), nullable=False),
+backend/alembic/versions/2ee5cf35e17a_create_data_quality_assessment.py:27:    sa.Column('assessment_number', sa.String(length=50), nullable=False),
+backend/alembic/versions/2ee5cf35e17a_create_data_quality_assessment.py:28:    sa.Column('assessment_name', sa.String(length=255), nullable=False),
+backend/alembic/versions/2ee5cf35e17a_create_data_quality_assessment.py:29:    sa.Column('assessment_type', sa.String(length=50), nullable=False),
+backend/alembic/versions/2ee5cf35e17a_create_data_quality_assessment.py:30:    sa.Column('execution_start_time', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/2ee5cf35e17a_create_data_quality_assessment.py:31:    sa.Column('execution_end_time', sa.TIMESTAMP(), nullable=True),
+backend/alembic/versions/2ee5cf35e17a_create_data_quality_assessment.py:32:    sa.Column('executed_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/2ee5cf35e17a_create_data_quality_assessment.py:33:    sa.Column('status', sa.String(length=30), nullable=False),
+backend/alembic/versions/2ee5cf35e17a_create_data_quality_assessment.py:34:    sa.Column('created_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/2ee5cf35e17a_create_data_quality_assessment.py:35:    sa.Column('created_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/2ee5cf35e17a_create_data_quality_assessment.py:36:    sa.Column('modified_by', sa.String(length=100), nullable=True),
+backend/alembic/versions/2ee5cf35e17a_create_data_quality_assessment.py:37:    sa.Column('modified_date', sa.TIMESTAMP(), nullable=True),
+backend/alembic/versions/2ee5cf35e17a_create_data_quality_assessment.py:38:    sa.Column('is_active', sa.Boolean(), server_default='TRUE', nullable=False),
+backend/alembic/versions/25f927618c4b_create_impact_analysis.py:25:    sa.Column('impact_analysis_id', sa.UUID(), nullable=False),
+backend/alembic/versions/25f927618c4b_create_impact_analysis.py:26:    sa.Column('lineage_mapping_id', sa.UUID(), nullable=False),
+backend/alembic/versions/25f927618c4b_create_impact_analysis.py:27:    sa.Column('analysis_number', sa.String(length=50), nullable=False),
+backend/alembic/versions/25f927618c4b_create_impact_analysis.py:28:    sa.Column('source_asset', sa.String(length=255), nullable=False),
+backend/alembic/versions/25f927618c4b_create_impact_analysis.py:29:    sa.Column('impact_scope', sa.String(length=100), nullable=False),
+backend/alembic/versions/25f927618c4b_create_impact_analysis.py:30:    sa.Column('affected_objects', sa.Integer(), nullable=False),
+backend/alembic/versions/25f927618c4b_create_impact_analysis.py:31:    sa.Column('analysis_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/25f927618c4b_create_impact_analysis.py:32:    sa.Column('requested_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/25f927618c4b_create_impact_analysis.py:33:    sa.Column('status', sa.String(length=30), nullable=False),
+backend/alembic/versions/25f927618c4b_create_impact_analysis.py:34:    sa.Column('created_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/25f927618c4b_create_impact_analysis.py:35:    sa.Column('created_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/25f927618c4b_create_impact_analysis.py:36:    sa.Column('modified_by', sa.String(length=100), nullable=True),
+backend/alembic/versions/25f927618c4b_create_impact_analysis.py:37:    sa.Column('modified_date', sa.TIMESTAMP(), nullable=True),
+backend/alembic/versions/25f927618c4b_create_impact_analysis.py:38:    sa.Column('is_active', sa.Boolean(), server_default='TRUE', nullable=False),
+backend/alembic/versions/c72c7b5269c9_create_business_category.py:25:    sa.Column('business_category_id', sa.UUID(), nullable=False),
+backend/alembic/versions/c72c7b5269c9_create_business_category.py:26:    sa.Column('business_glossary_id', sa.UUID(), nullable=False),
+backend/alembic/versions/c72c7b5269c9_create_business_category.py:27:    sa.Column('parent_category_id', sa.UUID(), nullable=True),
+backend/alembic/versions/c72c7b5269c9_create_business_category.py:28:    sa.Column('category_name', sa.String(length=200), nullable=False),
+backend/alembic/versions/c72c7b5269c9_create_business_category.py:29:    sa.Column('display_name', sa.String(length=200), nullable=False),
+backend/alembic/versions/c72c7b5269c9_create_business_category.py:30:    sa.Column('description', sa.Text(), nullable=True),
+backend/alembic/versions/c72c7b5269c9_create_business_category.py:31:    sa.Column('owner', sa.String(length=100), nullable=False),
+backend/alembic/versions/c72c7b5269c9_create_business_category.py:32:    sa.Column('steward', sa.String(length=100), nullable=False),
+backend/alembic/versions/c72c7b5269c9_create_business_category.py:33:    sa.Column('status', sa.String(length=30), nullable=False),
+backend/alembic/versions/c72c7b5269c9_create_business_category.py:34:    sa.Column('created_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/c72c7b5269c9_create_business_category.py:35:    sa.Column('created_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/c72c7b5269c9_create_business_category.py:36:    sa.Column('modified_by', sa.String(length=100), nullable=True),
+backend/alembic/versions/c72c7b5269c9_create_business_category.py:37:    sa.Column('modified_date', sa.TIMESTAMP(), nullable=True),
+backend/alembic/versions/c72c7b5269c9_create_business_category.py:38:    sa.Column('is_active', sa.Boolean(), server_default='TRUE', nullable=False),
+backend/alembic/versions/c62081edd60c_create_data_quality_rule.py:25:    sa.Column('data_quality_rule_id', sa.UUID(), nullable=False),
+backend/alembic/versions/c62081edd60c_create_data_quality_rule.py:26:    sa.Column('data_quality_dimension_id', sa.UUID(), nullable=False),
+backend/alembic/versions/c62081edd60c_create_data_quality_rule.py:27:    sa.Column('business_rule_id', sa.UUID(), nullable=False),
+backend/alembic/versions/c62081edd60c_create_data_quality_rule.py:28:    sa.Column('rule_code', sa.String(length=50), nullable=False),
+backend/alembic/versions/c62081edd60c_create_data_quality_rule.py:29:    sa.Column('rule_name', sa.String(length=255), nullable=False),
+backend/alembic/versions/c62081edd60c_create_data_quality_rule.py:30:    sa.Column('target_data_asset_id', sa.UUID(), nullable=False),
+backend/alembic/versions/c62081edd60c_create_data_quality_rule.py:31:    sa.Column('severity', sa.String(length=30), nullable=False),
+backend/alembic/versions/c62081edd60c_create_data_quality_rule.py:32:    sa.Column('threshold_percentage', sa.Numeric(precision=5, scale=2), nullable=False),
+backend/alembic/versions/c62081edd60c_create_data_quality_rule.py:33:    sa.Column('execution_frequency', sa.String(length=50), nullable=False),
+backend/alembic/versions/c62081edd60c_create_data_quality_rule.py:34:    sa.Column('owner', sa.String(length=100), nullable=False),
+backend/alembic/versions/c62081edd60c_create_data_quality_rule.py:35:    sa.Column('status', sa.String(length=30), nullable=False),
+backend/alembic/versions/c62081edd60c_create_data_quality_rule.py:36:    sa.Column('created_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/c62081edd60c_create_data_quality_rule.py:37:    sa.Column('created_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/c62081edd60c_create_data_quality_rule.py:38:    sa.Column('modified_by', sa.String(length=100), nullable=True),
+backend/alembic/versions/c62081edd60c_create_data_quality_rule.py:39:    sa.Column('modified_date', sa.TIMESTAMP(), nullable=True),
+backend/alembic/versions/c62081edd60c_create_data_quality_rule.py:40:    sa.Column('is_active', sa.Boolean(), server_default='TRUE', nullable=False),
+backend/alembic/versions/35adef90b56f_create_lineage_version.py:25:    sa.Column('lineage_version_id', sa.UUID(), nullable=False),
+backend/alembic/versions/35adef90b56f_create_lineage_version.py:26:    sa.Column('lineage_flow_id', sa.UUID(), nullable=False),
+backend/alembic/versions/35adef90b56f_create_lineage_version.py:27:    sa.Column('version_number', sa.String(length=20), nullable=False),
+backend/alembic/versions/35adef90b56f_create_lineage_version.py:28:    sa.Column('change_summary', sa.Text(), nullable=False),
+backend/alembic/versions/35adef90b56f_create_lineage_version.py:29:    sa.Column('effective_date', sa.Date(), nullable=False),
+backend/alembic/versions/35adef90b56f_create_lineage_version.py:30:    sa.Column('approved_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/35adef90b56f_create_lineage_version.py:31:    sa.Column('status', sa.String(length=30), nullable=False),
+backend/alembic/versions/35adef90b56f_create_lineage_version.py:32:    sa.Column('created_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/35adef90b56f_create_lineage_version.py:33:    sa.Column('created_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/35adef90b56f_create_lineage_version.py:34:    sa.Column('modified_by', sa.String(length=100), nullable=True),
+backend/alembic/versions/35adef90b56f_create_lineage_version.py:35:    sa.Column('modified_date', sa.TIMESTAMP(), nullable=True),
+backend/alembic/versions/35adef90b56f_create_lineage_version.py:36:    sa.Column('is_active', sa.Boolean(), server_default='TRUE', nullable=False),
+backend/alembic/versions/e162416e8cce_create_file_asset.py:25:    sa.Column('file_asset_id', sa.UUID(), nullable=False),
+backend/alembic/versions/e162416e8cce_create_file_asset.py:26:    sa.Column('source_system_id', sa.UUID(), nullable=False),
+backend/alembic/versions/e162416e8cce_create_file_asset.py:27:    sa.Column('file_name', sa.String(length=255), nullable=False),
+backend/alembic/versions/e162416e8cce_create_file_asset.py:28:    sa.Column('display_name', sa.String(length=255), nullable=False),
+backend/alembic/versions/e162416e8cce_create_file_asset.py:29:    sa.Column('description', sa.Text(), nullable=True),
+backend/alembic/versions/e162416e8cce_create_file_asset.py:30:    sa.Column('file_type', sa.String(length=50), nullable=False),
+backend/alembic/versions/e162416e8cce_create_file_asset.py:31:    sa.Column('file_format', sa.String(length=50), nullable=False),
+backend/alembic/versions/e162416e8cce_create_file_asset.py:32:    sa.Column('file_path', sa.String(length=1000), nullable=True),
+backend/alembic/versions/e162416e8cce_create_file_asset.py:33:    sa.Column('owner', sa.String(length=100), nullable=False),
+backend/alembic/versions/e162416e8cce_create_file_asset.py:34:    sa.Column('classification', sa.String(length=50), nullable=False),
+backend/alembic/versions/e162416e8cce_create_file_asset.py:35:    sa.Column('status', sa.String(length=30), nullable=False),
+backend/alembic/versions/e162416e8cce_create_file_asset.py:36:    sa.Column('created_by', sa.String(length=100), nullable=False),
+backend/alembic/versions/e162416e8cce_create_file_asset.py:37:    sa.Column('created_date', sa.TIMESTAMP(), nullable=False),
+backend/alembic/versions/e162416e8cce_create_file_asset.py:38:    sa.Column('modified_by', sa.String(length=100), nullable=True),
+backend/alembic/versions/e162416e8cce_create_file_asset.py:39:    sa.Column('modified_date', sa.TIMESTAMP(), nullable=True),
+backend/alembic/versions/e162416e8cce_create_file_asset.py:40:    sa.Column('is_active', sa.Boolean(), nullable=False),
+STEP 3 PASS
+
+STEP 4 — Inspect current target/mapping model definitions
+import uuid
+
+from sqlalchemy import Boolean, ForeignKey, Index, String, TIMESTAMP, UniqueConstraint
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import Mapped, mapped_column
+
+from app.db.base import Base
+
+
+class DataLineageTarget(Base):
+    __tablename__ = "lineage_target"
+
+    lineage_target_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+    )
+    lineage_transformation_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("lineage_transformation.lineage_transformation_id"),
+        nullable=True,
+    )
+    target_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    target_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    system_name: Mapped[str] = mapped_column(String(150), nullable=False)
+    business_domain: Mapped[str] = mapped_column(String(150), nullable=False)
+    owner: Mapped[str] = mapped_column(String(100), nullable=False)
+    status: Mapped[str] = mapped_column(String(30), nullable=False)
+    created_by: Mapped[str] = mapped_column(String(100), nullable=False)
+    created_date: Mapped[object] = mapped_column(TIMESTAMP, nullable=False)
+    modified_by: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    modified_date: Mapped[object | None] = mapped_column(TIMESTAMP, nullable=True)
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        server_default="TRUE",
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "target_name",
+            "system_name",
+            name="uq_lineage_target_name_system",
+        ),
+        Index("idx_lineage_target_transformation", "lineage_transformation_id"),
+        Index("idx_lineage_target_name", "target_name"),
+        Index("idx_lineage_target_type", "target_type"),
+        Index("idx_lineage_target_system", "system_name"),
+        Index("idx_lineage_target_status", "status"),
+    )
+
+import uuid
+from datetime import datetime
+
+from sqlalchemy import Boolean, ForeignKey, Index, String, TIMESTAMP, Text, UniqueConstraint
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import Mapped, mapped_column
+
+from app.db.base import Base
+
+
+class DataLineageMapping(Base):
+    __tablename__ = "lineage_mapping"
+
+    lineage_mapping_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+    )
+    lineage_target_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("lineage_target.lineage_target_id"),
+        nullable=True,
+    )
+    lineage_flow_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("lineage_flow.lineage_flow_id"),
+        nullable=False,
+    )
+    lineage_transformation_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("lineage_transformation.lineage_transformation_id"),
+        nullable=True,
+    )
+    source_attribute: Mapped[str] = mapped_column(String(255), nullable=False)
+    target_attribute: Mapped[str] = mapped_column(String(255), nullable=False)
+    mapping_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    status: Mapped[str] = mapped_column(String(30), nullable=False)
+    created_by: Mapped[str] = mapped_column(String(100), nullable=False)
+    created_date: Mapped[datetime] = mapped_column(TIMESTAMP, nullable=False)
+    modified_by: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    modified_date: Mapped[datetime | None] = mapped_column(TIMESTAMP, nullable=True)
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        server_default="TRUE",
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "lineage_flow_id",
+            "source_attribute",
+            "target_attribute",
+            name="uq_lineage_mapping_flow_source_target",
+        ),
+        Index("idx_lineage_mapping_target_id", "lineage_target_id"),
+        Index("idx_lineage_mapping_flow", "lineage_flow_id"),
+        Index("idx_lineage_mapping_source", "source_attribute"),
+        Index("idx_lineage_mapping_target", "target_attribute"),
+        Index("idx_lineage_mapping_status", "status"),
+    )
+STEP 4 PASS
+
+STEP 5 — Inspect current migration
+"""add lineage target relationships
+
+Revision ID: 32b95f7a0662
+Revises: afddcea9037e
+Create Date: 2026-09-06 14:45:26.612094
+
+"""
+from typing import Sequence, Union
+
+from alembic import op
+import sqlalchemy as sa
+
+
+# revision identifiers, used by Alembic.
+revision: str = '32b95f7a0662'
+down_revision: Union[str, Sequence[str], None] = 'afddcea9037e'
+branch_labels: Union[str, Sequence[str], None] = None
+depends_on: Union[str, Sequence[str], None] = None
+
+
+def upgrade() -> None:
+    """Upgrade schema."""
+    op.add_column(
+        'lineage_target',
+        sa.Column('lineage_transformation_id', sa.UUID(), nullable=True),
+    )
+    op.create_index('idx_lineage_target_transformation', 'lineage_target', ['lineage_transformation_id'], unique=False)
+    op.create_foreign_key(
+        'fk_lineage_target_lineage_transformation_id',
+        'lineage_target',
+        'lineage_transformation',
+        ['lineage_transformation_id'],
+        ['lineage_transformation_id'],
+    )
+    op.add_column(
+        'lineage_mapping',
+        sa.Column('lineage_target_id', sa.UUID(), nullable=True),
+    )
+    op.create_index('idx_lineage_mapping_target_id', 'lineage_mapping', ['lineage_target_id'], unique=False)
+    op.create_foreign_key(
+        'fk_lineage_mapping_lineage_target_id',
+        'lineage_mapping',
+        'lineage_target',
+        ['lineage_target_id'],
+        ['lineage_target_id'],
+    )
+
+
+def downgrade() -> None:
+    """Downgrade schema."""
+    op.drop_constraint(
+        'fk_lineage_mapping_lineage_target_id',
+        'lineage_mapping',
+        type_='foreignkey',
+    )
+    op.drop_index('idx_lineage_mapping_target_id', table_name='lineage_mapping')
+    op.drop_column('lineage_mapping', 'lineage_target_id')
+    op.drop_constraint(
+        'fk_lineage_target_lineage_transformation_id',
+        'lineage_target',
+        type_='foreignkey',
+    )
+    op.drop_index('idx_lineage_target_transformation', table_name='lineage_target')
+    op.drop_column('lineage_target', 'lineage_transformation_id')
+STEP 5 PASS
+
+STEP 6 — Query PostgreSQL column constraints
+
+============================================================
+COLUMN NULLABILITY
+============================================================
+{'table_schema': 'public', 'table_name': 'lineage_mapping', 'column_name': 'lineage_target_id', 'is_nullable': 'NO', 'column_default': None, 'data_type': 'uuid'}
+{'table_schema': 'public', 'table_name': 'lineage_target', 'column_name': 'lineage_transformation_id', 'is_nullable': 'NO', 'column_default': None, 'data_type': 'uuid'}
+Rows: 2
+
+============================================================
+TABLE CONSTRAINTS
+============================================================
+{'table_name': 'lineage_mapping', 'constraint_name': '2200_25199_12_not_null', 'constraint_type': 'CHECK'}
+{'table_name': 'lineage_mapping', 'constraint_name': '2200_25199_13_not_null', 'constraint_type': 'CHECK'}
+{'table_name': 'lineage_mapping', 'constraint_name': '2200_25199_1_not_null', 'constraint_type': 'CHECK'}
+{'table_name': 'lineage_mapping', 'constraint_name': '2200_25199_2_not_null', 'constraint_type': 'CHECK'}
+{'table_name': 'lineage_mapping', 'constraint_name': '2200_25199_4_not_null', 'constraint_type': 'CHECK'}
+{'table_name': 'lineage_mapping', 'constraint_name': '2200_25199_5_not_null', 'constraint_type': 'CHECK'}
+{'table_name': 'lineage_mapping', 'constraint_name': '2200_25199_6_not_null', 'constraint_type': 'CHECK'}
+{'table_name': 'lineage_mapping', 'constraint_name': '2200_25199_7_not_null', 'constraint_type': 'CHECK'}
+{'table_name': 'lineage_mapping', 'constraint_name': '2200_25199_8_not_null', 'constraint_type': 'CHECK'}
+{'table_name': 'lineage_mapping', 'constraint_name': '2200_25199_9_not_null', 'constraint_type': 'CHECK'}
+{'table_name': 'lineage_mapping', 'constraint_name': 'lineage_mapping_lineage_flow_id_fkey', 'constraint_type': 'FOREIGN KEY'}
+{'table_name': 'lineage_mapping', 'constraint_name': 'lineage_mapping_lineage_target_id_fkey', 'constraint_type': 'FOREIGN KEY'}
+{'table_name': 'lineage_mapping', 'constraint_name': 'lineage_mapping_lineage_transformation_id_fkey', 'constraint_type': 'FOREIGN KEY'}
+{'table_name': 'lineage_mapping', 'constraint_name': 'lineage_mapping_pkey', 'constraint_type': 'PRIMARY KEY'}
+{'table_name': 'lineage_mapping', 'constraint_name': 'uq_lineage_mapping_flow_source_target', 'constraint_type': 'UNIQUE'}
+{'table_name': 'lineage_target', 'constraint_name': '2200_25129_12_not_null', 'constraint_type': 'CHECK'}
+{'table_name': 'lineage_target', 'constraint_name': '2200_25129_13_not_null', 'constraint_type': 'CHECK'}
+{'table_name': 'lineage_target', 'constraint_name': '2200_25129_1_not_null', 'constraint_type': 'CHECK'}
+{'table_name': 'lineage_target', 'constraint_name': '2200_25129_2_not_null', 'constraint_type': 'CHECK'}
+{'table_name': 'lineage_target', 'constraint_name': '2200_25129_3_not_null', 'constraint_type': 'CHECK'}
+{'table_name': 'lineage_target', 'constraint_name': '2200_25129_4_not_null', 'constraint_type': 'CHECK'}
+{'table_name': 'lineage_target', 'constraint_name': '2200_25129_5_not_null', 'constraint_type': 'CHECK'}
+{'table_name': 'lineage_target', 'constraint_name': '2200_25129_6_not_null', 'constraint_type': 'CHECK'}
+{'table_name': 'lineage_target', 'constraint_name': '2200_25129_7_not_null', 'constraint_type': 'CHECK'}
+{'table_name': 'lineage_target', 'constraint_name': '2200_25129_8_not_null', 'constraint_type': 'CHECK'}
+{'table_name': 'lineage_target', 'constraint_name': '2200_25129_9_not_null', 'constraint_type': 'CHECK'}
+{'table_name': 'lineage_target', 'constraint_name': 'lineage_target_lineage_transformation_id_fkey', 'constraint_type': 'FOREIGN KEY'}
+{'table_name': 'lineage_target', 'constraint_name': 'lineage_target_pkey', 'constraint_type': 'PRIMARY KEY'}
+{'table_name': 'lineage_target', 'constraint_name': 'uq_lineage_target_name_system', 'constraint_type': 'UNIQUE'}
+Rows: 29
+
+============================================================
+FOREIGN KEY DETAILS
+============================================================
+{'table_name': 'lineage_mapping', 'constraint_name': 'lineage_mapping_lineage_flow_id_fkey', 'column_name': 'lineage_flow_id', 'referenced_table': 'lineage_flow', 'referenced_column': 'lineage_flow_id'}
+{'table_name': 'lineage_mapping', 'constraint_name': 'lineage_mapping_lineage_target_id_fkey', 'column_name': 'lineage_target_id', 'referenced_table': 'lineage_target', 'referenced_column': 'lineage_target_id'}
+{'table_name': 'lineage_mapping', 'constraint_name': 'lineage_mapping_lineage_transformation_id_fkey', 'column_name': 'lineage_transformation_id', 'referenced_table': 'lineage_transformation', 'referenced_column': 'lineage_transformation_id'}
+{'table_name': 'lineage_target', 'constraint_name': 'lineage_target_lineage_transformation_id_fkey', 'column_name': 'lineage_transformation_id', 'referenced_table': 'lineage_transformation', 'referenced_column': 'lineage_transformation_id'}
+Rows: 4
+STEP 6 PASS
+
+STEP 7 — Check whether any existing NULL values remain
+lineage_target.lineage_transformation_id: NULL rows = 0
+lineage_mapping.lineage_target_id: NULL rows = 0
+STEP 7 PASS
+
+STEP 8 — Inspect PostgreSQL migration history
+alembic_version:
+('32b95f7a0662',)
+STEP 8 PASS
+
+STEP 9 — Inspect Git history for nullability changes
+lineage_target.py history:
+e2bf900 feat(lineage): add lineage target
+
+lineage_mapping.py history:
+c5f1665 feat(lineage): add lineage mapping
+
+Alembic migration history:
+1dc171f feat(lineage): add lineage snapshot
+a91e31f feat(lineage): add lineage version
+afb02b2 feat(lineage): add impact analysis
+c5f1665 feat(lineage): add lineage mapping
+20faa53 feat(lineage): add lineage transformation
+116d272 feat(lineage): add lineage process and flow
+e2bf900 feat(lineage): add lineage target
+6126ada feat(lineage): add lineage source
+1831315 feat(data-quality): add data quality exception
+69a8bdf feat(data-quality): add data quality issue
+64c69ed feat(data-quality): add data quality result
+05d50c9 feat(data-quality): add data quality assessment
+f4b0918 feat(data-quality): add data quality rule
+2455e22 feat(data-quality): add data quality dimension
+STEP 9 PASS
+
+STEP 10 — Search Git history for relevant nullable statements
+c5f1665 feat(lineage): add lineage mapping
+20faa53 feat(lineage): add lineage transformation
+
+e2bf900 feat(lineage): add lineage target
+STEP 10 PASS
+
+STEP 11 — Verify Alembic state without modifications
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+32b95f7a0662 (head)
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.schemas
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.tables
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.types
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.constraints
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.defaults
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.comments
+No new upgrade operations detected.
+STEP 11 PASS
+
+STEP 12 — Final read-only verification
+ M backend/alembic/env.py
+ M backend/app/models/lineage_mapping.py
+ M backend/app/models/lineage_target.py
+?? backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py
+No modification commands were executed.
+
+============================================================
+BATCH 08.8I COMPLETED
+Report: Test reports/Batch-08.8I-database-constraint-history-20260914-211753.txt
+============================================================

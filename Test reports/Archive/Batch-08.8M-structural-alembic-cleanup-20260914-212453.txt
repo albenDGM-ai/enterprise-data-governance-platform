@@ -1,0 +1,28 @@
+============================================================
+DGM — BATCH 08.8M
+Structural Alembic Cleanup
+Started: Mon Sep 14 09:24:53 PM IST 2026
+============================================================
+
+STEP 1 — Verify current state
+ M backend/alembic/env.py
+ M backend/app/models/lineage_mapping.py
+ M backend/app/models/lineage_target.py
+?? backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py
+
+Workaround locations:
+38:def include_object(
+49:        if (table_name, name) in LEGACY_NULLABLE_COLUMNS:
+79:        include_object=include_object,
+STEP 1 PASS
+
+STEP 2 — Backup env.py
+-rw-r--r-- 1 alben alben 2920 Sep 14 21:24 backend/alembic/env.py.before-08.8M
+STEP 2 PASS
+
+STEP 3 — Structural inspection of workaround
+LEGACY_NULLABLE_COLUMNS lines: [49]
+include_object function lines: [38]
+include_object argument lines: [79]
+STOP: unexpected source ordering: legacy marker occurs after include_object function.
+STEP 3 FAILED — no source modification performed.

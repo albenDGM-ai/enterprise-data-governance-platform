@@ -1,0 +1,140 @@
+============================================================
+DGM — BATCH 08.8T
+Align Batch 08 Test With Governed NOT NULL Model
+Started: Mon Sep 14 09:35:27 PM IST 2026
+============================================================
+
+STEP 1 — Current Git state
+ M backend/alembic/env.py
+ M backend/app/models/lineage_mapping.py
+ M backend/app/models/lineage_target.py
+?? backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py
+?? backend/tests/test_batch_08_graph_integrity.py
+STEP 1 PASS
+
+STEP 2 — Inspect failing test and surrounding tests
+   185	
+   186	
+   187	def test_update_rejects_a_cross_flow_replacement() -> None:
+   188	    flow_a_id, flow_b_id, transformation_a_id, transformation_b_id, target_a_id, target_b_id = (
+   189	        uuid4() for _ in range(6)
+   190	    )
+   191	    service = mapping_service(
+   192	        flow=SimpleNamespace(lineage_flow_id=flow_a_id, is_active=True),
+   193	        target=record(target_b_id, lineage_transformation_id=transformation_b_id),
+   194	        transformations=(record(transformation_b_id, lineage_flow_id=flow_b_id),),
+   195	    )
+   196	    entity = SimpleNamespace(
+   197	        lineage_mapping_id=uuid4(),
+   198	        lineage_flow_id=flow_a_id,
+   199	        lineage_target_id=target_a_id,
+   200	        lineage_transformation_id=transformation_a_id,
+   201	        source_attribute="source.customer_id",
+   202	        target_attribute="target.customer_id",
+   203	    )
+   204	
+   205	    with pytest.raises(LineageRelationshipValidationError, match="different Lineage Flow"):
+   206	        service.update(
+   207	            entity,
+   208	            modified_by="batch-08-test",
+   209	            lineage_target_id=target_b_id,
+   210	        )
+   211	
+   212	    assert service.repository.updated == []
+   213	
+   214	
+   215	def test_legacy_null_relationships_remain_readable() -> None:
+   216	    assert DataLineageTarget.__table__.c.lineage_transformation_id.nullable is True
+   217	    assert DataLineageMapping.__table__.c.lineage_target_id.nullable is True
+   218	    assert "None" in str(LineageTargetResponse.model_fields["lineage_transformation_id"].annotation)
+   219	    assert "None" in str(LineageMappingResponse.model_fields["lineage_target_id"].annotation)
+   220	
+   221	
+   222	def test_transformation_update_contract_does_not_expose_flow_reassignment() -> None:
+   223	    from app.schemas.lineage_transformation import LineageTransformationUpdate
+   224	
+   225	    fields = LineageTransformationUpdate.model_fields
+   226	
+   227	    assert "lineage_flow_id" not in fields
+   228	    assert "sequence_number" in fields
+   229	    assert "transformation_name" in fields
+   230	    assert "transformation_type" in fields
+   231	    assert "description" in fields
+   232	    assert "expression" in fields
+   233	    assert "status" in fields
+STEP 2 PASS
+
+STEP 3 — Verify exact obsolete assertion
+Expected obsolete assertion count: 1
+Exact obsolete assertion found.
+STEP 3 PASS
+
+STEP 4 — Backup test file
+Backup: backend/tests/test_batch_08_graph_integrity.py.before-08.8T
+STEP 4 PASS
+
+STEP 5 — Replace obsolete ORM nullability expectation
+Updated target ORM nullability assertion:
+    nullable is True
+to:
+    nullable is False
+STEP 5 PASS
+
+STEP 6 — Check for additional legacy-nullability test assertions
+215:def test_legacy_null_relationships_remain_readable() -> None:
+217:    assert DataLineageMapping.__table__.c.lineage_target_id.nullable is True
+STEP 6 PASS — diagnostic result captured
+
+STEP 7 — Remove obsolete Alembic workaround using AST
+Backup: backend/alembic/env.py.before-08.8T
+Removing include_object AST range lines 38-52
+include_object configure argument count: 1
+Alembic workaround cleanup applied.
+STEP 7 PASS
+
+STEP 8 — Definitive env.py verification
+Top-level functions: ['run_migrations_offline', 'run_migrations_online']
+AST verification: PASS
+Compilation: PASS
+STEP 8 PASS
+
+STEP 9 — Verify ORM metadata
+lineage_target.lineage_transformation_id nullable = False
+lineage_mapping.lineage_target_id nullable = False
+ORM metadata: PASS
+STEP 9 PASS
+
+STEP 10 — Alembic check
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.schemas
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.tables
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.types
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.constraints
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.defaults
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.comments
+No new upgrade operations detected.
+Alembic check exit code: 0
+ALEMBIC CHECK: CLEAN
+STEP 10 PASS
+
+STEP 11 — Run Batch 08 graph-integrity tests
+......F.                                                                 [100%]
+=================================== FAILURES ===================================
+________________ test_legacy_null_relationships_remain_readable ________________
+
+    def test_legacy_null_relationships_remain_readable() -> None:
+        assert DataLineageTarget.__table__.c.lineage_transformation_id.nullable is False
+>       assert DataLineageMapping.__table__.c.lineage_target_id.nullable is True
+E       AssertionError: assert False is True
+E        +  where False = Column('lineage_target_id', UUID(), ForeignKey('lineage_target.lineage_target_id'), table=<lineage_mapping>, nullable=False).nullable
+E        +    where Column('lineage_target_id', UUID(), ForeignKey('lineage_target.lineage_target_id'), table=<lineage_mapping>, nullable=False) = <sqlalchemy.sql.base.ReadOnlyColumnCollection object at 0x76806bcb3650>.lineage_target_id
+E        +      where <sqlalchemy.sql.base.ReadOnlyColumnCollection object at 0x76806bcb3650> = Table('lineage_mapping', MetaData(), Column('lineage_mapping_id', UUID(), table=<lineage_mapping>, primary_key=True, n...olean(), table=<lineage_mapping>, nullable=False, server_default=DefaultClause('TRUE', for_update=False)), schema=None).c
+E        +        where Table('lineage_mapping', MetaData(), Column('lineage_mapping_id', UUID(), table=<lineage_mapping>, primary_key=True, n...olean(), table=<lineage_mapping>, nullable=False, server_default=DefaultClause('TRUE', for_update=False)), schema=None) = DataLineageMapping.__table__
+
+backend/tests/test_batch_08_graph_integrity.py:217: AssertionError
+=========================== short test summary info ============================
+FAILED backend/tests/test_batch_08_graph_integrity.py::test_legacy_null_relationships_remain_readable
+1 failed, 7 passed in 0.73s
+Test exit code: 1
+TESTS FAILED — restoring both files.

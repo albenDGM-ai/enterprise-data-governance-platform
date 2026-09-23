@@ -1,0 +1,137 @@
+============================================================
+DGM — Batch 09.5
+Runtime Test Reconciliation
+============================================================
+
+=== 1. ENVIRONMENT ===
+Python 3.14.4
+pip 25.1.1 from /home/alben/Projects/enterprise-data-governance-platform/.venv/lib/python3.14/site-packages/pip (python 3.14)
+pytest 9.1.1
+
+=== 2. TEST COLLECTION ===
+
+==================================== ERRORS ====================================
+___ ERROR collecting backend/tests/test_batch_07_transition_compatibility.py ___
+ImportError while importing test module '/home/alben/Projects/enterprise-data-governance-platform/backend/tests/test_batch_07_transition_compatibility.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/usr/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend/tests/test_batch_07_transition_compatibility.py:5: in <module>
+    from app.models.lineage_mapping import DataLineageMapping
+E   ModuleNotFoundError: No module named 'app'
+_______ ERROR collecting backend/tests/test_batch_08_graph_integrity.py ________
+ImportError while importing test module '/home/alben/Projects/enterprise-data-governance-platform/backend/tests/test_batch_08_graph_integrity.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/usr/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend/tests/test_batch_08_graph_integrity.py:8: in <module>
+    from app.models.lineage_mapping import DataLineageMapping
+E   ModuleNotFoundError: No module named 'app'
+=========================== short test summary info ============================
+ERROR backend/tests/test_batch_07_transition_compatibility.py
+ERROR backend/tests/test_batch_08_graph_integrity.py
+!!!!!!!!!!!!!!!!!!! Interrupted: 2 errors during collection !!!!!!!!!!!!!!!!!!!!
+no tests collected, 2 errors in 0.34s
+
+=== 3. BATCH 08 GRAPH INTEGRITY ===
+
+==================================== ERRORS ====================================
+_______ ERROR collecting backend/tests/test_batch_08_graph_integrity.py ________
+ImportError while importing test module '/home/alben/Projects/enterprise-data-governance-platform/backend/tests/test_batch_08_graph_integrity.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/usr/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend/tests/test_batch_08_graph_integrity.py:8: in <module>
+    from app.models.lineage_mapping import DataLineageMapping
+E   ModuleNotFoundError: No module named 'app'
+=========================== short test summary info ============================
+ERROR backend/tests/test_batch_08_graph_integrity.py
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+1 error in 0.18s
+
+=== 4. BATCH 07 TRANSITION COMPATIBILITY ===
+
+==================================== ERRORS ====================================
+___ ERROR collecting backend/tests/test_batch_07_transition_compatibility.py ___
+ImportError while importing test module '/home/alben/Projects/enterprise-data-governance-platform/backend/tests/test_batch_07_transition_compatibility.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/usr/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend/tests/test_batch_07_transition_compatibility.py:5: in <module>
+    from app.models.lineage_mapping import DataLineageMapping
+E   ModuleNotFoundError: No module named 'app'
+=========================== short test summary info ============================
+ERROR backend/tests/test_batch_07_transition_compatibility.py
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+1 error in 0.15s
+
+=== 5. PYTHON SYNTAX ===
+compileall exit: 0
+
+=== 6. GIT DIFF CHECK ===
+backend/alembic/env.py:33: trailing whitespace.
++ 
+
+=== 7. GIT STATUS ===
+ M backend/alembic/env.py
+ M backend/app/main.py
+ M backend/app/models/lineage_mapping.py
+ M backend/app/models/lineage_target.py
+ M backend/app/services/lineage_mapping_service.py
+ M backend/app/services/lineage_target_service.py
+ M backend/app/services/lineage_transformation_service.py
+ M docs/architecture/logical/DataLineageLogicalModel.md
+ M docs/architecture/physical/DataLineagePhysicalModel.md
+?? .agents/
+?? AGENTS.md
+?? AI_CONTEXT/
+?? "Test reports/"
+?? backend/alembic/env.py.before-08.8D
+?? backend/alembic/env.py.before-08.8E-20260914-210936
+?? backend/alembic/env.py.before-08.8E-20260914-211116
+?? backend/alembic/env.py.before-08.8J
+?? backend/alembic/env.py.before-08.8K
+?? backend/alembic/env.py.before-08.8L
+?? backend/alembic/env.py.before-08.8M
+?? backend/alembic/env.py.before-08.8N
+?? backend/alembic/env.py.before-08.8O
+?? backend/alembic/env.py.before-08.8Q
+?? backend/alembic/env.py.before-08.8S
+?? backend/alembic/env.py.before-08.8T
+?? backend/alembic/env.py.before-08.8U
+?? backend/alembic/env.py.before-08.8V
+?? backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py
+?? backend/alembic/versions/e2d453a0ad03_enforce_lineage_relationship_not_null.py
+?? backend/app/api/
+?? backend/app/models/lineage_mapping.py.before-08.8J
+?? backend/app/models/lineage_mapping.py.before_68
+?? backend/app/models/lineage_target.py.before-08.8J
+?? backend/app/models/lineage_target.py.before_68
+?? backend/app/schemas/
+?? backend/app/services/lineage_discovery_service.py
+?? backend/app/services/lineage_discovery_service.py.before_76
+?? backend/app/services/lineage_mapping_service.py.before_68
+?? backend/app/services/lineage_target_service.py.before_68
+?? backend/app/services/lineage_validation.py
+?? backend/tests/
+?? docs/architecture/05_LogicalModel.md.before_83
+?? docs/architecture/06_PhysicalModel.md.before_83
+?? docs/architecture/07_API_Design.md.before_83
+?? docs/architecture/08_UI_Design.md.before_83
+?? docs/architecture/ProductContext.md
+?? docs/architecture/api/DataLineageAPI.md.before_83
+?? docs/architecture/logical/DataLineageLogicalModel.md.before_83
+?? docs/architecture/physical/DataLineagePhysicalModel.md.before_83
+?? docs/architecture/ui/DataLineageUI.md.before_83
+
+============================================================
+BATCH 09.5 TEST RECONCILIATION COMPLETE
+============================================================

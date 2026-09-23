@@ -120,6 +120,23 @@ Physical deletion shall not be performed.
 
 ---
 
+## 3.6 Governed Graph Integrity
+
+For new governed relationships, service validation verifies that active parent
+records exist and that `lineage_mapping.lineage_flow_id` agrees with the Flow
+owning the Target's Transformation. When a Mapping Transformation is supplied,
+it must be that Target's Transformation and belong to the same Flow. These are
+cross-table semantic rules enforced at the service layer; no database trigger or
+new migration is introduced. `lineage_target.lineage_transformation_id` and
+`lineage_mapping.lineage_target_id` remain nullable for Phase 1 legacy-read
+compatibility.
+
+`lineage_mapping.lineage_transformation_id` is retained for compatibility but is
+redundant when `lineage_target_id` is populated. Its removal is a future,
+controlled schema/API change, not part of this physical model revision.
+
+---
+
 # 4. Physical Entity Mapping
 
 | Logical Entity | Physical Table |
@@ -207,6 +224,7 @@ lineage_target_id
 | Column | PostgreSQL Type | Nullable |
 |----------|----------------|----------|
 | lineage_target_id | UUID | No |
+| lineage_transformation_id | UUID | Yes (Phase 1 legacy compatibility) |
 | target_name | VARCHAR(255) | No |
 | target_type | VARCHAR(100) | No |
 | system_name | VARCHAR(150) | No |
@@ -234,6 +252,7 @@ Unique
 Indexes
 
 - idx_lineage_target_name
+- idx_lineage_target_transformation
 - idx_lineage_target_type
 - idx_lineage_target_system
 - idx_lineage_target_status
@@ -443,6 +462,8 @@ lineage_flow_id → lineage_flow.lineage_flow_id
 
 lineage_transformation_id → lineage_transformation.lineage_transformation_id
 
+lineage_target_id → lineage_target.lineage_target_id
+
 ---
 
 ### Columns
@@ -451,6 +472,7 @@ lineage_transformation_id → lineage_transformation.lineage_transformation_id
 |----------|----------------|----------|
 | lineage_mapping_id | UUID | No |
 | lineage_flow_id | UUID | No |
+| lineage_target_id | UUID | Yes (Phase 1 legacy compatibility) |
 | lineage_transformation_id | UUID | Yes |
 | source_attribute | VARCHAR(255) | No |
 | target_attribute | VARCHAR(255) | No |
@@ -482,6 +504,7 @@ Unique
 Indexes
 
 - idx_lineage_mapping_flow
+- idx_lineage_mapping_target_id
 - idx_lineage_mapping_source
 - idx_lineage_mapping_target
 - idx_lineage_mapping_status
@@ -685,6 +708,9 @@ The following table summarizes all foreign key relationships within the Data Lin
 | lineage_process | lineage_flow | lineage_process_id |
 | lineage_flow | lineage_transformation | lineage_flow_id |
 | lineage_flow | lineage_mapping | lineage_flow_id |
+| lineage_flow | lineage_transformation | lineage_flow_id |
+| lineage_transformation | lineage_target | lineage_transformation_id |
+| lineage_target | lineage_mapping | lineage_target_id |
 | lineage_transformation | lineage_mapping | lineage_transformation_id |
 | lineage_mapping | impact_analysis | lineage_mapping_id |
 | lineage_flow | lineage_version | lineage_flow_id |
@@ -701,7 +727,9 @@ The following rules shall apply.
 - A Lineage Flow cannot exist without a Lineage Source.
 - A Lineage Flow cannot exist without a Lineage Process.
 - A Lineage Transformation cannot exist without a Lineage Flow.
+- A Lineage Target cannot exist without a Lineage Transformation.
 - A Lineage Mapping cannot exist without a Lineage Flow.
+- A Lineage Mapping cannot exist without a Lineage Target.
 - A Lineage Mapping may optionally reference a Lineage Transformation.
 - An Impact Analysis cannot exist without a Lineage Mapping.
 - A Lineage Version cannot exist without a Lineage Flow.
@@ -908,4 +936,3 @@ This document serves as the implementation blueprint for:
 - REST APIs
 - Reporting Services
 - AI Services
-

@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import Boolean, Index, String, TIMESTAMP, UniqueConstraint
+from sqlalchemy import Boolean, ForeignKey, Index, String, TIMESTAMP, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -13,6 +13,11 @@ class DataLineageTarget(Base):
     lineage_target_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         primary_key=True,
+    )
+    lineage_transformation_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("lineage_transformation.lineage_transformation_id"),
+        nullable=False,
     )
     target_name: Mapped[str] = mapped_column(String(255), nullable=False)
     target_type: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -36,6 +41,7 @@ class DataLineageTarget(Base):
             "system_name",
             name="uq_lineage_target_name_system",
         ),
+        Index("idx_lineage_target_transformation", "lineage_transformation_id"),
         Index("idx_lineage_target_name", "target_name"),
         Index("idx_lineage_target_type", "target_type"),
         Index("idx_lineage_target_system", "system_name"),

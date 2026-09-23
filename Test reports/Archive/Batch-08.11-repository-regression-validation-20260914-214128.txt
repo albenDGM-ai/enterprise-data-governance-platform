@@ -1,0 +1,226 @@
+============================================================
+DGM — BATCH 08.11
+Repository + Full Regression Validation
+Started: Mon Sep 14 09:41:28 PM IST 2026
+============================================================
+
+STEP 1 — Repository state
+feature/project-foundation
+ M backend/alembic/env.py
+ M backend/app/main.py
+ M backend/app/models/lineage_mapping.py
+ M backend/app/models/lineage_target.py
+ M backend/app/services/lineage_mapping_service.py
+ M backend/app/services/lineage_target_service.py
+ M backend/app/services/lineage_transformation_service.py
+ M docs/architecture/logical/DataLineageLogicalModel.md
+ M docs/architecture/physical/DataLineagePhysicalModel.md
+?? AGENTS.md
+?? "Test reports/"
+?? backend/alembic/env.py.before-08.8D
+?? backend/alembic/env.py.before-08.8E-20260914-210936
+?? backend/alembic/env.py.before-08.8E-20260914-211116
+?? backend/alembic/env.py.before-08.8J
+?? backend/alembic/env.py.before-08.8K
+?? backend/alembic/env.py.before-08.8L
+?? backend/alembic/env.py.before-08.8M
+?? backend/alembic/env.py.before-08.8N
+?? backend/alembic/env.py.before-08.8O
+?? backend/alembic/env.py.before-08.8Q
+?? backend/alembic/env.py.before-08.8S
+?? backend/alembic/env.py.before-08.8T
+?? backend/alembic/env.py.before-08.8U
+?? backend/alembic/env.py.before-08.8V
+?? backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py
+?? backend/alembic/versions/e2d453a0ad03_enforce_lineage_relationship_not_null.py
+?? backend/app/api/
+?? backend/app/models/lineage_mapping.py.before-08.8J
+?? backend/app/models/lineage_mapping.py.before_68
+?? backend/app/models/lineage_target.py.before-08.8J
+?? backend/app/models/lineage_target.py.before_68
+?? backend/app/schemas/
+?? backend/app/services/lineage_discovery_service.py
+?? backend/app/services/lineage_discovery_service.py.before_76
+?? backend/app/services/lineage_mapping_service.py.before_68
+?? backend/app/services/lineage_target_service.py.before_68
+?? backend/app/services/lineage_validation.py
+?? backend/tests/
+?? docs/architecture/05_LogicalModel.md.before_83
+?? docs/architecture/06_PhysicalModel.md.before_83
+?? docs/architecture/07_API_Design.md.before_83
+?? docs/architecture/08_UI_Design.md.before_83
+?? docs/architecture/api/DataLineageAPI.md.before_83
+?? docs/architecture/logical/DataLineageLogicalModel.md.before_83
+?? docs/architecture/physical/DataLineagePhysicalModel.md.before_83
+?? docs/architecture/ui/DataLineageUI.md.before_83
+
+Recent commits:
+0a5a38b feat(lineage): add lineage services
+c3faf21 feat(lineage): add lineage repositories
+1dc171f feat(lineage): add lineage snapshot
+a91e31f feat(lineage): add lineage version
+afb02b2 feat(lineage): add impact analysis
+c5f1665 feat(lineage): add lineage mapping
+20faa53 feat(lineage): add lineage transformation
+116d272 feat(lineage): add lineage process and flow
+STEP 1 PASS
+
+STEP 2 — Inspect exact source changes
+----- env.py diff -----
+diff --git a/backend/alembic/env.py b/backend/alembic/env.py
+index 86454ee..26fa17a 100644
+--- a/backend/alembic/env.py
++++ b/backend/alembic/env.py
+@@ -28,7 +28,9 @@ if config.config_file_name is not None:
+ # for 'autogenerate' support
+ # from myapp import mymodel
+ # target_metadata = mymodel.Base.metadata
+-target_metadata = Base.metadata 
++target_metadata = Base.metadata
++
++ 
+ 
+ # other values from the config, defined by the needs of env.py,
+ # can be acquired:
+@@ -75,7 +77,8 @@ def run_migrations_online() -> None:
+ 
+     with connectable.connect() as connection:
+         context.configure(
+-            connection=connection, target_metadata=target_metadata
++            connection=connection,
++            target_metadata=target_metadata,
+         )
+ 
+         with context.begin_transaction():
+
+----- lineage_target.py diff -----
+diff --git a/backend/app/models/lineage_target.py b/backend/app/models/lineage_target.py
+index b484ce9..a025360 100644
+--- a/backend/app/models/lineage_target.py
++++ b/backend/app/models/lineage_target.py
+@@ -1,6 +1,6 @@
+ import uuid
+ 
+-from sqlalchemy import Boolean, Index, String, TIMESTAMP, UniqueConstraint
++from sqlalchemy import Boolean, ForeignKey, Index, String, TIMESTAMP, UniqueConstraint
+ from sqlalchemy.dialects.postgresql import UUID
+ from sqlalchemy.orm import Mapped, mapped_column
+ 
+@@ -14,6 +14,11 @@ class DataLineageTarget(Base):
+         UUID(as_uuid=True),
+         primary_key=True,
+     )
++    lineage_transformation_id: Mapped[uuid.UUID] = mapped_column(
++        UUID(as_uuid=True),
++        ForeignKey("lineage_transformation.lineage_transformation_id"),
++        nullable=False,
++    )
+     target_name: Mapped[str] = mapped_column(String(255), nullable=False)
+     target_type: Mapped[str] = mapped_column(String(100), nullable=False)
+     system_name: Mapped[str] = mapped_column(String(150), nullable=False)
+@@ -36,6 +41,7 @@ class DataLineageTarget(Base):
+             "system_name",
+             name="uq_lineage_target_name_system",
+         ),
++        Index("idx_lineage_target_transformation", "lineage_transformation_id"),
+         Index("idx_lineage_target_name", "target_name"),
+         Index("idx_lineage_target_type", "target_type"),
+         Index("idx_lineage_target_system", "system_name"),
+
+----- lineage_mapping.py diff -----
+diff --git a/backend/app/models/lineage_mapping.py b/backend/app/models/lineage_mapping.py
+index 7b8a2da..58a3d26 100644
+--- a/backend/app/models/lineage_mapping.py
++++ b/backend/app/models/lineage_mapping.py
+@@ -15,6 +15,11 @@ class DataLineageMapping(Base):
+         UUID(as_uuid=True),
+         primary_key=True,
+     )
++    lineage_target_id: Mapped[uuid.UUID] = mapped_column(
++        UUID(as_uuid=True),
++        ForeignKey("lineage_target.lineage_target_id"),
++        nullable=False,
++    )
+     lineage_flow_id: Mapped[uuid.UUID] = mapped_column(
+         UUID(as_uuid=True),
+         ForeignKey("lineage_flow.lineage_flow_id"),
+@@ -46,6 +51,7 @@ class DataLineageMapping(Base):
+             "target_attribute",
+             name="uq_lineage_mapping_flow_source_target",
+         ),
++        Index("idx_lineage_mapping_target_id", "lineage_target_id"),
+         Index("idx_lineage_mapping_flow", "lineage_flow_id"),
+         Index("idx_lineage_mapping_source", "source_attribute"),
+         Index("idx_lineage_mapping_target", "target_attribute"),
+
+----- graph integrity test diff -----
+
+----- new corrective migration -----
+"""enforce lineage relationship not null
+
+Revision ID: e2d453a0ad03
+Revises: 32b95f7a0662
+Create Date: 2026-09-14 21:40:21
+"""
+
+from typing import Sequence, Union
+
+from alembic import op
+import sqlalchemy as sa
+
+
+# revision identifiers, used by Alembic.
+revision: str = "e2d453a0ad03"
+down_revision: Union[str, Sequence[str], None] = "32b95f7a0662"
+branch_labels: Union[str, Sequence[str], None] = None
+depends_on: Union[str, Sequence[str], None] = None
+
+
+def upgrade() -> None:
+    """Enforce required lineage relationships."""
+
+    op.alter_column(
+        "lineage_mapping",
+        "lineage_target_id",
+        existing_type=sa.UUID(),
+        nullable=False,
+    )
+
+    op.alter_column(
+        "lineage_target",
+        "lineage_transformation_id",
+        existing_type=sa.UUID(),
+        nullable=False,
+    )
+
+
+def downgrade() -> None:
+    """Restore historical nullable relationship definitions."""
+
+    op.alter_column(
+        "lineage_target",
+        "lineage_transformation_id",
+        existing_type=sa.UUID(),
+        nullable=True,
+    )
+
+    op.alter_column(
+        "lineage_mapping",
+        "lineage_target_id",
+        existing_type=sa.UUID(),
+        nullable=True,
+    )
+STEP 2 PASS
+
+STEP 3 — Verify original migration was not modified
+Original migration remains historical nullable migration.
+32b95f7a0662 unchanged in working tree: PASS
+STEP 3 PASS
+
+STEP 4 — Validate Alembic migration graph
+e2d453a0ad03 (head)
+
+usage: alembic [-h] [--version] [-c CONFIG] [-n NAME] [-x X] [--raiseerr] [-q]
+               {branches,check,current,downgrade,edit,ensure_version,heads,history,init,list_templates,merge,revision,show,stamp,upgrade} ...
+alembic: error: unrecognized arguments: -5
+STEP 4 HISTORY FAILED.

@@ -1,0 +1,879 @@
+============================================================
+DGM — Batch 08.1
+Transformation Flow Immutability & Final Verification
+============================================================
+Date: Sat Sep 12 07:50:07 PM IST 2026
+Repository: /home/alben/Projects/enterprise-data-governance-platform
+
+---------------- 1. Current status ----------------
+ M backend/app/main.py
+ M backend/app/models/lineage_mapping.py
+ M backend/app/models/lineage_target.py
+ M backend/app/services/lineage_mapping_service.py
+ M backend/app/services/lineage_target_service.py
+ M backend/app/services/lineage_transformation_service.py
+ M docs/architecture/logical/DataLineageLogicalModel.md
+ M docs/architecture/physical/DataLineagePhysicalModel.md
+?? AGENTS.md
+?? "Test reports/"
+?? backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py
+?? backend/app/api/
+?? backend/app/models/lineage_mapping.py.before_68
+?? backend/app/models/lineage_target.py.before_68
+?? backend/app/schemas/
+?? backend/app/services/lineage_discovery_service.py
+?? backend/app/services/lineage_discovery_service.py.before_76
+?? backend/app/services/lineage_mapping_service.py.before_68
+?? backend/app/services/lineage_target_service.py.before_68
+?? backend/app/services/lineage_validation.py
+?? backend/tests/
+?? docs/architecture/05_LogicalModel.md.before_83
+?? docs/architecture/06_PhysicalModel.md.before_83
+?? docs/architecture/07_API_Design.md.before_83
+?? docs/architecture/08_UI_Design.md.before_83
+?? docs/architecture/api/DataLineageAPI.md.before_83
+?? docs/architecture/logical/DataLineageLogicalModel.md.before_83
+?? docs/architecture/physical/DataLineagePhysicalModel.md.before_83
+?? docs/architecture/ui/DataLineageUI.md.before_83
+
+---------------- 2. Transformation service contract ----------------
+from __future__ import annotations
+
+import uuid
+from datetime import datetime, timezone
+
+from sqlalchemy.orm import Session
+
+from app.models.lineage_transformation import DataLineageTransformation
+from app.repositories.lineage_flow_repository import LineageFlowRepository
+from app.repositories.lineage_transformation_repository import (
+    LineageTransformationRepository,
+)
+from app.services.lineage_validation import LineageRelationshipValidationError
+
+
+class LineageTransformationService:
+    """Business operations for Lineage Transformation."""
+
+    def __init__(self, session: Session) -> None:
+        self.session = session
+        self.repository = LineageTransformationRepository(session)
+        self.flow_repository = LineageFlowRepository(session)
+
+    def _validate_flow(self, lineage_flow_id: uuid.UUID) -> None:
+        flow = self.flow_repository.get_by_id(
+            lineage_flow_id,
+            include_inactive=True,
+        )
+        if flow is None:
+            raise LineageRelationshipValidationError(
+                "The supplied Lineage Flow does not exist."
+            )
+        if not flow.is_active:
+            raise LineageRelationshipValidationError(
+                "The supplied Lineage Flow is inactive."
+            )
+
+    def get(
+        self,
+        lineage_transformation_id: uuid.UUID,
+        *,
+        include_inactive: bool = False,
+    ) -> DataLineageTransformation | None:
+        return self.repository.get_by_id(
+            lineage_transformation_id,
+            include_inactive=include_inactive,
+        )
+
+    def get_by_flow_and_sequence(
+        self,
+        lineage_flow_id: uuid.UUID,
+        sequence_number: int,
+        *,
+        include_inactive: bool = False,
+    ) -> DataLineageTransformation | None:
+        return self.repository.get_by_flow_and_sequence(
+            lineage_flow_id,
+            sequence_number,
+            include_inactive=include_inactive,
+        )
+
+    def list(
+        self,
+        *,
+        lineage_flow_id: uuid.UUID | None = None,
+        transformation_type: str | None = None,
+        status: str | None = None,
+        include_inactive: bool = False,
+    ) -> list[DataLineageTransformation]:
+        return self.repository.list(
+            lineage_flow_id=lineage_flow_id,
+            transformation_type=transformation_type,
+            status=status,
+            include_inactive=include_inactive,
+        )
+
+    def create(
+        self,
+        *,
+        lineage_flow_id: uuid.UUID,
+        sequence_number: int,
+        transformation_name: str,
+        transformation_type: str,
+        description: str | None,
+        expression: str | None,
+        status: str,
+        created_by: str,
+    ) -> DataLineageTransformation:
+        self._validate_flow(lineage_flow_id)
+
+        existing = self.repository.get_by_flow_and_sequence(
+            lineage_flow_id,
+            sequence_number,
+            include_inactive=True,
+        )
+
+        if existing is not None:
+            raise ValueError(
+                "A Lineage Transformation with the supplied Lineage Flow "
+                "and Sequence Number already exists."
+            )
+
+        entity = DataLineageTransformation(
+            lineage_transformation_id=uuid.uuid4(),
+            lineage_flow_id=lineage_flow_id,
+            sequence_number=sequence_number,
+            transformation_name=transformation_name,
+            transformation_type=transformation_type,
+            description=description,
+            expression=expression,
+            status=status,
+            created_by=created_by,
+            created_date=datetime.now(timezone.utc).replace(tzinfo=None),
+            is_active=True,
+        )
+
+        self.repository.create(entity)
+        return entity
+
+    def update(
+        self,
+        entity: DataLineageTransformation,
+        *,
+        modified_by: str,
+        sequence_number: int | None = None,
+        transformation_name: str | None = None,
+        transformation_type: str | None = None,
+        description: str | None = None,
+        expression: str | None = None,
+        status: str | None = None,
+    ) -> DataLineageTransformation:
+        new_sequence_number = (
+            sequence_number
+            if sequence_number is not None
+            else entity.sequence_number
+        )
+
+        duplicate = self.repository.get_by_flow_and_sequence(
+            entity.lineage_flow_id,
+            new_sequence_number,
+            include_inactive=True,
+        )
+        if duplicate is not None and duplicate.lineage_transformation_id != entity.lineage_transformation_id:
+            raise ValueError(
+                "A Lineage Transformation with the same flow and sequence "
+                "number already exists."
+            )
+
+        if sequence_number is not None:
+            entity.sequence_number = sequence_number
+        if transformation_name is not None:
+            entity.transformation_name = transformation_name
+        if transformation_type is not None:
+            entity.transformation_type = transformation_type
+        if description is not None:
+            entity.description = description
+        if expression is not None:
+            entity.expression = expression
+        if status is not None:
+            entity.status = status
+
+        entity.modified_by = modified_by
+        entity.modified_date = datetime.now(timezone.utc).replace(tzinfo=None)
+
+        self.repository.update(entity)
+        return entity
+
+    def delete(
+        self,
+        entity: DataLineageTransformation,
+        *,
+        modified_by: str,
+    ) -> DataLineageTransformation:
+        return self.repository.soft_delete(
+            entity,
+            modified_by=modified_by,
+        )
+
+---------------- 3. Transformation API schema ----------------
+1-from datetime import datetime
+2-from uuid import UUID
+3-
+4-from pydantic import ConfigDict
+5-
+6-from app.schemas.common import APIBaseSchema
+7-
+8-
+9:class LineageTransformationCreate(APIBaseSchema):
+10-    lineage_flow_id: UUID
+11-    sequence_number: int
+12-    transformation_name: str
+13-    transformation_type: str
+14-    description: str | None = None
+15-    expression: str | None = None
+16-    status: str
+17-
+18-
+19:class LineageTransformationUpdate(APIBaseSchema):
+20-    lineage_flow_id: UUID | None = None
+21-    sequence_number: int | None = None
+22-    transformation_name: str | None = None
+23-    transformation_type: str | None = None
+24-    description: str | None = None
+25-    expression: str | None = None
+26-    status: str | None = None
+27-
+28-
+29-class LineageTransformationReplace(APIBaseSchema):
+30-    lineage_flow_id: UUID
+31-    sequence_number: int
+32-    transformation_name: str
+33-    transformation_type: str
+34-    description: str | None = None
+35-    expression: str | None = None
+36-    status: str
+37-
+38-
+39-class LineageTransformationResponse(APIBaseSchema):
+40-    model_config = ConfigDict(from_attributes=True)
+41-
+42-    lineage_transformation_id: UUID
+43-    lineage_flow_id: UUID
+44-    sequence_number: int
+45-    transformation_name: str
+46-    transformation_type: str
+47-    description: str | None = None
+48-    expression: str | None = None
+49-    status: str
+50-    created_by: str
+51-    created_date: datetime
+52-    modified_by: str | None = None
+53-    modified_date: datetime | None = None
+54-    is_active: bool
+
+---------------- 4. Transformation API routes ----------------
+124-        service.session.commit()
+125-        service.session.refresh(entity)
+126-        return entity
+127-    except ValueError as exc:
+128-        service.session.rollback()
+129-        raise HTTPException(
+130-            status_code=status.HTTP_409_CONFLICT,
+131-            detail=str(exc),
+132-        ) from exc
+133-    except Exception:
+134-        service.session.rollback()
+135-        raise
+136-
+137-
+138-@router.get(
+139:    "/flows/{lineage_flow_id}",
+140-    response_model=LineageFlowResponse,
+141-)
+142-def get_flow(
+143:    lineage_flow_id: UUID,
+144-    include_inactive: bool = False,
+145-    service: LineageFlowService = Depends(get_flow_service),
+146-) -> LineageFlowResponse:
+147-    entity = service.get(
+148:        lineage_flow_id,
+149-        include_inactive=include_inactive,
+150-    )
+151-
+152-    if entity is None:
+153-        raise HTTPException(
+154-            status_code=status.HTTP_404_NOT_FOUND,
+155-            detail="Lineage Flow not found.",
+156-        )
+157-
+158-    return entity
+159-
+160-
+161-@router.get(
+162-    "/flows",
+163-    response_model=list[LineageFlowResponse],
+164-)
+165-def list_flows(
+166-    status: str | None = None,
+167-    flow_type: str | None = None,
+168-    direction: str | None = None,
+169-    owner: str | None = None,
+170-    lineage_source_id: UUID | None = None,
+171-    lineage_process_id: UUID | None = None,
+172-    include_inactive: bool = False,
+173-    service: LineageFlowService = Depends(get_flow_service),
+174-) -> list[LineageFlowResponse]:
+175-    return service.list(
+176-        status=status,
+177-        flow_type=flow_type,
+178-        direction=direction,
+179-        owner=owner,
+180-        lineage_source_id=lineage_source_id,
+181-        lineage_process_id=lineage_process_id,
+182-        include_inactive=include_inactive,
+183-    )
+184-
+185-
+186:@router.put(
+187:    "/flows/{lineage_flow_id}",
+188-    response_model=LineageFlowResponse,
+189-)
+190-def replace_flow(
+191:    lineage_flow_id: UUID,
+192-    payload: LineageFlowReplace,
+193-    x_user: str = Header(..., alias="X-User"),
+194-    service: LineageFlowService = Depends(get_flow_service),
+195-) -> LineageFlowResponse:
+196:    entity = service.get(lineage_flow_id)
+197-
+198-    if entity is None:
+199-        raise HTTPException(
+200-            status_code=status.HTTP_404_NOT_FOUND,
+201-            detail="Lineage Flow not found.",
+202-        )
+203-
+204-    try:
+205-        entity = service.update(
+206-            entity,
+207-            modified_by=x_user,
+208-            flow_name=payload.flow_name,
+209-            lineage_source_id=payload.lineage_source_id,
+210-            lineage_process_id=payload.lineage_process_id,
+211-            flow_type=payload.flow_type,
+212-            direction=payload.direction,
+213-            frequency=payload.frequency,
+214-            owner=payload.owner,
+215-            status=payload.status,
+216-        )
+217-        service.session.commit()
+218-        service.session.refresh(entity)
+219-        return entity
+220-    except ValueError as exc:
+221-        service.session.rollback()
+222-        raise HTTPException(
+223-            status_code=status.HTTP_409_CONFLICT,
+224-            detail=str(exc),
+225-        ) from exc
+226-    except Exception:
+227-        service.session.rollback()
+228-        raise
+229-
+230-
+231:@router.patch(
+232:    "/flows/{lineage_flow_id}",
+233-    response_model=LineageFlowResponse,
+234-)
+235-def update_flow(
+236:    lineage_flow_id: UUID,
+237-    payload: LineageFlowUpdate,
+238-    x_user: str = Header(..., alias="X-User"),
+239-    service: LineageFlowService = Depends(get_flow_service),
+240-) -> LineageFlowResponse:
+241:    entity = service.get(lineage_flow_id)
+242-
+243-    if entity is None:
+244-        raise HTTPException(
+245-            status_code=status.HTTP_404_NOT_FOUND,
+246-            detail="Lineage Flow not found.",
+247-        )
+248-
+249-    try:
+250-        entity = service.update(
+251-            entity,
+252-            modified_by=x_user,
+253-            flow_name=payload.flow_name,
+254-            lineage_source_id=payload.lineage_source_id,
+255-            lineage_process_id=payload.lineage_process_id,
+256-            flow_type=payload.flow_type,
+257-            direction=payload.direction,
+258-            frequency=payload.frequency,
+259-            owner=payload.owner,
+260-            status=payload.status,
+261-        )
+262-        service.session.commit()
+263-        service.session.refresh(entity)
+264-        return entity
+265-    except ValueError as exc:
+266-        service.session.rollback()
+267-        raise HTTPException(
+268-            status_code=status.HTTP_409_CONFLICT,
+269-            detail=str(exc),
+270-        ) from exc
+271-    except Exception:
+272-        service.session.rollback()
+273-        raise
+274-
+275-
+276-@router.delete(
+277:    "/flows/{lineage_flow_id}",
+278-    response_model=LineageFlowResponse,
+279-)
+280-def delete_flow(
+281:    lineage_flow_id: UUID,
+282-    x_user: str = Header(..., alias="X-User"),
+283-    service: LineageFlowService = Depends(get_flow_service),
+284-) -> LineageFlowResponse:
+285:    entity = service.get(lineage_flow_id)
+286-
+287-    if entity is None:
+288-        raise HTTPException(
+289-            status_code=status.HTTP_404_NOT_FOUND,
+290-            detail="Lineage Flow not found.",
+291-        )
+292-
+293-    try:
+294-        entity = service.delete(
+295-            entity,
+296-            modified_by=x_user,
+297-        )
+298-        service.session.commit()
+299-        service.session.refresh(entity)
+300-        return entity
+301-    except Exception:
+302-        service.session.rollback()
+303-        raise
+304-
+305-
+306-def get_process_service(db: Session = Depends(get_db)) -> LineageProcessService:
+307-    return LineageProcessService(db)
+308-
+309-
+310-@router.post(
+311-    "/processes",
+312-    response_model=LineageProcessResponse,
+313-    status_code=status.HTTP_201_CREATED,
+314-)
+315-def create_process(
+316-    payload: LineageProcessCreate,
+317-    x_user: str = Header(..., alias="X-User"),
+318-    service: LineageProcessService = Depends(get_process_service),
+319-) -> LineageProcessResponse:
+320-    try:
+321-        entity = service.create(
+322-            process_name=payload.process_name,
+323-            process_type=payload.process_type,
+324-            technology=payload.technology,
+325-            schedule=payload.schedule,
+326-            owner=payload.owner,
+327-            status=payload.status,
+328-            created_by=x_user,
+329-        )
+330-        service.session.commit()
+331-        service.session.refresh(entity)
+332-        return entity
+333-    except ValueError as exc:
+334-        service.session.rollback()
+335-        raise HTTPException(
+336-            status_code=status.HTTP_409_CONFLICT,
+337-            detail=str(exc),
+338-        ) from exc
+339-    except Exception:
+340-        service.session.rollback()
+341-        raise
+342-
+343-
+344-@router.get(
+345-    "/processes/{lineage_process_id}",
+346-    response_model=LineageProcessResponse,
+347-)
+348-def get_process(
+349-    lineage_process_id: UUID,
+350-    include_inactive: bool = False,
+351-    service: LineageProcessService = Depends(get_process_service),
+352-) -> LineageProcessResponse:
+353-    entity = service.get(
+354-        lineage_process_id,
+355-        include_inactive=include_inactive,
+356-    )
+357-
+358-    if entity is None:
+359-        raise HTTPException(
+360-            status_code=status.HTTP_404_NOT_FOUND,
+361-            detail="Lineage Process not found.",
+362-        )
+363-
+364-    return entity
+365-
+--
+373-    process_type: str | None = None,
+374-    technology: str | None = None,
+375-    owner: str | None = None,
+376-    include_inactive: bool = False,
+377-    service: LineageProcessService = Depends(get_process_service),
+378-) -> list[LineageProcessResponse]:
+379-    return service.list(
+380-        status=status,
+381-        process_type=process_type,
+382-        technology=technology,
+383-        owner=owner,
+384-        include_inactive=include_inactive,
+385-    )
+386-
+387-
+388:@router.put(
+389-    "/processes/{lineage_process_id}",
+390-    response_model=LineageProcessResponse,
+391-)
+392-def replace_process(
+393-    lineage_process_id: UUID,
+394-    payload: LineageProcessReplace,
+395-    x_user: str = Header(..., alias="X-User"),
+396-    service: LineageProcessService = Depends(get_process_service),
+397-) -> LineageProcessResponse:
+398-    entity = service.get(lineage_process_id)
+399-
+400-    if entity is None:
+401-        raise HTTPException(
+402-            status_code=status.HTTP_404_NOT_FOUND,
+403-            detail="Lineage Process not found.",
+404-        )
+405-
+406-    try:
+407-        entity = service.update(
+408-            entity,
+409-            modified_by=x_user,
+410-            process_name=payload.process_name,
+411-            process_type=payload.process_type,
+412-            technology=payload.technology,
+413-            schedule=payload.schedule,
+414-            owner=payload.owner,
+415-            status=payload.status,
+416-        )
+417-        service.session.commit()
+418-        service.session.refresh(entity)
+419-        return entity
+420-    except ValueError as exc:
+421-        service.session.rollback()
+422-        raise HTTPException(
+423-            status_code=status.HTTP_409_CONFLICT,
+424-            detail=str(exc),
+425-        ) from exc
+426-    except Exception:
+427-        service.session.rollback()
+428-        raise
+429-
+430-
+431:@router.patch(
+432-    "/processes/{lineage_process_id}",
+433-    response_model=LineageProcessResponse,
+434-)
+435-def update_process(
+436-    lineage_process_id: UUID,
+437-    payload: LineageProcessUpdate,
+438-    x_user: str = Header(..., alias="X-User"),
+439-    service: LineageProcessService = Depends(get_process_service),
+440-) -> LineageProcessResponse:
+441-    entity = service.get(lineage_process_id)
+442-
+443-    if entity is None:
+444-        raise HTTPException(
+445-            status_code=status.HTTP_404_NOT_FOUND,
+446-            detail="Lineage Process not found.",
+447-        )
+448-
+449-    try:
+450-        entity = service.update(
+451-            entity,
+452-            modified_by=x_user,
+453-            process_name=payload.process_name,
+454-            process_type=payload.process_type,
+455-            technology=payload.technology,
+456-            schedule=payload.schedule,
+457-            owner=payload.owner,
+458-            status=payload.status,
+459-        )
+460-        service.session.commit()
+461-        service.session.refresh(entity)
+462-        return entity
+463-    except ValueError as exc:
+464-        service.session.rollback()
+465-        raise HTTPException(
+466-            status_code=status.HTTP_409_CONFLICT,
+467-            detail=str(exc),
+468-        ) from exc
+469-    except Exception:
+470-        service.session.rollback()
+471-        raise
+472-
+473-
+474-@router.delete(
+475-    "/processes/{lineage_process_id}",
+476-    response_model=LineageProcessResponse,
+477-)
+478-def delete_process(
+479-    lineage_process_id: UUID,
+480-    x_user: str = Header(..., alias="X-User"),
+481-    service: LineageProcessService = Depends(get_process_service),
+482-) -> LineageProcessResponse:
+483-    entity = service.get(lineage_process_id)
+484-
+485-    if entity is None:
+486-        raise HTTPException(
+487-            status_code=status.HTTP_404_NOT_FOUND,
+488-            detail="Lineage Process not found.",
+489-        )
+490-
+491-    try:
+492-        entity = service.delete(
+493-            entity,
+494-            modified_by=x_user,
+495-        )
+496-        service.session.commit()
+497-        service.session.refresh(entity)
+498-        return entity
+499-    except Exception:
+500-        service.session.rollback()
+501-        raise
+502-
+503-
+504-def get_source_service(
+505-    db: Session = Depends(get_db),
+506-) -> LineageSourceService:
+507-    return LineageSourceService(db)
+508-
+509-
+510-@router.post(
+511-    "/sources",
+--
+576-    business_domain: str | None = Query(None),
+577-    owner: str | None = Query(None),
+578-    include_inactive: bool = Query(False),
+579-    service: LineageSourceService = Depends(get_source_service),
+580-):
+581-    return service.list(
+582-        status=status_filter,
+583-        source_type=source_type,
+584-        system_name=system_name,
+585-        business_domain=business_domain,
+586-        owner=owner,
+587-        include_inactive=include_inactive,
+588-    )
+589-
+590-
+591:@router.put(
+592-    "/sources/{lineage_source_id}",
+593-    response_model=LineageSourceResponse,
+594-)
+595-def replace_source(
+596-    lineage_source_id: UUID,
+597-    payload: LineageSourceReplace,
+598-    x_user: str = Header(..., alias="X-User"),
+599-    service: LineageSourceService = Depends(get_source_service),
+600-):
+601-    entity = service.get(
+602-        lineage_source_id,
+603-        include_inactive=False,
+604-    )
+605-
+606-    if entity is None:
+607-        raise HTTPException(
+608-            status_code=status.HTTP_404_NOT_FOUND,
+609-            detail="Lineage Source not found.",
+610-        )
+611-
+612-    try:
+613-        entity = service.update(
+614-            entity,
+615-            modified_by=x_user,
+616-            source_name=payload.source_name,
+617-            source_type=payload.source_type,
+618-            system_name=payload.system_name,
+619-            business_domain=payload.business_domain,
+620-            owner=payload.owner,
+621-            status=payload.status,
+622-        )
+623-        service.session.commit()
+624-        return entity
+625-
+626-    except ValueError as exc:
+627-        service.session.rollback()
+628-        raise HTTPException(
+629-            status_code=status.HTTP_409_CONFLICT,
+630-            detail=str(exc),
+631-        ) from exc
+632-
+633-    except Exception:
+634-        service.session.rollback()
+635-        raise
+636-
+637-
+638:@router.patch(
+639-    "/sources/{lineage_source_id}",
+640-    response_model=LineageSourceResponse,
+641-)
+642-def update_source(
+643-    lineage_source_id: UUID,
+644-    payload: LineageSourceUpdate,
+645-    x_user: str = Header(..., alias="X-User"),
+646-    service: LineageSourceService = Depends(get_source_service),
+647-):
+648-    entity = service.get(
+649-        lineage_source_id,
+650-        include_inactive=False,
+651-    )
+652-
+653-    if entity is None:
+654-        raise HTTPException(
+655-            status_code=status.HTTP_404_NOT_FOUND,
+656-            detail="Lineage Source not found.",
+657-        )
+658-
+659-    try:
+660-        entity = service.update(
+661-            entity,
+662-            modified_by=x_user,
+663-            source_name=payload.source_name,
+664-            source_type=payload.source_type,
+665-            system_name=payload.system_name,
+666-            business_domain=payload.business_domain,
+667-            owner=payload.owner,
+668-            status=payload.status,
+669-        )
+670-        service.session.commit()
+671-        return entity
+672-
+673-    except ValueError as exc:
+674-        service.session.rollback()
+675-        raise HTTPException(
+676-            status_code=status.HTTP_409_CONFLICT,
+677-            detail=str(exc),
+678-        ) from exc
+679-
+680-    except Exception:
+681-        service.session.rollback()
+682-        raise
+683-
+684-
+685-@router.delete(
+686-    "/sources/{lineage_source_id}",
+687-    response_model=LineageSourceResponse,
+688-)
+689-def delete_source(
+690-    lineage_source_id: UUID,
+691-    x_user: str = Header(..., alias="X-User"),
+692-    service: LineageSourceService = Depends(get_source_service),
+
+---------------- 5. Check transformation update for flow mutation ----------------
+FAIL: transformation update contains lineage_flow_id.
+
+---------------- 6. Check transformation update API exposure ----------------
+FAIL: transformation update schema exposes lineage_flow_id.
+
+---------------- 7. Existing Batch 08 tests ----------------
+14:from app.services.lineage_validation import LineageRelationshipValidationError
+41:def record(record_id, *, is_active=True, lineage_flow_id=None, lineage_transformation_id=None):
+43:        lineage_flow_id=lineage_flow_id,
+50:def mapping_service(*, flow, target=None, transformations=()):
+53:    service.flow_repository = StubRepository({flow.lineage_flow_id: flow})
+63:def create_mapping(service, *, flow_id, target_id, transformation_id=None):
+65:        lineage_flow_id=flow_id,
+76:def test_valid_mapping_uses_the_target_transformation_flow() -> None:
+77:    flow_id = uuid4()
+80:    flow = SimpleNamespace(lineage_flow_id=flow_id, is_active=True)
+81:    transformation = record(transformation_id, lineage_flow_id=flow_id)
+84:        flow=flow,
+91:        flow_id=flow_id,
+96:    assert mapping.lineage_flow_id == flow_id
+100:def test_cross_flow_target_mapping_is_rejected_before_persistence() -> None:
+101:    flow_a_id, flow_b_id, transformation_id, target_id = (uuid4() for _ in range(4))
+103:        flow=SimpleNamespace(lineage_flow_id=flow_a_id, is_active=True),
+105:        transformations=(record(transformation_id, lineage_flow_id=flow_b_id),),
+108:    with pytest.raises(LineageRelationshipValidationError, match="different Lineage Flow"):
+109:        create_mapping(service, flow_id=flow_a_id, target_id=target_id)
+114:def test_cross_flow_mapping_transformation_is_rejected() -> None:
+115:    flow_a_id, flow_b_id, transformation_id, target_id = (uuid4() for _ in range(4))
+118:        flow=SimpleNamespace(lineage_flow_id=flow_a_id, is_active=True),
+121:            record(target_transformation, lineage_flow_id=flow_a_id),
+122:            record(transformation_id, lineage_flow_id=flow_b_id),
+126:    with pytest.raises(LineageRelationshipValidationError, match="different Lineage Flow"):
+129:            flow_id=flow_a_id,
+135:def test_mapping_transformation_must_own_its_target() -> None:
+136:    flow_id, target_transformation_id, supplied_transformation_id, target_id = (
+140:        flow=SimpleNamespace(lineage_flow_id=flow_id, is_active=True),
+143:            record(target_transformation_id, lineage_flow_id=flow_id),
+144:            record(supplied_transformation_id, lineage_flow_id=flow_id),
+148:    with pytest.raises(LineageRelationshipValidationError, match="does not own"):
+151:            flow_id=flow_id,
+157:def test_inactive_parent_relationships_are_rejected() -> None:
+158:    flow_id, transformation_id, target_id = (uuid4() for _ in range(3))
+160:        flow=SimpleNamespace(lineage_flow_id=flow_id, is_active=False),
+162:        transformations=(record(transformation_id, lineage_flow_id=flow_id),),
+165:    with pytest.raises(LineageRelationshipValidationError, match="Flow is inactive"):
+166:        create_mapping(service, flow_id=flow_id, target_id=target_id)
+170:    target_service.flow_repository = StubRepository({flow_id: SimpleNamespace(is_active=True)})
+172:        {transformation_id: record(transformation_id, is_active=False, lineage_flow_id=flow_id)}
+174:    with pytest.raises(LineageRelationshipValidationError, match="Transformation is inactive"):
+187:def test_update_rejects_a_cross_flow_replacement() -> None:
+188:    flow_a_id, flow_b_id, transformation_a_id, transformation_b_id, target_a_id, target_b_id = (
+192:        flow=SimpleNamespace(lineage_flow_id=flow_a_id, is_active=True),
+194:        transformations=(record(transformation_b_id, lineage_flow_id=flow_b_id),),
+198:        lineage_flow_id=flow_a_id,
+205:    with pytest.raises(LineageRelationshipValidationError, match="different Lineage Flow"):
+215:def test_legacy_null_relationships_remain_readable() -> None:
+216:    assert DataLineageTarget.__table__.c.lineage_transformation_id.nullable is True
+217:    assert DataLineageMapping.__table__.c.lineage_target_id.nullable is True
+
+---------------- 8. Python cache ownership ----------------
+alben:alben backend/alembic/versions/__pycache__
+alben:alben backend/tests/__pycache__
+root:root backend/app/api/__pycache__
+root:root backend/app/api/routers/__pycache__
+root:root backend/app/core/__pycache__
+root:root backend/app/db/__pycache__
+root:root backend/app/models/business_glossary/__pycache__
+root:root backend/app/models/business_rules/__pycache__
+root:root backend/app/models/data_quality/__pycache__
+root:root backend/app/models/metadata/__pycache__
+root:root backend/app/models/__pycache__
+root:root backend/app/__pycache__
+root:root backend/app/repositories/__pycache__
+root:root backend/app/schemas/__pycache__
+root:root backend/app/services/__pycache__
+
+---------------- 9. Relevant file ownership ----------------
+alben:alben 664 backend/app/services/lineage_transformation_service.py
+alben:alben 664 backend/app/schemas/lineage_transformation.py
+alben:alben 664 backend/app/api/routers/lineage.py
+alben:alben 664 backend/tests/test_batch_08_graph_integrity.py
+
+---------------- 10. Migration integrity ----------------
+PASS: nullable target transformation
+PASS: nullable mapping target
+PASS: named target FK
+PASS: named mapping FK
+PASS: target index
+PASS: mapping target index
+PASS: no backfill
+
+---------------- 11. Syntax verification without writing pyc ----------------
+PASS: Python syntax compilation.
+
+---------------- 12. Pytest availability ----------------
+BLOCKED: pytest is not installed.
+
+---------------- 13. Git whitespace verification ----------------
+git diff --check exit code: 0
+
+============================================================
+BATCH 08.1 CHECK COMPLETE
+============================================================

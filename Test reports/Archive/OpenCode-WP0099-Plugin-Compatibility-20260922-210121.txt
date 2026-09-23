@@ -1,0 +1,107 @@
+============================================================
+DGM WP-009.9 — Controlled OpenCode Plugin Compatibility Test
+============================================================
+Tue Sep 22 09:01:21 PM IST 2026
+/home/alben/Projects/enterprise-data-governance-platform
+
+=== 1. Baseline ===
+--- OpenCode ---
+opencode v2.0.12
+
+--- Plugin source ---
+import { Plugin } from "@opencode/plugin"
+
+export default Plugin.define({
+  id: "dgm.quota-retry",
+
+  setup: async (ctx) => {
+    await ctx.session.hook("retry", (event) => {
+      // Retry provider rate-limit/quota responses once after 60 seconds.
+      if (event.error.status === 429 && event.attempt === 1) {
+        event.decision = {
+          retry: true,
+          delay: 60_000,
+        }
+      }
+    })
+  },
+})
+
+--- .opencode/package.json ---
+{
+  "dependencies": {
+    "@opencode/plugin": "^2.0.14"
+  }
+}
+
+--- dependency version ---
+@opencode/plugin@2.0.14
+
+=== 2. Create timestamped backups ===
+PLUGIN_BACKUP=.opencode/plugins/quota-retry.ts.before-wp0099-20260922-210121
+PACKAGE_BACKUP=.opencode/package.json.before-wp0099-20260922-210121
+
+=== 3. Controlled package-plugin test ===
+We temporarily remove only the explicit @opencode/plugin
+dependency from .opencode/package.json.
+The existing plugin source is preserved.
+The installed node_modules directory is NOT deleted.
+TEMPORARY_PACKAGE_CHANGE_APPLIED
+
+--- temporary .opencode/package.json ---
+{}
+
+=== 4. Start OpenCode briefly and capture plugin-loader behavior ===
+--- OpenCode command output ---
+[91m[1mError: [0mModel unavailable: google/gemini-3.5-flash-lite
+
+=== 5. Inspect newest OpenCode log entries ===
+--- Plugin-related entries from last 120 lines ---
+timestamp=2026-09-22T15:14:00.423Z level=INFO run=6fa42cb7 message="watcher stopped" path=/home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts type=file http.span=3617353 role=server
+timestamp=2026-09-22T15:17:32.858Z level=INFO run=6fa42cb7 msg="loading plugin" id=/home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts entrypoint=file:///home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts http.span=206 role=server
+timestamp=2026-09-22T15:17:32.862Z level=INFO run=6fa42cb7 message="watcher subscribe" path=/home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts type=file ignores=0 http.span=210 role=server
+timestamp=2026-09-22T15:17:32.863Z level=INFO run=6fa42cb7 message="watcher started" path=/home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts type=file backend=node ignores=0 http.span=211 role=server
+timestamp=2026-09-22T15:17:32.864Z level=INFO run=6fa42cb7 message="watcher subscribe" path=/home/alben/Projects/enterprise-data-governance-platform/.opencode/node_modules/@opencode/plugin type=directory ignores=0 http.span=212 role=server
+timestamp=2026-09-22T15:17:32.866Z level=INFO run=6fa42cb7 message="watcher started" path=/home/alben/Projects/enterprise-data-governance-platform/.opencode/node_modules/@opencode/plugin type=directory backend=inotify ignores=0 http.span=214 role=server
+timestamp=2026-09-22T15:17:32.867Z level=WARN run=6fa42cb7 message="failed to load plugin" target=/home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts ref=err_627bf75e cause="Cause([Die(ResolveMessage: Cannot find package '@opencode/plugin' imported from /home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts)])" http.span=215 role=server
+timestamp=2026-09-22T15:17:34.271Z level=ERROR run=6fa42cb7 message="Failed to drain Session" cause="SessionRunnerModel.ModelUnavailableError: Model unavailable: google/gemini-3.5-flash-lite\n    at <anonymous> (/$bunfs/root/chunk-9dbgd38n.js:37:21266)\n    at SessionRunnerModel.resolve (/$bunfs/root/chunk-9dbgd38n.js:115:7697)\n    at SessionRunnerModel.resolve (definition) (/$bunfs/root/chunk-9dbgd38n.js:37:21023)\n    at SessionContext.load (/$bunfs/root/chunk-4k7gm06b.js:366:2529)\n    at SessionContext.load (definition) (/$bunfs/root/chunk-9dbgd38n.js:115:7646)\n    at SessionRunner.advanceToStep (/$bunfs/root/chunk-4k7gm06b.js:366:2583)\n    at SessionRunner.advanceToStep (definition) (/$bunfs/root/chunk-4k7gm06b.js:366:729)\n    at SessionRunner.drain (/$bunfs/root/chunk-pdvyckmt.js:24:2279)\n    at SessionRunner.drain (definition) (/$bunfs/root/chunk-4k7gm06b.js:366:352)\n    at ServerProcess.start (/$bunfs/root/chunk-rtrfvtvs.js:2:6383)\n    at ServerProcess.start (definition) (/$bunfs/root/chunk-4k7gm06b.js:437:22432)" role=server sessionID=ses_f364e698bffe5vDNQzX11krlah
+timestamp=2026-09-22T15:31:22.099Z level=INFO run=6fa42cb7 msg="loading plugin" id=/home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts entrypoint=file:///home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts http.span=829447 role=server
+timestamp=2026-09-22T15:31:22.100Z level=WARN run=6fa42cb7 message="failed to load plugin" target=/home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts ref=err_ef188d91 cause="Cause([Die(ResolveMessage: Cannot find package '@opencode/plugin' imported from /home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts)])" http.span=829448 role=server
+timestamp=2026-09-22T15:31:22.497Z level=INFO run=82c67917 message="cli starting" version=2.0.12 channel=latest local=false args="[\"run\",\"--model\",\"google/gemini-3.5-flash-lite\",\"Reply with exactly: WP0099_PLUGIN_COMPATIBILITY_TEST\"]" role=cli
+
+=== 6. Check whether plugin package is still physically present ===
+PLUGIN_PACKAGE_STILL_PRESENT
+@opencode/plugin@2.0.14
+
+=== 7. Restore original package.json ===
+PACKAGE_JSON_RESTORED
+
+=== 8. Verify restoration ===
+PACKAGE_RESTORE_VERIFIED
+PLUGIN_SOURCE_UNCHANGED
+
+=== 9. Final dependency state ===
+{
+  "dependencies": {
+    "@opencode/plugin": "^2.0.14"
+  }
+}
+
+@opencode/plugin@2.0.14
+
+=== 10. Git status ===
+?? .opencode/
+?? node_modules/
+?? package-lock.json
+?? package.json
+
+=== 11. RESULT INTERPRETATION ===
+This batch does NOT declare PASS/FAIL automatically.
+Interpretation requires the OpenCode log evidence above.
+
+=== 12. NO COMMIT ===
+No git commit was performed.
+
+============================================================
+WP-009.9 DIAGNOSTIC COMPLETE
+============================================================

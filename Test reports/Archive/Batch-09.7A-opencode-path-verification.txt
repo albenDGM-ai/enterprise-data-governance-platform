@@ -1,0 +1,79 @@
+============================================================
+DGM — Batch 09.7A
+OpenCode PATH Verification
+============================================================
+
+=== 1. RELOAD SHELL PATH ===
+PATH:
+/home/alben/.opencode/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+
+=== 2. OPENCODE COMMAND ===
+PASS: opencode command found
+Path: /home/alben/.opencode/bin/opencode
+
+=== 3. OPENCODE VERSION ===
+opencode v2.0.11
+
+=== 4. PROJECT ===
+Repository: /home/alben/Projects/enterprise-data-governance-platform
+Branch: feature/project-foundation
+
+=== 5. GIT DIFF CHECK ===
+backend/alembic/env.py:33: trailing whitespace.
++ 
+
+=== 6. GIT STATUS ===
+ M backend/alembic/env.py
+ M backend/app/main.py
+ M backend/app/models/lineage_mapping.py
+ M backend/app/models/lineage_target.py
+ M backend/app/services/lineage_mapping_service.py
+ M backend/app/services/lineage_target_service.py
+ M backend/app/services/lineage_transformation_service.py
+ M docs/architecture/logical/DataLineageLogicalModel.md
+ M docs/architecture/physical/DataLineagePhysicalModel.md
+?? .agents/
+?? AGENTS.md
+?? AI_CONTEXT/
+?? "Test reports/"
+?? backend/alembic/env.py.before-08.8D
+?? backend/alembic/env.py.before-08.8E-20260914-210936
+?? backend/alembic/env.py.before-08.8E-20260914-211116
+?? backend/alembic/env.py.before-08.8J
+?? backend/alembic/env.py.before-08.8K
+?? backend/alembic/env.py.before-08.8L
+?? backend/alembic/env.py.before-08.8M
+?? backend/alembic/env.py.before-08.8N
+?? backend/alembic/env.py.before-08.8O
+?? backend/alembic/env.py.before-08.8Q
+?? backend/alembic/env.py.before-08.8S
+?? backend/alembic/env.py.before-08.8T
+?? backend/alembic/env.py.before-08.8U
+?? backend/alembic/env.py.before-08.8V
+?? backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py
+?? backend/alembic/versions/e2d453a0ad03_enforce_lineage_relationship_not_null.py
+?? backend/app/api/
+?? backend/app/models/lineage_mapping.py.before-08.8J
+?? backend/app/models/lineage_mapping.py.before_68
+?? backend/app/models/lineage_target.py.before-08.8J
+?? backend/app/models/lineage_target.py.before_68
+?? backend/app/schemas/
+?? backend/app/services/lineage_discovery_service.py
+?? backend/app/services/lineage_discovery_service.py.before_76
+?? backend/app/services/lineage_mapping_service.py.before_68
+?? backend/app/services/lineage_target_service.py.before_68
+?? backend/app/services/lineage_validation.py
+?? backend/tests/
+?? docs/architecture/05_LogicalModel.md.before_83
+?? docs/architecture/06_PhysicalModel.md.before_83
+?? docs/architecture/07_API_Design.md.before_83
+?? docs/architecture/08_UI_Design.md.before_83
+?? docs/architecture/ProductContext.md
+?? docs/architecture/api/DataLineageAPI.md.before_83
+?? docs/architecture/logical/DataLineageLogicalModel.md.before_83
+?? docs/architecture/physical/DataLineagePhysicalModel.md.before_83
+?? docs/architecture/ui/DataLineageUI.md.before_83
+
+============================================================
+BATCH 09.7A COMPLETE
+============================================================

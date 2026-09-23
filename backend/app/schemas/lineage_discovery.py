@@ -1,0 +1,92 @@
+from __future__ import annotations
+
+from uuid import UUID
+
+from pydantic import BaseModel, ConfigDict
+
+
+class LineageDiscoveryMapping(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    lineage_mapping_id: UUID
+    lineage_transformation_id: UUID | None
+    source_attribute: str
+    target_attribute: str
+    mapping_type: str
+    status: str
+    is_active: bool
+
+
+class LineageDiscoveryTarget(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    lineage_target_id: UUID
+    lineage_transformation_id: UUID
+    target_name: str
+    target_type: str
+    system_name: str
+    business_domain: str
+    owner: str
+    status: str
+    is_active: bool
+    mappings: list[LineageDiscoveryMapping] = []
+
+
+class LineageDiscoveryTransformation(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    lineage_transformation_id: UUID
+    sequence_number: int
+    transformation_name: str
+    transformation_type: str
+    description: str | None
+    expression: str | None
+    status: str
+    is_active: bool
+    targets: list[LineageDiscoveryTarget] = []
+
+
+class LineageDiscoverySource(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    lineage_source_id: UUID
+    source_name: str
+    source_type: str
+    system_name: str
+    business_domain: str
+    owner: str
+    status: str
+    is_active: bool
+
+
+class LineageDiscoveryProcess(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    lineage_process_id: UUID
+    process_name: str
+    process_type: str
+    technology: str
+    schedule: str | None
+    owner: str
+    status: str
+    is_active: bool
+
+
+class LineageDiscoveryFlow(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    lineage_flow_id: UUID
+    flow_name: str
+    flow_type: str
+    direction: str
+    frequency: str
+    owner: str
+    status: str
+    is_active: bool
+
+
+class LineageDiscoveryResponse(BaseModel):
+    source: LineageDiscoverySource
+    process: LineageDiscoveryProcess
+    flow: LineageDiscoveryFlow
+    transformations: list[LineageDiscoveryTransformation]

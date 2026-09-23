@@ -1,0 +1,85 @@
+============================================================
+BATCH 8 STATE CHECK
+============================================================
+
+=== GIT STATUS ===
+ M backend/app/main.py
+ M backend/app/models/lineage_mapping.py
+ M backend/app/models/lineage_target.py
+ M backend/app/services/lineage_mapping_service.py
+ M backend/app/services/lineage_target_service.py
+ M backend/app/services/lineage_transformation_service.py
+ M docs/architecture/logical/DataLineageLogicalModel.md
+ M docs/architecture/physical/DataLineagePhysicalModel.md
+?? AGENTS.md
+?? "Test reports/"
+?? backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py
+?? backend/app/api/
+?? backend/app/models/lineage_mapping.py.before_68
+?? backend/app/models/lineage_target.py.before_68
+?? backend/app/schemas/
+?? backend/app/services/lineage_discovery_service.py
+?? backend/app/services/lineage_discovery_service.py.before_76
+?? backend/app/services/lineage_mapping_service.py.before_68
+?? backend/app/services/lineage_target_service.py.before_68
+?? backend/app/services/lineage_validation.py
+?? backend/tests/
+?? docs/architecture/05_LogicalModel.md.before_83
+?? docs/architecture/06_PhysicalModel.md.before_83
+?? docs/architecture/07_API_Design.md.before_83
+?? docs/architecture/08_UI_Design.md.before_83
+?? docs/architecture/api/DataLineageAPI.md.before_83
+?? docs/architecture/logical/DataLineageLogicalModel.md.before_83
+?? docs/architecture/physical/DataLineagePhysicalModel.md.before_83
+?? docs/architecture/ui/DataLineageUI.md.before_83
+
+=== CHANGED FILE SUMMARY ===
+ backend/app/main.py                                |   6 +
+ backend/app/models/lineage_mapping.py              |   6 +
+ backend/app/models/lineage_target.py               |   8 +-
+ backend/app/services/lineage_mapping_service.py    | 128 ++++++++++++++++++++-
+ backend/app/services/lineage_target_service.py     |  44 +++++++
+ .../app/services/lineage_transformation_service.py |  19 +++
+ .../logical/DataLineageLogicalModel.md             |  18 ++-
+ .../physical/DataLineagePhysicalModel.md           |  29 ++++-
+ 8 files changed, 254 insertions(+), 4 deletions(-)
+
+=== LINEAGE VALIDATION FILE ===
+class LineageRelationshipValidationError(ValueError):
+    """Raised when a governed lineage relationship is invalid."""
+
+=== BATCH 8 TEST FILE ===
+219 backend/tests/test_batch_08_graph_integrity.py
+
+=== SERVICE VALIDATION REFERENCES ===
+backend/app/services/lineage_target_service.py:14:from app.services.lineage_validation import LineageRelationshipValidationError
+backend/app/services/lineage_target_service.py:35:            raise LineageRelationshipValidationError(
+backend/app/services/lineage_target_service.py:39:            raise LineageRelationshipValidationError(
+backend/app/services/lineage_target_service.py:47:            raise LineageRelationshipValidationError(
+backend/app/services/lineage_target_service.py:51:            raise LineageRelationshipValidationError(
+backend/app/services/lineage_mapping_service.py:15:from app.services.lineage_validation import LineageRelationshipValidationError
+backend/app/services/lineage_mapping_service.py:40:            raise LineageRelationshipValidationError(
+backend/app/services/lineage_mapping_service.py:44:            raise LineageRelationshipValidationError(
+backend/app/services/lineage_mapping_service.py:55:                raise LineageRelationshipValidationError(
+backend/app/services/lineage_mapping_service.py:59:                raise LineageRelationshipValidationError(
+backend/app/services/lineage_mapping_service.py:63:                raise LineageRelationshipValidationError(
+backend/app/services/lineage_mapping_service.py:72:                raise LineageRelationshipValidationError(
+backend/app/services/lineage_mapping_service.py:76:                raise LineageRelationshipValidationError(
+backend/app/services/lineage_mapping_service.py:80:                raise LineageRelationshipValidationError(
+backend/app/services/lineage_mapping_service.py:90:                raise LineageRelationshipValidationError(
+backend/app/services/lineage_mapping_service.py:94:                raise LineageRelationshipValidationError(
+backend/app/services/lineage_mapping_service.py:98:                raise LineageRelationshipValidationError(
+backend/app/services/lineage_mapping_service.py:106:                raise LineageRelationshipValidationError(
+backend/app/services/lineage_transformation_service.py:13:from app.services.lineage_validation import LineageRelationshipValidationError
+backend/app/services/lineage_transformation_service.py:30:            raise LineageRelationshipValidationError(
+backend/app/services/lineage_transformation_service.py:34:            raise LineageRelationshipValidationError(
+backend/app/services/lineage_validation.py:1:class LineageRelationshipValidationError(ValueError):
+
+=== BATCH 8 REPORT ===
+NOT FOUND
+
+=== DIFF CHECK ===
+
+============================================================
+BATCH 8 STATE CHECK COMPLETE
+============================================================

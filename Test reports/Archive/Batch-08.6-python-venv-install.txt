@@ -1,0 +1,106 @@
+============================================================
+DGM — Batch 08.6
+Python Virtual Environment Support
+============================================================
+
+---------------- 1. Python ----------------
+Python 3.14.4
+
+---------------- 2. Install Python venv package ----------------
+
+WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
+
+Hit:1 https://download.docker.com/linux/ubuntu resolute InRelease
+Hit:2 https://packages.microsoft.com/repos/code stable InRelease
+Hit:3 http://in.archive.ubuntu.com/ubuntu resolute InRelease
+Hit:4 http://security.ubuntu.com/ubuntu resolute-security InRelease
+Get:5 http://in.archive.ubuntu.com/ubuntu resolute-updates InRelease [137 kB]
+Hit:6 http://in.archive.ubuntu.com/ubuntu resolute-backports InRelease
+Get:7 http://in.archive.ubuntu.com/ubuntu resolute-updates/main amd64 Packages [603 kB]
+Get:8 http://in.archive.ubuntu.com/ubuntu resolute-updates/universe amd64 Packages [285 kB]
+Fetched 1,025 kB in 2s (630 kB/s)
+Reading package lists...
+Building dependency tree...
+Reading state information...
+11 packages can be upgraded. Run 'apt list --upgradable' to see them.
+
+WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
+
+Reading package lists...
+Building dependency tree...
+Reading state information...
+Solving dependencies...
+Installing:
+  python3.14-venv
+
+Installing dependencies:
+  python3-pip-whl  python3-setuptools-whl
+
+Summary:
+  Upgrading: 0, Installing: 3, Removing: 0, Not Upgrading: 11
+  Download size: 2,609 kB
+  Space needed: 2,952 kB / 436 GB available
+
+Get:1 http://in.archive.ubuntu.com/ubuntu resolute/universe amd64 python3-pip-whl all 25.1.1+dfsg-1ubuntu2 [1,430 kB]
+Get:2 http://in.archive.ubuntu.com/ubuntu resolute/universe amd64 python3-setuptools-whl all 78.1.1-0.1build1 [1,174 kB]
+Get:3 http://in.archive.ubuntu.com/ubuntu resolute-updates/universe amd64 python3.14-venv amd64 3.14.4-1ubuntu0.2 [5,356 B]
+Fetched 2,609 kB in 2s (1,310 kB/s)
+Selecting previously unselected package python3-pip-whl.
+(Reading database… (Reading database… 5%(Reading database… 10%(Reading database… 15%(Reading database… 20%(Reading database… 25%(Reading database… 30%(Reading database… 35%(Reading database… 40%(Reading database… 45%(Reading database… 50%(Reading database… 55%(Reading database… 60%(Reading database… 65%(Reading database… 70%(Reading database… 75%(Reading database… 80%(Reading database… 85%(Reading database… 90%(Reading database… 95%(Reading database… 100%(Reading database… 272711 files and directories currently installed.)
+Preparing to unpack …/python3-pip-whl_25.1.1+dfsg-1ubuntu2_all.deb…
+Unpacking python3-pip-whl (25.1.1+dfsg-1ubuntu2)…
+Selecting previously unselected package python3-setuptools-whl.
+Preparing to unpack …/python3-setuptools-whl_78.1.1-0.1build1_all.deb…
+Unpacking python3-setuptools-whl (78.1.1-0.1build1)…
+Selecting previously unselected package python3.14-venv.
+Preparing to unpack …/python3.14-venv_3.14.4-1ubuntu0.2_amd64.deb…
+Unpacking python3.14-venv (3.14.4-1ubuntu0.2)…
+Setting up python3-setuptools-whl (78.1.1-0.1build1)…
+Setting up python3-pip-whl (25.1.1+dfsg-1ubuntu2)…
+Setting up python3.14-venv (3.14.4-1ubuntu0.2)…
+
+---------------- 3. Verify ensurepip ----------------
+pip 25.1.1
+
+---------------- 4. Create project virtual environment ----------------
+Existing .venv directory found.
+Verifying existing environment rather than deleting/recreating it.
+
+---------------- 5. Verify virtual environment ----------------
+Python 3.14.4
+/home/alben/Projects/enterprise-data-governance-platform/.venv/bin/python: No module named pip
+
+---------------- 6. Verify repository state ----------------
+ M backend/app/main.py
+ M backend/app/models/lineage_mapping.py
+ M backend/app/models/lineage_target.py
+ M backend/app/services/lineage_mapping_service.py
+ M backend/app/services/lineage_target_service.py
+ M backend/app/services/lineage_transformation_service.py
+ M docs/architecture/logical/DataLineageLogicalModel.md
+ M docs/architecture/physical/DataLineagePhysicalModel.md
+?? AGENTS.md
+?? "Test reports/"
+?? backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py
+?? backend/app/api/
+?? backend/app/models/lineage_mapping.py.before_68
+?? backend/app/models/lineage_target.py.before_68
+?? backend/app/schemas/
+?? backend/app/services/lineage_discovery_service.py
+?? backend/app/services/lineage_discovery_service.py.before_76
+?? backend/app/services/lineage_mapping_service.py.before_68
+?? backend/app/services/lineage_target_service.py.before_68
+?? backend/app/services/lineage_validation.py
+?? backend/tests/
+?? docs/architecture/05_LogicalModel.md.before_83
+?? docs/architecture/06_PhysicalModel.md.before_83
+?? docs/architecture/07_API_Design.md.before_83
+?? docs/architecture/08_UI_Design.md.before_83
+?? docs/architecture/api/DataLineageAPI.md.before_83
+?? docs/architecture/logical/DataLineageLogicalModel.md.before_83
+?? docs/architecture/physical/DataLineagePhysicalModel.md.before_83
+?? docs/architecture/ui/DataLineageUI.md.before_83
+
+============================================================
+BATCH 08.6 CHECK COMPLETE
+============================================================

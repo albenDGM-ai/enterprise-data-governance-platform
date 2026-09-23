@@ -1,0 +1,1321 @@
+============================================================
+DGM — Batch 09.1
+Skill Foundation Analysis
+============================================================
+
+---------------- 1. AGENTS.md ----------------
+# Enterprise Data Governance Management Platform — Engineering Instructions
+
+## Project safety
+
+- Never discard, reset, revert, checkout, stash, overwrite, or delete existing user work unless explicitly instructed.
+- Treat all pre-existing modified and untracked files as intentional until proven otherwise.
+- Never automatically clean up `.before_*` backup files.
+- Inspect the existing implementation before changing it.
+
+## Development workflow
+
+- Follow the project's batch-based development workflow.
+- Group related commands and changes into small, logical batches; include practical verification in each batch.
+- Prefer consolidated results over repeated one-command-at-a-time interaction.
+- Make focused changes and avoid unrelated refactoring.
+
+## Architecture
+
+- This is an Enterprise Data Governance Management platform.
+- Preserve separation between business requirements, conceptual, logical, and physical models, API design, UI design, and implementation.
+- Do not make architectural changes silently. Explain material architectural impact and request confirmation before proceeding.
+
+## Documentation
+
+- Preserve the numbered architecture documentation structure, including `01_ProjectVision.md` through `10_NamingStandards.md`, and all subsequently established numbered architecture documents.
+- Preserve module-level logical, physical, API, and UI documentation.
+- Do not rewrite planned architecture merely to match incomplete implementation.
+- Clearly distinguish implemented, planned, and future capabilities.
+
+## Current technology direction
+
+- Backend: FastAPI, Python, SQLAlchemy, Pydantic, Alembic; database: PostgreSQL.
+- Frontend: React, TypeScript, Material UI, React Router, TanStack Query.
+- Infrastructure: Docker and Docker Compose.
+- AI: OpenAI API for cloud LLM capability; LangChain for orchestration; ChromaDB as a future vector store; Ollama as an optional local model runtime.
+- Add LangGraph only when stateful, branching, looping, or multi-step agent orchestration genuinely requires it.
+- Do not describe Ollama as an LLM; it is a local runtime for models.
+
+## Data lineage
+
+- Treat Data Lineage as a governed enterprise capability, not merely a visualization feature.
+- Preserve traceability, ownership, auditability, versioning, snapshots, transformations, mappings, and human-review requirements.
+- Automatically or AI-discovered lineage must be reviewable before publication.
+- Maintain consistency between lineage entities and foreign-key relationships; never weaken governance controls for convenience.
+
+## Database and migrations
+
+- Never modify migrations casually; inspect migration history before creating one.
+- Test migrations against appropriate database states.
+- Be especially careful with non-null columns, foreign keys, existing data, downgrade behavior, and migration ordering.
+
+## Testing and verification
+
+- Run focused verification relevant to each change; do not claim a feature works without appropriate verification.
+- As the project matures, prefer tests for API behavior, services, database integrity, and migrations.
+- Do not install dependencies without explicit need and awareness of the project's environment.
+
+## Git
+
+- Never commit unless explicitly requested.
+- Before and after meaningful changes, inspect `git status` and relevant diffs.
+- Preserve the user's current branch and working tree.
+
+## Working style
+
+- Be conservative with existing code.
+- Explain intended changes before broad or architectural modifications.
+- When uncertain, inspect more rather than guessing.
+- Report observed facts separately from recommendations.
+
+---------------- 2. AI_CONTEXT files ----------------
+AI_CONTEXT/BLOCKERS.md
+AI_CONTEXT/CURRENT_WORK.md
+AI_CONTEXT/DECISIONS.md
+AI_CONTEXT/HANDOFF.md
+AI_CONTEXT/PROGRESS_LEDGER.md
+AI_CONTEXT/PROJECT_STATE.md
+AI_CONTEXT/project_state.yaml
+AI_CONTEXT/ROADMAP.md
+AI_CONTEXT/work-packages/WP-009-ai-development-os.md
+
+---------------- 3. Current project state ----------------
+# DGM Project State
+
+## Project
+
+Enterprise Data Governance Platform (DGM)
+
+## Mission
+
+Build an enterprise-grade Data Governance Management platform with metadata,
+business glossary, data quality, lineage, governance workflows, and AI-powered
+governance capabilities.
+
+## Current Development Phase
+
+Platform Foundation
+
+## Current Workstream
+
+Lineage Governance
+
+## Current Batch
+
+Batch 09 — AI Development Operating System
+
+## Previous Work
+
+Batch 08 established lineage graph integrity and transformation API contract
+corrections.
+
+## Current Environment
+
+- OS: Ubuntu/Xubuntu
+- Python: 3.14.4
+- Git branch: feature/project-foundation
+- Project-local virtual environment: .venv
+- Backend: FastAPI / Python
+- ORM: SQLAlchemy
+- Migration: Alembic
+- Database target: PostgreSQL
+- Frontend target: React / TypeScript / MUI
+- AI architecture: multi-provider AI gateway
+
+## Current Objective
+
+Establish a model-independent AI-assisted development workflow so that
+different coding models can continue DGM development without losing project
+context or architectural continuity.
+
+## Current Status
+
+AI development operating system is being established.
+
+## Next Immediate Work
+
+1. Complete AI_CONTEXT structure.
+2. Create reusable DGM agent skills.
+3. Create model-independent handoff mechanism.
+4. Establish work-package execution protocol.
+5. Resume Batch 08 runtime testing.
+6. Continue DGM product implementation.
+
+## Important Principle
+
+The repository owns project knowledge.
+
+No individual AI model is the authoritative owner of DGM project context.
+
+## Source of Truth
+
+1. Product and architecture documentation
+2. AGENTS.md
+3. AI_CONTEXT
+4. Source code
+5. Tests and validation reports
+6. Git history
+
+---------------- 4. Current handoff ----------------
+# DGM AI Handoff
+
+## Purpose
+
+This document allows one AI coding agent to hand DGM development to another
+AI coding agent without losing project context.
+
+## Mission
+
+Continue development of the Enterprise Data Governance Platform.
+
+## Current Phase
+
+Platform Foundation
+
+## Current Workstream
+
+Lineage Governance
+
+## Current Work Package
+
+WP-009 — AI Development Operating System
+
+## Last Completed Major Work
+
+Batch 08 established lineage graph integrity and corrected the transformation
+API update contract.
+
+## Current Objective
+
+Establish the model-independent AI development operating system.
+
+## Important Architectural Rules
+
+1. Preserve the existing DGM documentation structure.
+2. Preserve existing business, conceptual, logical, physical, API, and UI
+   separation.
+3. Do not destroy or reset existing work.
+4. Do not overwrite `.before_*` files.
+5. Do not make destructive database changes without explicit approval.
+6. Lineage relationships must preserve governed graph integrity.
+7. Transformation flow ownership is immutable after creation.
+8. Governed lineage records must have valid active parent relationships.
+9. Physical migration compatibility may require nullable legacy columns.
+10. AI-generated lineage must remain subject to human governance/review.
+
+## Current Development Method
+
+Development is organized into small bounded work packages.
+
+Each work package must define:
+
+- objective
+- scope
+- exclusions
+- acceptance criteria
+- validation
+- stop conditions
+- completion artifacts
+
+## Model Switching Protocol
+
+A coding agent must:
+
+1. Read AGENTS.md.
+2. Read this HANDOFF.md.
+3. Read PROJECT_STATE.md.
+4. Read CURRENT_WORK.md.
+5. Read the active work package.
+6. Read only the relevant architecture/product documentation.
+7. Inspect the current repository state.
+8. Verify the stated state before modifying anything.
+9. Implement only the active work package.
+10. Run the required validation.
+11. Update the handoff/state documents.
+12. Produce a concise completion report.
+
+## Escalate Instead of Guessing
+
+Stop and request orchestration guidance when:
+
+- requirements conflict
+- architecture is unclear
+- a destructive migration is required
+- a major domain model decision is required
+- existing documentation conflicts materially with code
+- security/privacy implications are unclear
+- the requested change exceeds the current work package
+
+## Handoff Rule
+
+The next AI must continue from the current checkpoint.
+
+It must not restart completed work merely because it is a different model.
+
+---------------- 5. Current decisions ----------------
+# DGM Architecture and Development Decisions
+
+## Purpose
+
+Record durable decisions that coding agents must not silently reverse.
+
+## Lineage
+
+### Transformation Ownership
+
+A lineage transformation belongs to one lineage flow.
+
+### Target Ownership
+
+A governed lineage target belongs to one lineage transformation.
+
+### Mapping Ownership
+
+A governed lineage mapping requires a lineage target.
+
+### Transformation Flow Mutability
+
+A transformation's lineage flow is immutable after creation.
+
+### Legacy Migration Strategy
+
+New relationship columns may remain nullable during the initial migration
+phase to preserve legacy-read compatibility.
+
+Hard enforcement requires governed remediation before tightening constraints.
+
+## Development
+
+### Repository as Source of Truth
+
+AI models are replaceable execution components.
+
+Project knowledge must remain in the repository.
+
+### Work Package Model
+
+AI coding work must be bounded by explicit work packages and acceptance
+criteria.
+
+### Human Architectural Control
+
+Major architectural decisions require human/orchestration review.
+
+### Git
+
+Do not create commits unless explicitly requested.
+
+---------------- 6. Current work ----------------
+# Current Work
+
+## Work Package
+
+WP-009 — AI Development Operating System
+
+## Objective
+
+Create a persistent, model-independent development context that allows
+different AI coding agents to continue DGM development without restarting
+project analysis.
+
+## Scope
+
+- AI project state
+- Current work tracking
+- Model handoff
+- Decision tracking
+- Blocker tracking
+- Progress tracking
+- Work-package structure
+- Shared AI skills
+
+## Out of Scope
+
+- Application code changes
+- Database schema changes
+- API changes
+- UI changes
+- AI runtime implementation
+
+## Acceptance Criteria
+
+- [ ] AI_CONTEXT directory exists.
+- [ ] Project state exists.
+- [ ] Current work exists.
+- [ ] Handoff mechanism exists.
+- [ ] Decision log exists.
+- [ ] Blocker log exists.
+- [ ] Roadmap exists.
+- [ ] Progress ledger exists.
+- [ ] Machine-readable state exists.
+- [ ] Shared DGM skills exist.
+- [ ] Model-switching workflow is documented.
+
+## Completion Condition
+
+The project must be able to hand a bounded work package from one coding
+model to another using only repository-resident context.
+
+---------------- 7. Existing DGM skill files ----------------
+
+===== .agents/skills/dgm-ai-agent/SKILL.md =====
+# dgm-ai-agent
+
+## Purpose
+
+DGM-specific reusable agent capability.
+
+## Status
+
+Initial framework placeholder.
+
+## Instructions
+
+This skill will be expanded with DGM-specific execution rules before being
+used by coding agents.
+
+## Project Context
+
+Read:
+
+- AGENTS.md
+- AI_CONTEXT/HANDOFF.md
+- AI_CONTEXT/PROJECT_STATE.md
+
+Then read only the relevant DGM architecture documentation.
+
+## Safety
+
+Do not modify files outside the active work package unless required and
+explicitly justified.
+
+Do not reverse established architecture decisions silently.
+
+## Validation
+
+Follow the project's testing and validation requirements.
+
+===== .agents/skills/dgm-api/SKILL.md =====
+# dgm-api
+
+## Purpose
+
+DGM-specific reusable agent capability.
+
+## Status
+
+Initial framework placeholder.
+
+## Instructions
+
+This skill will be expanded with DGM-specific execution rules before being
+used by coding agents.
+
+## Project Context
+
+Read:
+
+- AGENTS.md
+- AI_CONTEXT/HANDOFF.md
+- AI_CONTEXT/PROJECT_STATE.md
+
+Then read only the relevant DGM architecture documentation.
+
+## Safety
+
+Do not modify files outside the active work package unless required and
+explicitly justified.
+
+Do not reverse established architecture decisions silently.
+
+## Validation
+
+Follow the project's testing and validation requirements.
+
+===== .agents/skills/dgm-architecture/SKILL.md =====
+# dgm-architecture
+
+## Purpose
+
+DGM-specific reusable agent capability.
+
+## Status
+
+Initial framework placeholder.
+
+## Instructions
+
+This skill will be expanded with DGM-specific execution rules before being
+used by coding agents.
+
+## Project Context
+
+Read:
+
+- AGENTS.md
+- AI_CONTEXT/HANDOFF.md
+- AI_CONTEXT/PROJECT_STATE.md
+
+Then read only the relevant DGM architecture documentation.
+
+## Safety
+
+Do not modify files outside the active work package unless required and
+explicitly justified.
+
+Do not reverse established architecture decisions silently.
+
+## Validation
+
+Follow the project's testing and validation requirements.
+
+===== .agents/skills/dgm-database/SKILL.md =====
+# dgm-database
+
+## Purpose
+
+DGM-specific reusable agent capability.
+
+## Status
+
+Initial framework placeholder.
+
+## Instructions
+
+This skill will be expanded with DGM-specific execution rules before being
+used by coding agents.
+
+## Project Context
+
+Read:
+
+- AGENTS.md
+- AI_CONTEXT/HANDOFF.md
+- AI_CONTEXT/PROJECT_STATE.md
+
+Then read only the relevant DGM architecture documentation.
+
+## Safety
+
+Do not modify files outside the active work package unless required and
+explicitly justified.
+
+Do not reverse established architecture decisions silently.
+
+## Validation
+
+Follow the project's testing and validation requirements.
+
+===== .agents/skills/dgm-development/SKILL.md =====
+# dgm-development
+
+## Purpose
+
+DGM-specific reusable agent capability.
+
+## Status
+
+Initial framework placeholder.
+
+## Instructions
+
+This skill will be expanded with DGM-specific execution rules before being
+used by coding agents.
+
+## Project Context
+
+Read:
+
+- AGENTS.md
+- AI_CONTEXT/HANDOFF.md
+- AI_CONTEXT/PROJECT_STATE.md
+
+Then read only the relevant DGM architecture documentation.
+
+## Safety
+
+Do not modify files outside the active work package unless required and
+explicitly justified.
+
+Do not reverse established architecture decisions silently.
+
+## Validation
+
+Follow the project's testing and validation requirements.
+
+===== .agents/skills/dgm-documentation/SKILL.md =====
+# dgm-documentation
+
+## Purpose
+
+DGM-specific reusable agent capability.
+
+## Status
+
+Initial framework placeholder.
+
+## Instructions
+
+This skill will be expanded with DGM-specific execution rules before being
+used by coding agents.
+
+## Project Context
+
+Read:
+
+- AGENTS.md
+- AI_CONTEXT/HANDOFF.md
+- AI_CONTEXT/PROJECT_STATE.md
+
+Then read only the relevant DGM architecture documentation.
+
+## Safety
+
+Do not modify files outside the active work package unless required and
+explicitly justified.
+
+Do not reverse established architecture decisions silently.
+
+## Validation
+
+Follow the project's testing and validation requirements.
+
+===== .agents/skills/dgm-lineage/SKILL.md =====
+# dgm-lineage
+
+## Purpose
+
+DGM-specific reusable agent capability.
+
+## Status
+
+Initial framework placeholder.
+
+## Instructions
+
+This skill will be expanded with DGM-specific execution rules before being
+used by coding agents.
+
+## Project Context
+
+Read:
+
+- AGENTS.md
+- AI_CONTEXT/HANDOFF.md
+- AI_CONTEXT/PROJECT_STATE.md
+
+Then read only the relevant DGM architecture documentation.
+
+## Safety
+
+Do not modify files outside the active work package unless required and
+explicitly justified.
+
+Do not reverse established architecture decisions silently.
+
+## Validation
+
+Follow the project's testing and validation requirements.
+
+===== .agents/skills/dgm-testing/SKILL.md =====
+# dgm-testing
+
+## Purpose
+
+DGM-specific reusable agent capability.
+
+## Status
+
+Initial framework placeholder.
+
+## Instructions
+
+This skill will be expanded with DGM-specific execution rules before being
+used by coding agents.
+
+## Project Context
+
+Read:
+
+- AGENTS.md
+- AI_CONTEXT/HANDOFF.md
+- AI_CONTEXT/PROJECT_STATE.md
+
+Then read only the relevant DGM architecture documentation.
+
+## Safety
+
+Do not modify files outside the active work package unless required and
+explicitly justified.
+
+Do not reverse established architecture decisions silently.
+
+## Validation
+
+Follow the project's testing and validation requirements.
+
+---------------- 8. ProductContext ----------------
+# DGM Product Context — Current Progress
+
+**Product:** Enterprise Data Governance Platform (DGM)  
+**Document:** Product Context and Progress Baseline  
+**Status:** Living project-context document  
+**Last Updated:** 19 September 2026
+
+---
+
+## 1. Purpose
+
+This document captures the current product context, implementation maturity, architectural direction, and progress baseline for the Enterprise Data Governance Platform (DGM).
+
+It is intended to provide a stable context source for future development work, coding-agent sessions, architecture decisions, AI implementation, testing, and roadmap planning.
+
+Completion percentages are **indicative product-capability estimates**, not formal project-management KPIs. They represent approximate usable capability across requirements, architecture, data model, backend behavior, API foundation, validation, and testing.
+
+---
+
+## 2. Product Vision
+
+DGM is intended to be an enterprise data-governance platform providing a governed system of record for:
+
+- enterprise metadata
+- business meaning
+- data quality
+- ownership
+- stewardship
+- policies
+- business rules
+- critical data elements
+- data lineage
+- governance workflows
+- auditability
+- search
+- reporting
+- AI-assisted governance
+
+The platform is intended to combine deterministic governance controls with AI capabilities rather than allowing AI to bypass governance controls.
+
+### AI governance principle
+
+> AI may discover, recommend, explain, and assist; governed publication remains subject to enterprise controls and appropriate human review.
+
+---
+
+## 3. Core Product Capability Areas
+
+1. Metadata Management
+2. Business Glossary Management
+3. Enterprise Business Modeling
+4. Data Governance
+5. Data Ownership
+6. Data Stewardship
+7. Data Classification
+8. Policy Management
+9. Business Rules Management
+10. Critical Data Element (CDE) Management
+11. Data Quality Management
+12. Data Lineage
+13. Workflow Management
+14. Audit Management
+15. Security Management
+16. Reporting and Dashboards
+17. Enterprise Search
+
+These capabilities are intended to operate as an integrated governance platform rather than as independent applications.
+
+---
+
+## 4. Current Product Architecture Direction
+
+The intended architecture separates the deterministic governance platform from the AI intelligence layer.
+
+```text
+                    Enterprise DGM
+                          |
+          +---------------+---------------+
+          |                               |
+   Deterministic Governance          AI Intelligence
+          |                               |
+   PostgreSQL                         SLM / LLM
+   SQLAlchemy                         Embeddings
+   Alembic                            Retrieval / RAG
+   FastAPI                            AI Agents
+   Governance APIs                    Recommendations
+   Audit / Controls                   Explanations
+          |                               |
+          +---------------+---------------+
+                          |
+                  Human Governance
+                   / Review / Approval
+```
+
+The deterministic layer is the system of record. AI operates as a governed intelligence layer over enterprise metadata and the governance graph.
+
+---
+
+## 5. Current Technical Foundation
+
+### Main technology direction
+
+- Python / FastAPI
+- SQLAlchemy ORM
+- Pydantic
+- Alembic
+- PostgreSQL
+- Docker Compose
+- pytest
+- Git
+
+### Development branch
+
+`feature/project-foundation`
+
+### Current lineage migration head
+
+`e2d453a0ad03`
+
+---
+
+## 6. Documentation Baseline
+
+The established architecture documentation sequence is:
+
+```text
+01_ProjectVision.md
+02_BusinessRequirements.md
+03_EnterpriseBusinessModel.md
+04_ConceptualModel.md
+05_LogicalModel.md
+06_PhysicalModel.md
+07_API_Design.md
+08_UI_Design.md
+09_DataDictionary.md
+10_NamingStandards.md
+```
+
+Lineage-specific architecture documentation includes:
+
+```text
+docs/architecture/logical/DataLineageLogicalModel.md
+docs/architecture/physical/DataLineagePhysicalModel.md
+docs/architecture/api/DataLineageAPI.md
+docs/architecture/ui/DataLineageUI.md
+```
+
+This document is a product-context supplement and does not replace the architecture baseline.
+
+---
+
+# 7. Capability Progress Baseline
+
+| Capability | Indicative maturity | Current position |
+|---|---:|---|
+| Metadata Management | 25–30% | Core objective and architecture direction established; ingestion/catalog/operational management remain |
+| Business Glossary Management | 15–20% | Identified core capability; glossary model, lifecycle, UI and workflows remain |
+| Enterprise Business Modeling | 40–50% | Domain/capability modeling and enterprise context substantially defined; operational implementation remains |
+| Data Governance | 30–35% | Governance is the central product purpose; operational governance framework remains |
+| Data Ownership | 15–20% | Ownership concepts/fields established; owner registry and lifecycle workflows remain |
+| Data Stewardship | 15–20% | Stewardship recognized as core role; assignments/work queues/workflows remain |
+| Data Classification | 5–10% | Capability identified; implementation largely future, including AI assistance |
+| Policy Management | 5–10% | Target capability identified; repository/lifecycle/approval remain |
+| Business Rules Management | 10–15% | Concept established; repository/lifecycle/evaluation remain |
+| CDE Management | 5–10% | Capability identified; repository and lifecycle remain |
+| Data Quality Management | 15–20% | Central capability direction established; profiling/rules/scorecards/issues remain |
+| **Data Lineage** | **70–80%** | Most mature area: models, migrations, services, validation, discovery, mapping, impact/version/snapshot foundations and tests |
+| Workflow Management | 10–15% | Governance workflow direction established; engine and approvals remain |
+| Audit Management | 15–20% | Auditability is an architectural principle; central audit/event framework remains |
+| Security Management | 10–15% | Enterprise security recognized; authentication/RBAC/authorization remain |
+| Reporting and Dashboards | 5–10% | Target capability identified; reporting/KPI/dashboard implementation remains |
+| Enterprise Search | 5–10% | Target capability identified; unified/semantic search remains |
+
+These estimates are directional and should be updated as implementation progresses.
+
+---
+
+# 8. Data Lineage — Current Most Mature Capability
+
+**Indicative maturity: 70–80%**
+
+### Implemented or established
+
+- Lineage Process
+- Lineage Flow
+- Lineage Transformation
+- Lineage Target
+- Lineage Mapping
+- Foreign-key relationships
+- Relationship validation services
+- Lineage discovery service foundation
+- Impact analysis foundation
+- Version foundation
+- Snapshot foundation
+- CRUD/service architecture
+- Discovery filtering
+- Governance-oriented validation
+- API foundation
+- Lineage architecture documentation
+- Automated graph-integrity tests
+
+### Current relationship model
+
+```text
+Source
+  |
+  v
+Process
+  |
+  v
+Flow
+  |
+  v
+Transformation
+  |
+  v
+Target
+  |
+  v
+Mapping
+```
+
+Target → Transformation and Mapping → Target are now required relationships in the ORM/database contract.
+
+### Current validation state
+
+- Alembic migration graph: clean
+- Current migration head: `e2d453a0ad03`
+- Alembic check: clean
+- Batch 08 graph-integrity tests: **8/8 passing**
+- PostgreSQL relationship columns: `NOT NULL`
+
+### Current issue
+
+Batch 07 contains a historical transition-compatibility test that still expects the ORM relationship columns to be nullable. The current Batch 08 and database contract require them to be non-nullable.
+
+This is a **test-contract reconciliation issue**, not a reason to weaken the current governed database relationship.
+
+Response schemas retain nullable typing where required for legacy-read/discovery compatibility.
+
+---
+
+# 9. Other Capability Context
+
+## Metadata Management — 25–30%
+
+### Established
+
+- Metadata repository is a core DGM objective.
+- Metadata is intended to feed lineage, search, governance, and AI.
+
+### Remaining
+
+- Metadata harvesting/connectors
+- Catalog APIs
+- Metadata lifecycle
+- Metadata UI
+- Technical/business metadata reconciliation
+- Metadata versioning
+
+## Business Glossary — 15–20%
+
+### Established
+
+- Identified as a core DGM capability.
+- Intended to connect business meaning with metadata and business modeling.
+
+### Remaining
+
+- Term model
+- Definitions/synonyms
+- Ownership/stewardship
+- Data-asset relationships
+- Approval lifecycle
+- UI/search
+
+## Enterprise Business Modeling — 40–50%
+
+### Established
+
+- Enterprise Business Model is part of the architecture baseline.
+- Business Domain Catalog and Business Capability Catalog are established concepts.
+
+### Remaining
+
+- Full operational repository
+- APIs
+- UI visualization
+- Relationships to glossary/metadata/CDE/policies/lineage
+- Lifecycle governance
+
+## Data Governance — 30–35%
+
+### Established
+
+- Central product purpose.
+- Governance principles.
+- Ownership, stewardship, lineage, versioning, auditability and reviewability treated as governance concerns.
+
+### Remaining
+
+- Operational governance framework
+- Governance workflows
+- Governance issue management
+- Governance dashboards
+- End-to-end lifecycle
+
+## Data Ownership — 15–20%
+
+Ownership is represented in governance-oriented structures, but owner registry, assignment/change workflows, delegation and accountability views remain.
+
+## Data Stewardship — 15–20%
+
+Stewardship is a core governance role, but steward registry, assignments, work queues, actions, approvals and metrics remain.
+
+## Data Classification — 5–10%
+
+Classification is a target capability and future AI-assisted area. Taxonomy, repository, rules, AI classification, human review and audit remain.
+
+## Policy Management — 5–10%
+
+Policy governance is a target capability. Repository, lifecycle, ownership, applicability, versioning, approval and policy-to-control relationships remain.
+
+## Business Rules — 10–15%
+
+Rules are intended to connect data quality, policies, metadata and governance controls. Repository, lifecycle, evaluation and ownership remain.
+
+## CDE Management — 5–10%
+
+CDEs are intended to connect business meaning, classification, quality, ownership and lineage. Dedicated CDE repository/lifecycle/monitoring remain.
+
+## Data Quality — 15–20%
+
+DQ is intended as a central platform capability. Rule repository, profiling, dimensions, scorecards, measurements, exceptions, remediation and dashboards remain.
+
+## Workflow — 10–15%
+
+Governance workflow and human review are architectural requirements. Generic workflow engine, assignments, approvals, escalation, notifications and SLA tracking remain.
+
+## Audit — 15–20%
+
+Auditability is a core governance principle. Versioning and snapshots provide foundations, but a central immutable audit/event framework remains.
+
+## Security — 10–15%
+
+Security is an enterprise requirement. Authentication, RBAC/ABAC, object/domain permissions, masking and administration remain.
+
+## Reporting and Dashboards — 5–10%
+
+Reporting is a target capability. KPI framework, governance/DQ/lineage/stewardship dashboards and executive reporting remain.
+
+## Enterprise Search — 5–10%
+
+Search is a target capability spanning metadata, glossary, lineage, policies and rules. Unified indexing, relevance, facets, semantic/vector search and AI search remain.
+
+---
+
+# 10. Overall Product Maturity
+
+A single percentage would be misleading because the capabilities are at very different stages.
+
+A more useful planning picture is:
+
+```text
+Platform / Engineering Foundation       ~65%
+Governance Capability Foundation        ~25–35%
+Data Lineage                            ~70–80%
+AI Runtime Capability                   ~5%
+```
+
+These are directional estimates, not formal KPIs.
+
+---
+
+# 11. AI Implementation Direction
+
+AI is intended to be a governed intelligence layer rather than a standalone chatbot.
+
+## First major AI target
+
+**AI-assisted Lineage and Metadata Discovery**
+
+```text
+Enterprise Metadata / SQL / ETL / Governance Context
+                         |
+                         v
+                    AI Engine
+                         |
+                         v
+                Candidate Lineage
+                         |
+             +-----------+-----------+
+             |                       |
+       Confidence                 Evidence
+             |                       |
+             +-----------+-----------+
+                         |
+                         v
+                   Human Review
+                  /            \
+             APPROVE           REJECT
+                 |
+                 v
+          Governed DGM Lineage
+```
+
+AI should discover, recommend and explain lineage, but should not silently publish governed lineage.
+
+---
+
+# 12. AI Capability Roadmap
+
+1. AI-assisted lineage discovery
+2. AI mapping recommendations
+3. Transformation detection
+4. Metadata classification
+5. Business glossary suggestions
+6. AI-assisted CDE identification
+7. Data-quality rule suggestions
+8. Impact-analysis explanations
+9. Governance copilot/search
+10. Multi-agent governance workflows
+
+The deterministic metadata/lineage foundation should remain the governed source of context for these capabilities.
+
+---
+
+# 13. AI Governance Requirements
+
+AI-generated governance recommendations should be traceable through:
+
+- model/provider
+- model version
+- prompt/instruction version where applicable
+- metadata/context snapshot
+- evidence
+- recommendation
+- confidence
+- status
+- reviewer
+- review timestamp
+- approval/rejection decision
+- resulting governed change
+
+This supports auditability and controlled human review.
+
+---
+
+# 14. Recommended Development Sequence
+
+```text
+1. Finish Lineage foundation and regression stabilization
+                     |
+                     v
+2. Metadata Management
+                     |
+                     v
+3. Business Glossary
+                     |
+                     v
+4. Data Quality
+                     |
+                     v
+5. CDE + Classification
+                     |
+                     v
+6. Ownership + Stewardship
+                     |
+                     v
+7. Policies + Business Rules
+                     |
+                     v
+8. Workflow + Audit
+                     |
+                     v
+9. Search + Reporting
+                     |
+                     v
+10. Expand AI capabilities
+```
+
+AI should not necessarily wait until every governance module is complete. Once metadata, glossary and lineage are sufficiently stable, the first AI feature can begin in parallel.
+
+---
+
+# 15. Immediate Priority
+
+1. Resolve the Batch 07/Batch 08 compatibility-test contract.
+2. Restore the complete backend test suite to green.
+3. Preserve the current database governance constraints.
+4. Stabilize the metadata/governance foundation.
+5. Introduce the AI abstraction and first AI-assisted lineage/metadata capability.
+
+---
+
+# 16. Development-Agent Context
+
+Any coding agent working on DGM should use this document together with:
+
+- `AGENTS.md`
+- project vision
+- business requirements
+- architecture documentation
+- logical/physical/API/UI designs
+- current migrations
+- automated tests
+- test reports
+
+Agents must clearly distinguish:
+
+- **Implemented**
+- **Partially implemented**
+- **Documented/planned**
+- **Future AI**
+
+Planned capabilities must not be represented as implemented capabilities.
+
+---
+
+# 17. Current Baseline Summary
+
+As of 19 September 2026:
+
+- DGM has a functioning backend/platform foundation.
+- Data Lineage is the most mature product capability.
+- The lineage graph has explicit governed relationship constraints.
+- Batch 08 graph-integrity tests pass 8/8.
+- Current Alembic lineage head is `e2d453a0ad03`.
+- The remaining Batch 07 failure is a historical test-contract mismatch with the newer governed relationship contract.
+- Most broader governance capabilities have architecture/requirements direction but still require substantial implementation.
+- The AI runtime layer has not yet been implemented.
+- The intended first AI feature is AI-assisted lineage and metadata discovery with human review.
+
+This document should be updated whenever a major capability moves from planned to implemented or its maturity materially changes.
+
+---------------- 9. Architecture document structure ----------------
+docs/architecture/00_EnterpriseArchitectureOverview.md
+docs/architecture/01_ProjectVision.md
+docs/architecture/02_BusinessRequirements.md
+docs/architecture/03_EnterpriseBusinessModel.md
+docs/architecture/04_ConceptualModel.md
+docs/architecture/05_LogicalModel.md
+docs/architecture/05_LogicalModel.md.before_83
+docs/architecture/06_PhysicalModel.md
+docs/architecture/06_PhysicalModel.md.before_83
+docs/architecture/07_API_Design.md
+docs/architecture/07_API_Design.md.before_83
+docs/architecture/08_UI_Design.md
+docs/architecture/08_UI_Design.md.before_83
+docs/architecture/09_DataDictionary.md
+docs/architecture/10_NamingStandards.md
+docs/architecture/api/AIAPI.md
+docs/architecture/api/BusinessGlossaryAPI.md
+docs/architecture/api/BusinessRulesAPI.md
+docs/architecture/api/DataLineageAPI.md
+docs/architecture/api/DataLineageAPI.md.before_83
+docs/architecture/api/DataQualityAPI.md
+docs/architecture/api/GovernanceAPI.md
+docs/architecture/api/MetadataAPI.md
+docs/architecture/api/ReportingAPI.md
+docs/architecture/api/SecurityAPI.md
+docs/architecture/api/WorkflowAPI.md
+docs/architecture/(INCOMPLETE) 11_SolutionArchitecture.md
+docs/architecture/logical/AILogicalModel.md
+docs/architecture/logical/BusinessGlossaryLogicalModel.md
+docs/architecture/logical/BusinessRulesLogicalModel.md
+docs/architecture/logical/DataLineageLogicalModel.md
+docs/architecture/logical/DataLineageLogicalModel.md.before_83
+docs/architecture/logical/DataQualityLogicalModel.md
+docs/architecture/logical/GovernanceLogicalModel.md
+docs/architecture/logical/MetadataLogicalModel.md
+docs/architecture/logical/ReportingLogicalModel.md
+docs/architecture/logical/SecurityLogicalModel.md
+docs/architecture/logical/WorkflowLogicalModel.md
+docs/architecture/physical/AIPhysicalModel.md
+docs/architecture/physical/BusinessGlossaryPhysicalModel.md
+docs/architecture/physical/BusinessRulesPhysicalModel.md
+docs/architecture/physical/DataLineagePhysicalModel.md
+docs/architecture/physical/DataLineagePhysicalModel.md.before_83
+docs/architecture/physical/DataQualityPhysicalModel.md
+docs/architecture/physical/GovernancePhysicalModel.md
+docs/architecture/physical/MetadataPhysicalModel.md
+docs/architecture/physical/ReportingPhysicalModel.md
+docs/architecture/physical/SecurityPhysicalModel.md
+docs/architecture/physical/WorkflowPhysicalModel.md
+docs/architecture/ProductContext.md
+docs/architecture/ui/AIUI.md
+docs/architecture/ui/BusinessGlossaryUI.md
+docs/architecture/ui/BusinessRulesUI.md
+docs/architecture/ui/DataLineageUI.md
+docs/architecture/ui/DataLineageUI.md.before_83
+docs/architecture/ui/DataQualityUI.md
+docs/architecture/ui/GovernanceUI.md
+docs/architecture/ui/MetadataUI.md
+docs/architecture/ui/ReportingUI.md
+docs/architecture/ui/SecurityUI.md
+docs/architecture/ui/WorkflowUI.md
+
+---------------- 10. Git state ----------------
+feature/project-foundation
+ M backend/alembic/env.py
+ M backend/app/main.py
+ M backend/app/models/lineage_mapping.py
+ M backend/app/models/lineage_target.py
+ M backend/app/services/lineage_mapping_service.py
+ M backend/app/services/lineage_target_service.py
+ M backend/app/services/lineage_transformation_service.py
+ M docs/architecture/logical/DataLineageLogicalModel.md
+ M docs/architecture/physical/DataLineagePhysicalModel.md
+?? .agents/
+?? AGENTS.md
+?? AI_CONTEXT/
+?? "Test reports/"
+?? backend/alembic/env.py.before-08.8D
+?? backend/alembic/env.py.before-08.8E-20260914-210936
+?? backend/alembic/env.py.before-08.8E-20260914-211116
+?? backend/alembic/env.py.before-08.8J
+?? backend/alembic/env.py.before-08.8K
+?? backend/alembic/env.py.before-08.8L
+?? backend/alembic/env.py.before-08.8M
+?? backend/alembic/env.py.before-08.8N
+?? backend/alembic/env.py.before-08.8O
+?? backend/alembic/env.py.before-08.8Q
+?? backend/alembic/env.py.before-08.8S
+?? backend/alembic/env.py.before-08.8T
+?? backend/alembic/env.py.before-08.8U
+?? backend/alembic/env.py.before-08.8V
+?? backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py
+?? backend/alembic/versions/e2d453a0ad03_enforce_lineage_relationship_not_null.py
+?? backend/app/api/
+?? backend/app/models/lineage_mapping.py.before-08.8J
+?? backend/app/models/lineage_mapping.py.before_68
+?? backend/app/models/lineage_target.py.before-08.8J
+?? backend/app/models/lineage_target.py.before_68
+?? backend/app/schemas/
+?? backend/app/services/lineage_discovery_service.py
+?? backend/app/services/lineage_discovery_service.py.before_76
+?? backend/app/services/lineage_mapping_service.py.before_68
+?? backend/app/services/lineage_target_service.py.before_68
+?? backend/app/services/lineage_validation.py
+?? backend/tests/
+?? docs/architecture/05_LogicalModel.md.before_83
+?? docs/architecture/06_PhysicalModel.md.before_83
+?? docs/architecture/07_API_Design.md.before_83
+?? docs/architecture/08_UI_Design.md.before_83
+?? docs/architecture/ProductContext.md
+?? docs/architecture/api/DataLineageAPI.md.before_83
+?? docs/architecture/logical/DataLineageLogicalModel.md.before_83
+?? docs/architecture/physical/DataLineagePhysicalModel.md.before_83
+?? docs/architecture/ui/DataLineageUI.md.before_83
+
+---------------- 11. Whitespace verification ----------------
+backend/alembic/env.py:33: trailing whitespace.
++ 
+
+============================================================
+BATCH 09.1 ANALYSIS COMPLETE
+============================================================

@@ -2,12 +2,18 @@ from fastapi import Depends, FastAPI
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from app.api import lineage_router
 from app.db.session import get_db
 
 
 app = FastAPI(
     title="Enterprise Data Governance Platform",
     version="0.1.0",
+)
+
+app.include_router(
+    lineage_router,
+    prefix="/api/v1",
 )
 
 

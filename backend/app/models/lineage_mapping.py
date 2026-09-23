@@ -15,6 +15,11 @@ class DataLineageMapping(Base):
         UUID(as_uuid=True),
         primary_key=True,
     )
+    lineage_target_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("lineage_target.lineage_target_id"),
+        nullable=False,
+    )
     lineage_flow_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("lineage_flow.lineage_flow_id"),
@@ -46,6 +51,7 @@ class DataLineageMapping(Base):
             "target_attribute",
             name="uq_lineage_mapping_flow_source_target",
         ),
+        Index("idx_lineage_mapping_target_id", "lineage_target_id"),
         Index("idx_lineage_mapping_flow", "lineage_flow_id"),
         Index("idx_lineage_mapping_source", "source_attribute"),
         Index("idx_lineage_mapping_target", "target_attribute"),

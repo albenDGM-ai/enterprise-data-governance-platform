@@ -1,0 +1,60 @@
+============================================================
+DGM — BATCH 08.8J
+ORM / Alembic Nullability Alignment
+Started: Mon Sep 14 09:19:28 PM IST 2026
+============================================================
+
+STEP 1 — Verify current state before modification
+ M backend/alembic/env.py
+ M backend/app/models/lineage_mapping.py
+ M backend/app/models/lineage_target.py
+?? backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py
+
+16-    )
+17:    lineage_transformation_id: Mapped[uuid.UUID | None] = mapped_column(
+18-        UUID(as_uuid=True),
+19-        ForeignKey("lineage_transformation.lineage_transformation_id"),
+20-        nullable=True,
+21-    )
+22-    target_name: Mapped[str] = mapped_column(String(255), nullable=False)
+
+17-    )
+18:    lineage_target_id: Mapped[uuid.UUID | None] = mapped_column(
+19-        UUID(as_uuid=True),
+20-        ForeignKey("lineage_target.lineage_target_id"),
+21-        nullable=True,
+22-    )
+23-    lineage_flow_id: Mapped[uuid.UUID] = mapped_column(
+STEP 1 PASS
+
+STEP 2 — Backup files before modification
+Backups created:
+-rw-r--r-- 1 alben alben 3094 Sep 14 21:19 backend/alembic/env.py.before-08.8J
+-rw-rw-r-- 1 alben alben 2276 Sep 14 21:19 backend/app/models/lineage_mapping.py.before-08.8J
+-rw-rw-r-- 1 alben alben 1968 Sep 14 21:19 backend/app/models/lineage_target.py.before-08.8J
+STEP 2 PASS
+
+STEP 3 — Update ORM nullability
+STEP 3 PASS
+
+STEP 4 — Remove temporary Alembic nullability workaround
+STEP 4 PASS
+
+STEP 5 — Verify source changes
+16-    )
+17:    lineage_transformation_id: Mapped[uuid.UUID] = mapped_column(
+18-        UUID(as_uuid=True),
+19-        ForeignKey("lineage_transformation.lineage_transformation_id"),
+20-        nullable=False,
+21-    )
+22-    target_name: Mapped[str] = mapped_column(String(255), nullable=False)
+
+17-    )
+18:    lineage_target_id: Mapped[uuid.UUID] = mapped_column(
+19-        UUID(as_uuid=True),
+20-        ForeignKey("lineage_target.lineage_target_id"),
+21-        nullable=False,
+22-    )
+23-    lineage_flow_id: Mapped[uuid.UUID] = mapped_column(
+
+STOP: legacy nullable workaround still present.

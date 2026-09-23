@@ -1,0 +1,40 @@
+
+=== MIGRATION PERMISSIONS ===
+-rw-r--r-- 1 root root 1870 Sep  6 20:15 backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py
+drwxr-xr-x 3 alben alben 4096 Sep 12 19:15 backend/alembic/versions
+
+=== PARENT OWNERSHIP ===
+drwxrwxr-x alben:alben backend
+drwxrwxr-x alben:alben backend/alembic
+drwxr-xr-x alben:alben backend/alembic/versions
+-rw-r--r-- root:root backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py
+
+=== CURRENT USER ===
+uid=1000(alben) gid=1000(alben) groups=1000(alben),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),100(users),109(lpadmin),112(lxd),978(docker)
+
+=== GIT STATUS ===
+ M backend/app/main.py
+ M backend/app/models/lineage_mapping.py
+ M backend/app/models/lineage_target.py
+ M backend/app/services/lineage_mapping_service.py
+ M backend/app/services/lineage_target_service.py
+ M docs/architecture/physical/DataLineagePhysicalModel.md
+?? AGENTS.md
+?? "Test reports/"
+?? backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py
+?? backend/app/api/
+?? backend/app/models/lineage_mapping.py.before_68
+?? backend/app/models/lineage_target.py.before_68
+?? backend/app/schemas/
+?? backend/app/services/lineage_discovery_service.py
+?? backend/app/services/lineage_discovery_service.py.before_76
+?? backend/app/services/lineage_mapping_service.py.before_68
+?? backend/app/services/lineage_target_service.py.before_68
+?? docs/architecture/05_LogicalModel.md.before_83
+?? docs/architecture/06_PhysicalModel.md.before_83
+?? docs/architecture/07_API_Design.md.before_83
+?? docs/architecture/08_UI_Design.md.before_83
+?? docs/architecture/api/DataLineageAPI.md.before_83
+?? docs/architecture/logical/DataLineageLogicalModel.md.before_83
+?? docs/architecture/physical/DataLineagePhysicalModel.md.before_83
+?? docs/architecture/ui/DataLineageUI.md.before_83

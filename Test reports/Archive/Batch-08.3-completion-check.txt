@@ -1,0 +1,260 @@
+============================================================
+DGM — Batch 08.3
+Transformation Flow Immutability Contract Fix
+============================================================
+
+---------------- 1. Backup current files ----------------
+PASS: backups created.
+
+---------------- 2. Remove flow ID from PATCH schema ----------------
+PASS: lineage_flow_id removed from LineageTransformationUpdate.
+
+---------------- 3. Remove obsolete PATCH guard ----------------
+PASS: obsolete PATCH flow-mutation guard removed.
+
+---------------- 4. Add explicit immutability contract test ----------------
+PASS: transformation PATCH immutability contract test added.
+
+---------------- 5. Verify schema ----------------
+from datetime import datetime
+from uuid import UUID
+
+from pydantic import ConfigDict
+
+from app.schemas.common import APIBaseSchema
+
+
+class LineageTransformationCreate(APIBaseSchema):
+    lineage_flow_id: UUID
+    sequence_number: int
+    transformation_name: str
+    transformation_type: str
+    description: str | None = None
+    expression: str | None = None
+    status: str
+
+
+class LineageTransformationUpdate(APIBaseSchema):
+    sequence_number: int | None = None
+    transformation_name: str | None = None
+    transformation_type: str | None = None
+    description: str | None = None
+    expression: str | None = None
+    status: str | None = None
+
+
+class LineageTransformationReplace(APIBaseSchema):
+    lineage_flow_id: UUID
+    sequence_number: int
+    transformation_name: str
+    transformation_type: str
+    description: str | None = None
+    expression: str | None = None
+    status: str
+
+
+class LineageTransformationResponse(APIBaseSchema):
+    model_config = ConfigDict(from_attributes=True)
+
+    lineage_transformation_id: UUID
+    lineage_flow_id: UUID
+    sequence_number: int
+    transformation_name: str
+    transformation_type: str
+    description: str | None = None
+    expression: str | None = None
+    status: str
+    created_by: str
+    created_date: datetime
+    modified_by: str | None = None
+    modified_date: datetime | None = None
+    is_active: bool
+
+---------------- 6. Verify PUT still enforces immutability ----------------
+1303-        raise HTTPException(
+1304-            status_code=status.HTTP_404_NOT_FOUND,
+1305-            detail="Lineage Transformation not found.",
+1306-        )
+1307-
+1308:    if payload.lineage_flow_id != entity.lineage_flow_id:
+1309-        raise HTTPException(
+1310-            status_code=status.HTTP_400_BAD_REQUEST,
+1311-            detail="Changing lineage_flow_id is not supported by the current service contract.",
+1312-        )
+1313-
+1314-    try:
+1315-        entity = service.update(
+1316-            entity,
+1317-            modified_by=x_user,
+1318-            sequence_number=payload.sequence_number,
+1319-            transformation_name=payload.transformation_name,
+1320-            transformation_type=payload.transformation_type,
+1321-            description=payload.description,
+1322-            expression=payload.expression,
+1323-            status=payload.status,
+1324-        )
+1325-        service.session.commit()
+1326-        service.session.refresh(entity)
+
+---------------- 7. Verify PATCH no longer references flow ID ----------------
+        service.session.rollback()
+        raise
+
+
+@router.patch(
+    "/transformations/{lineage_transformation_id}",
+    response_model=LineageTransformationResponse,
+)
+def update_transformation(
+    lineage_transformation_id: UUID,
+    payload: LineageTransformationUpdate,
+    x_user: str = Header(..., alias="X-User"),
+    service: LineageTransformationService = Depends(get_transformation_service),
+) -> LineageTransformationResponse:
+    entity = service.get(lineage_transformation_id)
+
+    if entity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Lineage Transformation not found.",
+        )
+
+    try:
+        entity = service.update(
+            entity,
+            modified_by=x_user,
+            sequence_number=payload.sequence_number,
+            transformation_name=payload.transformation_name,
+            transformation_type=payload.transformation_type,
+            description=payload.description,
+            expression=payload.expression,
+            status=payload.status,
+        )
+        service.session.commit()
+        service.session.refresh(entity)
+        return entity
+    except ValueError as exc:
+        service.session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        ) from exc
+    except Exception:
+        service.session.rollback()
+        raise
+
+
+@router.delete(
+    "/transformations/{lineage_transformation_id}",
+    response_model=LineageTransformationResponse,
+)
+
+---------------- 8. Verify service contract ----------------
+120:    def update(
+121-        self,
+122-        entity: DataLineageTransformation,
+123-        *,
+124-        modified_by: str,
+125-        sequence_number: int | None = None,
+126-        transformation_name: str | None = None,
+127-        transformation_type: str | None = None,
+128-        description: str | None = None,
+129-        expression: str | None = None,
+130-        status: str | None = None,
+131-    ) -> DataLineageTransformation:
+132-        new_sequence_number = (
+133-            sequence_number
+134-            if sequence_number is not None
+135-            else entity.sequence_number
+136-        )
+137-
+138-        duplicate = self.repository.get_by_flow_and_sequence(
+139-            entity.lineage_flow_id,
+140-            new_sequence_number,
+141-            include_inactive=True,
+142-        )
+143-        if duplicate is not None and duplicate.lineage_transformation_id != entity.lineage_transformation_id:
+144-            raise ValueError(
+145-                "A Lineage Transformation with the same flow and sequence "
+146-                "number already exists."
+147-            )
+148-
+149-        if sequence_number is not None:
+150-            entity.sequence_number = sequence_number
+151-        if transformation_name is not None:
+152-            entity.transformation_name = transformation_name
+153-        if transformation_type is not None:
+154-            entity.transformation_type = transformation_type
+155-        if description is not None:
+156-            entity.description = description
+157-        if expression is not None:
+158-            entity.expression = expression
+159-        if status is not None:
+160-            entity.status = status
+161-
+162-        entity.modified_by = modified_by
+163-        entity.modified_date = datetime.now(timezone.utc).replace(tzinfo=None)
+164-
+165-        self.repository.update(entity)
+166-        return entity
+167-
+168-    def delete(
+169-        self,
+170-        entity: DataLineageTransformation,
+171-        *,
+172-        modified_by: str,
+173-    ) -> DataLineageTransformation:
+174-        return self.repository.soft_delete(
+175-            entity,
+
+---------------- 9. Verify test ----------------
+        lineage_target_id=target_a_id,
+        lineage_transformation_id=transformation_a_id,
+        source_attribute="source.customer_id",
+        target_attribute="target.customer_id",
+    )
+
+    with pytest.raises(LineageRelationshipValidationError, match="different Lineage Flow"):
+        service.update(
+            entity,
+            modified_by="batch-08-test",
+            lineage_target_id=target_b_id,
+        )
+
+    assert service.repository.updated == []
+
+
+def test_legacy_null_relationships_remain_readable() -> None:
+    assert DataLineageTarget.__table__.c.lineage_transformation_id.nullable is True
+    assert DataLineageMapping.__table__.c.lineage_target_id.nullable is True
+    assert "None" in str(LineageTargetResponse.model_fields["lineage_transformation_id"].annotation)
+    assert "None" in str(LineageMappingResponse.model_fields["lineage_target_id"].annotation)
+
+
+def test_transformation_update_contract_does_not_expose_flow_reassignment() -> None:
+    from app.schemas.lineage_transformation import LineageTransformationUpdate
+
+    fields = LineageTransformationUpdate.model_fields
+
+    assert "lineage_flow_id" not in fields
+    assert "sequence_number" in fields
+    assert "transformation_name" in fields
+    assert "transformation_type" in fields
+    assert "description" in fields
+    assert "expression" in fields
+    assert "status" in fields
+
+---------------- 10. Python syntax ----------------
+PASS: Python syntax compilation.
+
+---------------- 11. Targeted contract verification ----------------
+PASS: PATCH schema has no lineage_flow_id.
+PASS: PATCH schema retains editable transformation fields.
+
+---------------- 12. Git whitespace ----------------
+
+---------------- 13. Final diff ----------------
+
+============================================================
+BATCH 08.3 COMPLETE
+============================================================

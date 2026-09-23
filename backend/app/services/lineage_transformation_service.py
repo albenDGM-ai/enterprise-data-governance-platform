@@ -6,9 +6,11 @@ from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 
 from app.models.lineage_transformation import DataLineageTransformation
+from app.repositories.lineage_flow_repository import LineageFlowRepository
 from app.repositories.lineage_transformation_repository import (
     LineageTransformationRepository,
 )
+from app.services.lineage_validation import LineageRelationshipValidationError
 
 
 class LineageTransformationService:
@@ -17,6 +19,21 @@ class LineageTransformationService:
     def __init__(self, session: Session) -> None:
         self.session = session
         self.repository = LineageTransformationRepository(session)
+        self.flow_repository = LineageFlowRepository(session)
+
+    def _validate_flow(self, lineage_flow_id: uuid.UUID) -> None:
+        flow = self.flow_repository.get_by_id(
+            lineage_flow_id,
+            include_inactive=True,
+        )
+        if flow is None:
+            raise LineageRelationshipValidationError(
+                "The supplied Lineage Flow does not exist."
+            )
+        if not flow.is_active:
+            raise LineageRelationshipValidationError(
+                "The supplied Lineage Flow is inactive."
+            )
 
     def get(
         self,
@@ -69,6 +86,8 @@ class LineageTransformationService:
         status: str,
         created_by: str,
     ) -> DataLineageTransformation:
+        self._validate_flow(lineage_flow_id)
+
         existing = self.repository.get_by_flow_and_sequence(
             lineage_flow_id,
             sequence_number,

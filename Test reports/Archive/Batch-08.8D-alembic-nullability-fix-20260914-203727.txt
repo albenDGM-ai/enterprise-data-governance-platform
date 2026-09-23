@@ -1,0 +1,219 @@
+============================================================
+DGM — BATCH 08.8D
+Alembic Legacy-Nullability Comparison Fix
+============================================================
+Started: Mon Sep 14 08:37:27 PM IST 2026
+
+------------------------------------------------------------
+STEP 1 — Verify current files before modification
+------------------------------------------------------------
+Alembic environment:
+-rw-r--r-- 1 alben alben 2.3K Aug 15 20:37 backend/alembic/env.py
+
+STEP 1 COMPLETE
+
+------------------------------------------------------------
+STEP 2 — Inspect Alembic env.py configuration
+------------------------------------------------------------
+from logging.config import fileConfig
+
+from sqlalchemy import engine_from_config
+from sqlalchemy import pool
+
+from alembic import context
+
+from app.core.config import settings
+from app.db.base import Base
+
+import app.models
+
+# this is the Alembic Config object, which provides
+# access to the values within the .ini file in use.
+config = context.config
+
+config.set_main_option(
+    "sqlalchemy.url",
+    settings.database_url,
+)
+
+# Interpret the config file for Python logging.
+# This line sets up loggers basically.
+if config.config_file_name is not None:
+    fileConfig(config.config_file_name)
+
+# add your model's MetaData object here
+# for 'autogenerate' support
+# from myapp import mymodel
+# target_metadata = mymodel.Base.metadata
+target_metadata = Base.metadata 
+
+# other values from the config, defined by the needs of env.py,
+# can be acquired:
+# my_important_option = config.get_main_option("my_important_option")
+# ... etc.
+
+
+def run_migrations_offline() -> None:
+    """Run migrations in 'offline' mode.
+
+    This configures the context with just a URL
+    and not an Engine, though an Engine is acceptable
+    here as well.  By skipping the Engine creation
+    we don't even need a DBAPI to be available.
+
+    Calls to context.execute() here emit the given string to the
+    script output.
+
+    """
+    url = config.get_main_option("sqlalchemy.url")
+    context.configure(
+        url=url,
+        target_metadata=target_metadata,
+        literal_binds=True,
+        dialect_opts={"paramstyle": "named"},
+    )
+
+    with context.begin_transaction():
+        context.run_migrations()
+
+
+def run_migrations_online() -> None:
+    """Run migrations in 'online' mode.
+
+    In this scenario we need to create an Engine
+    and associate a connection with the context.
+
+    """
+    connectable = engine_from_config(
+        config.get_section(config.config_ini_section, {}),
+        prefix="sqlalchemy.",
+        poolclass=pool.NullPool,
+    )
+
+    with connectable.connect() as connection:
+        context.configure(
+            connection=connection, target_metadata=target_metadata
+        )
+
+        with context.begin_transaction():
+            context.run_migrations()
+
+
+if context.is_offline_mode():
+    run_migrations_offline()
+else:
+    run_migrations_online()
+
+STEP 2 COMPLETE
+
+------------------------------------------------------------
+STEP 3 — Create a safety backup of env.py
+------------------------------------------------------------
+Backup created:
+backend/alembic/env.py.before-08.8D
+
+STEP 3 COMPLETE
+
+------------------------------------------------------------
+STEP 4 — Inspect exact configure() calls
+------------------------------------------------------------
+30:# target_metadata = mymodel.Base.metadata
+31:target_metadata = Base.metadata 
+52:    context.configure(
+54:        target_metadata=target_metadata,
+77:        context.configure(
+78:            connection=connection, target_metadata=target_metadata
+
+STEP 4 COMPLETE
+
+------------------------------------------------------------
+STEP 5 — Apply targeted Alembic comparison hook
+------------------------------------------------------------
+STOP: expected target_metadata marker was not found. No modification made.
+
+STEP 5 COMPLETE
+
+------------------------------------------------------------
+STEP 6 — Verify the modification
+------------------------------------------------------------
+
+STEP 6 COMPLETE
+
+------------------------------------------------------------
+STEP 7 — Verify Alembic syntax
+------------------------------------------------------------
+Alembic env.py syntax: PASS
+
+STEP 7 COMPLETE
+
+------------------------------------------------------------
+STEP 8 — Configure database connection
+------------------------------------------------------------
+DATABASE_URL configured.
+
+STEP 8 COMPLETE
+
+------------------------------------------------------------
+STEP 9 — Verify Alembic current revision
+------------------------------------------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+32b95f7a0662 (head)
+
+STEP 9 COMPLETE
+
+------------------------------------------------------------
+STEP 10 — Run Alembic check
+------------------------------------------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.schemas
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.tables
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.types
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.constraints
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.defaults
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.comments
+INFO  [alembic.autogenerate.compare.constraints] Detected NULL on column 'lineage_mapping.lineage_target_id'
+INFO  [alembic.autogenerate.compare.constraints] Detected NULL on column 'lineage_target.lineage_transformation_id'
+ERROR [alembic.util.messaging] New upgrade operations detected: [[('modify_nullable', None, 'lineage_mapping', 'lineage_target_id', {'existing_type': UUID(), 'existing_server_default': False, 'existing_comment': None}, False, True)], [('modify_nullable', None, 'lineage_target', 'lineage_transformation_id', {'existing_type': UUID(), 'existing_server_default': False, 'existing_comment': None}, False, True)]]
+  FAILED: New upgrade operations detected: [[('modify_nullable', None,
+  'lineage_mapping', 'lineage_target_id', {'existing_type': UUID(),
+  'existing_server_default': False, 'existing_comment': None}, False, True)],
+  [('modify_nullable', None, 'lineage_target', 'lineage_transformation_id',
+  {'existing_type': UUID(), 'existing_server_default': False,
+  'existing_comment': None}, False, True)]]
+
+STEP 10 COMPLETE
+
+------------------------------------------------------------
+STEP 11 — Run all Batch 08 lineage tests again
+------------------------------------------------------------
+........                                                                 [100%]
+8 passed in 0.72s
+
+STEP 11 COMPLETE
+
+------------------------------------------------------------
+STEP 12 — Verify no migration was generated
+------------------------------------------------------------
+?? backend/alembic/env.py.before-08.8D
+?? backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py
+
+Migration verification complete.
+No migration command was executed by this batch.
+
+STEP 12 COMPLETE
+
+------------------------------------------------------------
+STEP 13 — Final relevant Git status
+------------------------------------------------------------
+ M backend/app/models/lineage_mapping.py
+ M backend/app/models/lineage_target.py
+?? backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py
+?? backend/tests/test_batch_08_graph_integrity.py
+
+============================================================
+BATCH 08.8D COMPLETED
+============================================================
+Finished: Mon Sep 14 08:37:32 PM IST 2026
+============================================================

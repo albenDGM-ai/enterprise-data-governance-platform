@@ -1,0 +1,163 @@
+============================================================
+DGM OpenCode Quota Retry Plugin Fix & Verification
+============================================================
+Date: Tue Sep 22 07:47:34 PM IST 2026
+Repository: /home/alben/Projects/enterprise-data-governance-platform
+OpenCode: opencode v2.0.12
+
+============================================================
+1. PRE-FIX PLUGIN
+============================================================
+import { Plugin } from "@opencode/plugin"
+
+export default Plugin.define({
+  id: "dgm.quota-retry",
+
+  setup: async (ctx) => {
+    await ctx.session.hook("retry", (event) => {
+      // Retry provider rate-limit/quota responses once after 60 seconds.
+      if (event.error.status === 429 && event.attempt === 1) {
+        event.decision = {
+          retry: true,
+          delay: 60_000,
+        }
+      }
+    })
+  },
+})
+
+============================================================
+2. CREATE .OPENCODE/PACKAGE.JSON
+============================================================
+.opencode/package.json
+{
+  "dependencies": {
+    "@opencode/plugin": "latest"
+  }
+}
+
+
+============================================================
+3. OPENCODE FILES
+============================================================
+.opencode/plugins/quota-retry.ts
+.opencode/plugins/quota-retry.ts.before-v2-api-fix-20260921
+.opencode/package.json
+.opencode/agents/dgm-core.md.before-model-fix-20260921
+.opencode/agents/dgm-core.md
+.opencode/agents/dgm-core-context-test.md
+
+============================================================
+4. START OPENCODE FOR PLUGIN INITIALIZATION
+============================================================
+IMPORTANT: OpenCode will be started interactively.
+Exit OpenCode after it finishes initializing.
+
+
+============================================================
+5. POST-START PLUGIN VERIFICATION
+============================================================
+
+--- OpenCode version ---
+opencode v2.0.12
+
+--- Package dependency ---
+{
+  "dependencies": {
+    "@opencode/plugin": "latest"
+  }
+}
+
+--- Plugin source ---
+import { Plugin } from "@opencode/plugin"
+
+export default Plugin.define({
+  id: "dgm.quota-retry",
+
+  setup: async (ctx) => {
+    await ctx.session.hook("retry", (event) => {
+      // Retry provider rate-limit/quota responses once after 60 seconds.
+      if (event.error.status === 429 && event.attempt === 1) {
+        event.decision = {
+          retry: true,
+          delay: 60_000,
+        }
+      }
+    })
+  },
+})
+
+--- Recent plugin log entries ---
+1599:timestamp=2026-09-21T16:14:58.131Z level=INFO run=471d54a6 msg="loading plugin" id=/home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts entrypoint=file:///home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts http.span=5566437 role=server
+1600:timestamp=2026-09-21T16:14:58.167Z level=INFO run=471d54a6 message="watcher subscribe" path=/home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts type=file ignores=0 http.span=5566473 role=server
+1601:timestamp=2026-09-21T16:14:58.168Z level=INFO run=471d54a6 message="watcher started" path=/home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts type=file backend=node ignores=0 http.span=5566474 role=server
+1604:timestamp=2026-09-21T16:14:58.173Z level=WARN run=471d54a6 message="failed to load plugin" target=/home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts ref=err_94f59855 cause="Cause([Die(ResolveMessage: Cannot find package '@opencode-ai/plugin' imported from /home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts)])" http.span=5566479 role=server
+1890:timestamp=2026-09-21T16:56:35.260Z level=INFO run=471d54a6 msg="loading plugin" id=/home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts entrypoint=file:///home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts http.span=8063566 role=server
+1892:timestamp=2026-09-21T16:56:35.266Z level=WARN run=471d54a6 message="failed to load plugin" target=/home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts ref=err_321764df cause="Cause([Die(ResolveMessage: Cannot find package '@opencode/plugin' imported from /home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts)])" http.span=8063572 role=server
+1897:timestamp=2026-09-21T16:56:35.414Z level=INFO run=471d54a6 msg="loading plugin" id=/home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts entrypoint=file:///home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts http.span=8063720 role=server
+1898:timestamp=2026-09-21T16:56:35.414Z level=WARN run=471d54a6 message="failed to load plugin" target=/home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts ref=err_4c91cd3f cause="Cause([Die(ResolveMessage: Cannot find package '@opencode/plugin' imported from /home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts)])" http.span=8063720 role=server
+2510:timestamp=2026-09-22T14:13:43.324Z level=INFO run=6fa42cb7 msg="loading plugin" id=/home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts entrypoint=file:///home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts http.span=254 role=server
+2511:timestamp=2026-09-22T14:13:43.327Z level=INFO run=6fa42cb7 message="watcher subscribe" path=/home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts type=file ignores=0 http.span=257 role=server
+2512:timestamp=2026-09-22T14:13:43.328Z level=INFO run=6fa42cb7 message="watcher started" path=/home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts type=file backend=node ignores=0 http.span=258 role=server
+2515:timestamp=2026-09-22T14:13:43.332Z level=WARN run=6fa42cb7 message="failed to load plugin" target=/home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts ref=err_6c0839fe cause="Cause([Die(ResolveMessage: Cannot find package '@opencode/plugin' imported from /home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts)])" http.span=262 role=server
+
+--- Git status ---
+?? .opencode/
+
+============================================================
+END OF TEST REPORT
+============================================================
+
+============================================================
+5. POST-START PLUGIN VERIFICATION
+============================================================
+
+--- OpenCode version ---
+opencode v2.0.12
+
+--- Package dependency ---
+{
+  "dependencies": {
+    "@opencode/plugin": "latest"
+  }
+}
+
+--- Plugin source ---
+import { Plugin } from "@opencode/plugin"
+
+export default Plugin.define({
+  id: "dgm.quota-retry",
+
+  setup: async (ctx) => {
+    await ctx.session.hook("retry", (event) => {
+      // Retry provider rate-limit/quota responses once after 60 seconds.
+      if (event.error.status === 429 && event.attempt === 1) {
+        event.decision = {
+          retry: true,
+          delay: 60_000,
+        }
+      }
+    })
+  },
+})
+
+--- Recent plugin log entries ---
+1599:timestamp=2026-09-21T16:14:58.131Z level=INFO run=471d54a6 msg="loading plugin" id=/home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts entrypoint=file:///home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts http.span=5566437 role=server
+1600:timestamp=2026-09-21T16:14:58.167Z level=INFO run=471d54a6 message="watcher subscribe" path=/home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts type=file ignores=0 http.span=5566473 role=server
+1601:timestamp=2026-09-21T16:14:58.168Z level=INFO run=471d54a6 message="watcher started" path=/home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts type=file backend=node ignores=0 http.span=5566474 role=server
+1604:timestamp=2026-09-21T16:14:58.173Z level=WARN run=471d54a6 message="failed to load plugin" target=/home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts ref=err_94f59855 cause="Cause([Die(ResolveMessage: Cannot find package '@opencode-ai/plugin' imported from /home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts)])" http.span=5566479 role=server
+1890:timestamp=2026-09-21T16:56:35.260Z level=INFO run=471d54a6 msg="loading plugin" id=/home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts entrypoint=file:///home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts http.span=8063566 role=server
+1892:timestamp=2026-09-21T16:56:35.266Z level=WARN run=471d54a6 message="failed to load plugin" target=/home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts ref=err_321764df cause="Cause([Die(ResolveMessage: Cannot find package '@opencode/plugin' imported from /home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts)])" http.span=8063572 role=server
+1897:timestamp=2026-09-21T16:56:35.414Z level=INFO run=471d54a6 msg="loading plugin" id=/home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts entrypoint=file:///home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts http.span=8063720 role=server
+1898:timestamp=2026-09-21T16:56:35.414Z level=WARN run=471d54a6 message="failed to load plugin" target=/home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts ref=err_4c91cd3f cause="Cause([Die(ResolveMessage: Cannot find package '@opencode/plugin' imported from /home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts)])" http.span=8063720 role=server
+2510:timestamp=2026-09-22T14:13:43.324Z level=INFO run=6fa42cb7 msg="loading plugin" id=/home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts entrypoint=file:///home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts http.span=254 role=server
+2511:timestamp=2026-09-22T14:13:43.327Z level=INFO run=6fa42cb7 message="watcher subscribe" path=/home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts type=file ignores=0 http.span=257 role=server
+2512:timestamp=2026-09-22T14:13:43.328Z level=INFO run=6fa42cb7 message="watcher started" path=/home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts type=file backend=node ignores=0 http.span=258 role=server
+2515:timestamp=2026-09-22T14:13:43.332Z level=WARN run=6fa42cb7 message="failed to load plugin" target=/home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts ref=err_6c0839fe cause="Cause([Die(ResolveMessage: Cannot find package '@opencode/plugin' imported from /home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts)])" http.span=262 role=server
+
+--- Git status ---
+?? .opencode/
+
+============================================================
+END OF TEST REPORT
+============================================================

@@ -1,0 +1,29 @@
+============================================================
+BATCH 08.7B — INSTALL PIP INTO EXISTING VENV
+============================================================
+Timestamp: 2026-09-14 20:13:14 IST
+
+=== BEFORE ===
+Python 3.14.4
+/home/alben/Projects/enterprise-data-governance-platform/.venv/bin/python: No module named pip
+
+=== BOOTSTRAP PIP ===
+Looking in links: /tmp/tmpsfubo02w
+Processing /tmp/tmpsfubo02w/pip-25.1.1-py3-none-any.whl
+Installing collected packages: pip
+Successfully installed pip-25.1.1
+
+=== VERIFY PIP ===
+pip 25.1.1 from /home/alben/Projects/enterprise-data-governance-platform/.venv/lib/python3.14/site-packages/pip (python 3.14)
+
+=== VERIFY VENV EXECUTABLE ===
+Python: 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0]
+Executable: /home/alben/Projects/enterprise-data-governance-platform/.venv/bin/python
+
+=== VERIFY PIP EXECUTABLE ===
+bash: .venv/bin/pip: No such file or directory
+
+============================================================
+BATCH 08.7B COMPLETE
+REPORT: Test reports/Batch-08.7B-venv-pip-install.txt
+============================================================

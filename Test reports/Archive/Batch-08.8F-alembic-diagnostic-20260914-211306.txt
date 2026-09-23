@@ -1,0 +1,243 @@
+============================================================
+DGM — BATCH 08.8F
+Alembic Diagnostic — NO MODIFICATIONS
+Started: Mon Sep 14 09:13:06 PM IST 2026
+============================================================
+
+STEP 1 — Environment
+/home/alben/Projects/enterprise-data-governance-platform
+feature/project-foundation
+Python 3.14.4
+alembic 1.20.0
+STEP 1 PASS
+
+STEP 2 — Current env.py configuration
+# target_metadata = mymodel.Base.metadata
+target_metadata = Base.metadata
+
+# Intentional legacy-read compatibility.
+# These database columns remain nullable because historical records may
+# contain NULL relationships. New ORM records require these relationships.
+# Alembic should therefore exclude only these two columns from autogenerate
+# comparison.
+LEGACY_NULLABLE_COLUMNS = {
+    ("lineage_mapping", "lineage_target_id"),
+    ("lineage_target", "lineage_transformation_id"),
+}
+
+
+def include_object(
+    object_,
+    name,
+    type_,
+    reflected,
+    compare_to,
+):
+    if type_ == "column":
+        table = getattr(object_, "table", None)
+        table_name = getattr(table, "name", None)
+
+        if (table_name, name) in LEGACY_NULLABLE_COLUMNS:
+            return False
+
+    return True
+ 
+
+# other values from the config, defined by the needs of env.py,
+# can be acquired:
+# my_important_option = config.get_main_option("my_important_option")
+# ... etc.
+
+
+def run_migrations_offline() -> None:
+    """Run migrations in 'offline' mode.
+
+    This configures the context with just a URL
+    and not an Engine, though an Engine is acceptable
+    here as well.  By skipping the Engine creation
+    we don't even need a DBAPI to be available.
+
+    Calls to context.execute() here emit the given string to the
+    script output.
+
+    """
+    url = config.get_main_option("sqlalchemy.url")
+    context.configure(
+        url=url,
+        target_metadata=target_metadata,
+        literal_binds=True,
+        dialect_opts={"paramstyle": "named"},
+        include_object=include_object,
+    )
+
+    with context.begin_transaction():
+        context.run_migrations()
+
+
+def run_migrations_online() -> None:
+    """Run migrations in 'online' mode.
+
+    In this scenario we need to create an Engine
+    and associate a connection with the context.
+
+    """
+    connectable = engine_from_config(
+        config.get_section(config.config_ini_section, {}),
+        prefix="sqlalchemy.",
+        poolclass=pool.NullPool,
+    )
+
+    with connectable.connect() as connection:
+        context.configure(
+            connection=connection,
+            target_metadata=target_metadata,
+            include_object=include_object,
+        )
+
+        with context.begin_transaction():
+            context.run_migrations()
+
+
+if context.is_offline_mode():
+    run_migrations_offline()
+else:
+    run_migrations_online()
+STEP 2 PASS
+
+STEP 3 — Database configuration
+DATABASE_URL host configured: 127.0.0.1:5432
+STEP 3 PASS
+
+STEP 4 — PostgreSQL status
+NAME                  IMAGE            COMMAND                  SERVICE    CREATED       STATUS                       PORTS
+governance_backend    docker-backend   "uvicorn app.main:ap…"   backend    7 days ago    Up About an hour             0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp
+governance_postgres   postgres:17      "docker-entrypoint.s…"   postgres   4 weeks ago   Up About an hour (healthy)   0.0.0.0:5432->5432/tcp, [::]:5432->5432/tcp
+STEP 4 PASS
+
+STEP 5 — Direct SQLAlchemy database connection test
+Creating SQLAlchemy engine...
+Connecting...
+PostgreSQL connection: PASS
+Server: PostgreSQL 17.10 (Debian 17.10-1.pgdg13+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+Database/user: ('enterprise_governance', 'governance_admin')
+STEP 5 PASS
+
+STEP 6 — Alembic current with COMPLETE stderr
+Running: .venv/bin/alembic -c backend/alembic.ini current
+
+----- STDOUT -----
+----- STDERR / TRACEBACK -----
+Traceback (most recent call last):
+  File "/home/alben/Projects/enterprise-data-governance-platform/.venv/bin/alembic", line 8, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/home/alben/Projects/enterprise-data-governance-platform/.venv/lib/python3.14/site-packages/alembic/config.py", line 1039, in main
+    CommandLine(prog=prog).main(argv=argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "/home/alben/Projects/enterprise-data-governance-platform/.venv/lib/python3.14/site-packages/alembic/config.py", line 1029, in main
+    self.run_cmd(cfg, options)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/home/alben/Projects/enterprise-data-governance-platform/.venv/lib/python3.14/site-packages/alembic/config.py", line 963, in run_cmd
+    fn(
+    ~~^
+        config,
+        ^^^^^^^
+        *[getattr(options, k, None) for k in positional],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        **{k: getattr(options, k, None) for k in kwarg},
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/alben/Projects/enterprise-data-governance-platform/.venv/lib/python3.14/site-packages/alembic/command.py", line 726, in current
+    script.run_env()
+    ~~~~~~~~~~~~~~^^
+  File "/home/alben/Projects/enterprise-data-governance-platform/.venv/lib/python3.14/site-packages/alembic/script/base.py", line 550, in run_env
+    util.load_python_file(self.dir, "env.py")
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/home/alben/Projects/enterprise-data-governance-platform/.venv/lib/python3.14/site-packages/alembic/util/pyfiles.py", line 114, in load_python_file
+    module = load_module_py(module_id, path)
+  File "/home/alben/Projects/enterprise-data-governance-platform/.venv/lib/python3.14/site-packages/alembic/util/pyfiles.py", line 132, in load_module_py
+    spec.loader.exec_module(module)  # type: ignore
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "<frozen importlib._bootstrap_external>", line 759, in exec_module
+  File "<frozen importlib._bootstrap>", line 491, in _call_with_frames_removed
+  File "/home/alben/Projects/enterprise-data-governance-platform/backend/alembic/env.py", line 8, in <module>
+    from app.core.config import settings
+ModuleNotFoundError: No module named 'app'
+----- EXIT CODE -----
+1
+STEP 6 FAILED — THIS IS THE EXPECTED DIAGNOSTIC POINT.
+
+STEP 7 — Verify env.py was not changed by this diagnostic batch
+diff --git a/backend/alembic/env.py b/backend/alembic/env.py
+index 86454ee..3bd4452 100644
+--- a/backend/alembic/env.py
++++ b/backend/alembic/env.py
+@@ -28,7 +28,35 @@ if config.config_file_name is not None:
+ # for 'autogenerate' support
+ # from myapp import mymodel
+ # target_metadata = mymodel.Base.metadata
+-target_metadata = Base.metadata 
++target_metadata = Base.metadata
++
++# Intentional legacy-read compatibility.
++# These database columns remain nullable because historical records may
++# contain NULL relationships. New ORM records require these relationships.
++# Alembic should therefore exclude only these two columns from autogenerate
++# comparison.
++LEGACY_NULLABLE_COLUMNS = {
++    ("lineage_mapping", "lineage_target_id"),
++    ("lineage_target", "lineage_transformation_id"),
++}
++
++
++def include_object(
++    object_,
++    name,
++    type_,
++    reflected,
++    compare_to,
++):
++    if type_ == "column":
++        table = getattr(object_, "table", None)
++        table_name = getattr(table, "name", None)
++
++        if (table_name, name) in LEGACY_NULLABLE_COLUMNS:
++            return False
++
++    return True
++ 
+ 
+ # other values from the config, defined by the needs of env.py,
+ # can be acquired:
+@@ -54,6 +82,7 @@ def run_migrations_offline() -> None:
+         target_metadata=target_metadata,
+         literal_binds=True,
+         dialect_opts={"paramstyle": "named"},
++        include_object=include_object,
+     )
+ 
+     with context.begin_transaction():
+@@ -75,7 +104,9 @@ def run_migrations_online() -> None:
+ 
+     with connectable.connect() as connection:
+         context.configure(
+-            connection=connection, target_metadata=target_metadata
++            connection=connection,
++            target_metadata=target_metadata,
++            include_object=include_object,
+         )
+ 
+         with context.begin_transaction():
+No modification commands were executed against env.py.
+STEP 7 PASS
+
+STEP 8 — Current relevant Git state
+ M backend/alembic/env.py
+?? backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py
+
+============================================================
+BATCH 08.8F DIAGNOSTIC COMPLETED
+Alembic exit code: 1
+Report: Test reports/Batch-08.8F-alembic-diagnostic-20260914-211306.txt
+============================================================

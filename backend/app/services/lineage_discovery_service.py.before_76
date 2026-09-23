@@ -1,0 +1,124 @@
+from __future__ import annotations
+
+from uuid import UUID
+
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from app.models.lineage_flow import DataLineageFlow
+from app.models.lineage_mapping import DataLineageMapping
+from app.models.lineage_process import DataLineageProcess
+from app.models.lineage_source import DataLineageSource
+from app.models.lineage_transformation import DataLineageTransformation
+
+
+class LineageDiscoveryService:
+    """
+    Read-only service for assembling the currently persisted
+    lineage chain into a single discovery response.
+
+    Current physical lineage structure:
+
+        Source
+          |
+        Process
+          |
+        Flow
+        /   \
+    Transformation -> Mapping
+    """
+
+    def __init__(self, db: Session):
+        self.session = db
+
+    def discover(
+        self,
+        *,
+        lineage_source_id: UUID | None = None,
+        lineage_process_id: UUID | None = None,
+        lineage_flow_id: UUID | None = None,
+        include_inactive: bool = False,
+    ) -> list[dict]:
+        flow_stmt = select(DataLineageFlow)
+
+        if not include_inactive:
+            flow_stmt = flow_stmt.where(DataLineageFlow.is_active.is_(True))
+
+        if lineage_source_id is not None:
+            flow_stmt = flow_stmt.where(
+                DataLineageFlow.lineage_source_id == lineage_source_id
+            )
+
+        if lineage_process_id is not None:
+            flow_stmt = flow_stmt.where(
+                DataLineageFlow.lineage_process_id == lineage_process_id
+            )
+
+        if lineage_flow_id is not None:
+            flow_stmt = flow_stmt.where(
+                DataLineageFlow.lineage_flow_id == lineage_flow_id
+            )
+
+        flows = self.session.scalars(
+            flow_stmt.order_by(DataLineageFlow.flow_name)
+        ).all()
+
+        results: list[dict] = []
+
+        for flow in flows:
+            source = self.session.get(
+                DataLineageSource,
+                flow.lineage_source_id,
+            )
+            process = self.session.get(
+                DataLineageProcess,
+                flow.lineage_process_id,
+            )
+
+            if source is None or process is None:
+                continue
+
+            transformation_stmt = select(
+                DataLineageTransformation
+            ).where(
+                DataLineageTransformation.lineage_flow_id
+                == flow.lineage_flow_id
+            )
+
+            mapping_stmt = select(DataLineageMapping).where(
+                DataLineageMapping.lineage_flow_id
+                == flow.lineage_flow_id
+            )
+
+            if not include_inactive:
+                transformation_stmt = transformation_stmt.where(
+                    DataLineageTransformation.is_active.is_(True)
+                )
+                mapping_stmt = mapping_stmt.where(
+                    DataLineageMapping.is_active.is_(True)
+                )
+
+            transformations = self.session.scalars(
+                transformation_stmt.order_by(
+                    DataLineageTransformation.sequence_number
+                )
+            ).all()
+
+            mappings = self.session.scalars(
+                mapping_stmt.order_by(
+                    DataLineageMapping.source_attribute,
+                    DataLineageMapping.target_attribute,
+                )
+            ).all()
+
+            results.append(
+                {
+                    "source": source,
+                    "process": process,
+                    "flow": flow,
+                    "transformations": transformations,
+                    "mappings": mappings,
+                }
+            )
+
+        return results

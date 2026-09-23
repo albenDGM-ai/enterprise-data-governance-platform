@@ -1,0 +1,7 @@
+============================================================
+BATCH 08.8 — ORIGINAL BATCH 08 GRAPH INTEGRITY TESTS
+============================================================
+/home/alben/Projects/enterprise-data-governance-platform/.venv/bin/python: No module named pytest
+
+TEST EXIT CODE: 1
+REPORT: Test reports/Batch-08.8-graph-integrity-tests.txt

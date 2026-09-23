@@ -1,0 +1,101 @@
+============================================================
+DGM — BATCH 08.8V
+Final Lineage Nullability Alignment
+Started: Mon Sep 14 09:37:41 PM IST 2026
+============================================================
+
+STEP 1 — Verify both stale assertions
+Target stale assertion count: 1
+Mapping stale assertion count: 1
+Both stale assertions found exactly once.
+STEP 1 PASS
+
+STEP 2 — Create backups
+Test backup: backend/tests/test_batch_08_graph_integrity.py.before-08.8V
+env.py backup: backend/alembic/env.py.before-08.8V
+STEP 2 PASS
+
+STEP 3 — Change both ORM assertions to NOT NULL
+Target assertion: True -> False
+Mapping assertion: True -> False
+STEP 3 PASS
+
+STEP 4 — Verify both ORM assertions
+216:    assert DataLineageTarget.__table__.c.lineage_transformation_id.nullable is False
+217:    assert DataLineageMapping.__table__.c.lineage_target_id.nullable is False
+STEP 4 PASS
+
+STEP 5 — Verify response schemas still allow None
+Target response: uuid.UUID | None
+Mapping response: uuid.UUID | None
+Response schemas remain nullable: PASS
+STEP 5 PASS
+
+STEP 6 — Remove Alembic include_object workaround
+Removing include_object lines 38-52
+configure argument count: 1
+Alembic workaround removed.
+STEP 6 PASS
+
+STEP 7 — Verify env.py
+Top-level functions: ['run_migrations_offline', 'run_migrations_online']
+env.py clean.
+env.py compilation: PASS
+STEP 7 PASS
+
+STEP 8 — Verify ORM metadata
+Target nullable: False
+Mapping target nullable: False
+ORM metadata: PASS
+STEP 8 PASS
+
+STEP 9 — Alembic current
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+32b95f7a0662 (head)
+STEP 9 PASS
+
+STEP 10 — Alembic check
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.schemas
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.tables
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.types
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.constraints
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.defaults
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.comments
+No new upgrade operations detected.
+ALEMBIC CHECK: CLEAN
+STEP 10 PASS
+
+STEP 11 — Run Batch 08 graph integrity tests
+........                                                                 [100%]
+8 passed in 0.73s
+STEP 11 PASS
+
+STEP 12 — Verify database constraints
+{'table_name': 'lineage_mapping', 'column_name': 'lineage_target_id', 'is_nullable': 'NO'}
+{'table_name': 'lineage_target', 'column_name': 'lineage_transformation_id', 'is_nullable': 'NO'}
+Target NULL count: 0
+Mapping target NULL count: 0
+Database constraints: PASS
+STEP 12 PASS
+
+STEP 13 — Final Git state
+ M backend/alembic/env.py
+ M backend/app/models/lineage_mapping.py
+ M backend/app/models/lineage_target.py
+?? backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py
+?? backend/tests/test_batch_08_graph_integrity.py
+
+============================================================
+BATCH 08.8V COMPLETED
+============================================================
+Both ORM nullability assertions aligned to NOT NULL.
+Response schemas retain legacy None compatibility.
+Alembic workaround removed.
+Alembic check clean.
+Batch 08 graph-integrity tests passed.
+Database unchanged.
+Report: Test reports/Batch-08.8V-final-lineage-nullability-alignment-20260914-213741.txt
+============================================================

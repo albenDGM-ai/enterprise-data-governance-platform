@@ -6,7 +6,13 @@ from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 
 from app.models.lineage_mapping import DataLineageMapping
+from app.repositories.lineage_flow_repository import LineageFlowRepository
 from app.repositories.lineage_mapping_repository import LineageMappingRepository
+from app.repositories.lineage_target_repository import LineageTargetRepository
+from app.repositories.lineage_transformation_repository import (
+    LineageTransformationRepository,
+)
+from app.services.lineage_validation import LineageRelationshipValidationError
 
 
 class LineageMappingService:
@@ -15,6 +21,91 @@ class LineageMappingService:
     def __init__(self, session: Session) -> None:
         self.session = session
         self.repository = LineageMappingRepository(session)
+        self.flow_repository = LineageFlowRepository(session)
+        self.target_repository = LineageTargetRepository(session)
+        self.transformation_repository = LineageTransformationRepository(session)
+
+    def _validate_relationships(
+        self,
+        *,
+        lineage_flow_id: uuid.UUID,
+        lineage_target_id: uuid.UUID | None,
+        lineage_transformation_id: uuid.UUID | None,
+    ) -> None:
+        flow = self.flow_repository.get_by_id(
+            lineage_flow_id,
+            include_inactive=True,
+        )
+        if flow is None:
+            raise LineageRelationshipValidationError(
+                "The supplied Lineage Flow does not exist."
+            )
+        if not flow.is_active:
+            raise LineageRelationshipValidationError(
+                "The supplied Lineage Flow is inactive."
+            )
+
+        target_transformation = None
+        if lineage_target_id is not None:
+            target = self.target_repository.get_by_id(
+                lineage_target_id,
+                include_inactive=True,
+            )
+            if target is None:
+                raise LineageRelationshipValidationError(
+                    "The supplied Lineage Target does not exist."
+                )
+            if not target.is_active:
+                raise LineageRelationshipValidationError(
+                    "The supplied Lineage Target is inactive."
+                )
+            if target.lineage_transformation_id is None:
+                raise LineageRelationshipValidationError(
+                    "The supplied Lineage Target has no Lineage Transformation."
+                )
+
+            target_transformation = self.transformation_repository.get_by_id(
+                target.lineage_transformation_id,
+                include_inactive=True,
+            )
+            if target_transformation is None:
+                raise LineageRelationshipValidationError(
+                    "The supplied Lineage Target references a missing Lineage Transformation."
+                )
+            if not target_transformation.is_active:
+                raise LineageRelationshipValidationError(
+                    "The supplied Lineage Target references an inactive Lineage Transformation."
+                )
+            if target_transformation.lineage_flow_id != lineage_flow_id:
+                raise LineageRelationshipValidationError(
+                    "The supplied Lineage Target belongs to a different Lineage Flow."
+                )
+
+        if lineage_transformation_id is not None:
+            transformation = self.transformation_repository.get_by_id(
+                lineage_transformation_id,
+                include_inactive=True,
+            )
+            if transformation is None:
+                raise LineageRelationshipValidationError(
+                    "The supplied Lineage Transformation does not exist."
+                )
+            if not transformation.is_active:
+                raise LineageRelationshipValidationError(
+                    "The supplied Lineage Transformation is inactive."
+                )
+            if transformation.lineage_flow_id != lineage_flow_id:
+                raise LineageRelationshipValidationError(
+                    "The supplied Lineage Transformation belongs to a different Lineage Flow."
+                )
+            if (
+                target_transformation is not None
+                and transformation.lineage_transformation_id
+                != target_transformation.lineage_transformation_id
+            ):
+                raise LineageRelationshipValidationError(
+                    "The supplied Lineage Transformation does not own the supplied Lineage Target."
+                )
 
     def get(
         self,
@@ -63,6 +154,7 @@ class LineageMappingService:
         self,
         *,
         lineage_flow_id: uuid.UUID,
+        lineage_target_id: uuid.UUID,
         lineage_transformation_id: uuid.UUID | None,
         source_attribute: str,
         target_attribute: str,
@@ -70,6 +162,12 @@ class LineageMappingService:
         status: str,
         created_by: str,
     ) -> DataLineageMapping:
+        self._validate_relationships(
+            lineage_flow_id=lineage_flow_id,
+            lineage_target_id=lineage_target_id,
+            lineage_transformation_id=lineage_transformation_id,
+        )
+
         existing = self.repository.get_by_attributes(
             lineage_flow_id,
             source_attribute,
@@ -86,6 +184,7 @@ class LineageMappingService:
         entity = DataLineageMapping(
             lineage_mapping_id=uuid.uuid4(),
             lineage_flow_id=lineage_flow_id,
+            lineage_target_id=lineage_target_id,
             lineage_transformation_id=lineage_transformation_id,
             source_attribute=source_attribute,
             target_attribute=target_attribute,
@@ -104,12 +203,35 @@ class LineageMappingService:
         entity: DataLineageMapping,
         *,
         modified_by: str,
+        lineage_flow_id: uuid.UUID | None = None,
+        lineage_target_id: uuid.UUID | None = None,
         lineage_transformation_id: uuid.UUID | None = None,
         source_attribute: str | None = None,
         target_attribute: str | None = None,
         mapping_type: str | None = None,
         status: str | None = None,
     ) -> DataLineageMapping:
+        new_lineage_flow_id = (
+            lineage_flow_id
+            if lineage_flow_id is not None
+            else entity.lineage_flow_id
+        )
+        new_lineage_target_id = (
+            lineage_target_id
+            if lineage_target_id is not None
+            else entity.lineage_target_id
+        )
+        new_lineage_transformation_id = (
+            lineage_transformation_id
+            if lineage_transformation_id is not None
+            else entity.lineage_transformation_id
+        )
+        self._validate_relationships(
+            lineage_flow_id=new_lineage_flow_id,
+            lineage_target_id=new_lineage_target_id,
+            lineage_transformation_id=new_lineage_transformation_id,
+        )
+
         new_source_attribute = (
             source_attribute
             if source_attribute is not None
@@ -122,7 +244,7 @@ class LineageMappingService:
         )
 
         duplicate = self.repository.get_by_attributes(
-            entity.lineage_flow_id,
+            new_lineage_flow_id,
             new_source_attribute,
             new_target_attribute,
             include_inactive=True,
@@ -133,6 +255,10 @@ class LineageMappingService:
                 "and target attribute already exists."
             )
 
+        if lineage_flow_id is not None:
+            entity.lineage_flow_id = lineage_flow_id
+        if lineage_target_id is not None:
+            entity.lineage_target_id = lineage_target_id
         if lineage_transformation_id is not None:
             entity.lineage_transformation_id = lineage_transformation_id
         if source_attribute is not None:

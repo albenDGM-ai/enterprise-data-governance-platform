@@ -1,0 +1,32 @@
+============================================================
+BATCH 08.8 — VENV PACKAGE BASELINE
+============================================================
+Timestamp: 2026-09-14 20:16:12 IST
+
+=== VENV ===
+Python 3.14.4
+pip 25.1.1 from /home/alben/Projects/enterprise-data-governance-platform/.venv/lib/python3.14/site-packages/pip (python 3.14)
+
+=== INSTALLED PACKAGES ===
+Package Version
+------- -------
+pip     25.1.1
+
+=== REQUIRED TOOL CHECK ===
+fastapi      : MISSING
+sqlalchemy   : MISSING
+alembic      : MISSING
+psycopg2     : MISSING
+pydantic     : MISSING
+uvicorn      : MISSING
+pytest       : MISSING
+
+=== PROJECT FILES ===
+pyproject.toml: ABSENT
+requirements.txt: ABSENT
+backend/requirements.txt: PRESENT
+
+============================================================
+BATCH 08.8 COMPLETE
+REPORT: Test reports/Batch-08.8-venv-package-baseline.txt
+============================================================

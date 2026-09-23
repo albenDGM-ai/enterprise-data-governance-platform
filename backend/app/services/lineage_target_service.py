@@ -6,7 +6,12 @@ from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 
 from app.models.lineage_target import DataLineageTarget
+from app.repositories.lineage_flow_repository import LineageFlowRepository
 from app.repositories.lineage_target_repository import LineageTargetRepository
+from app.repositories.lineage_transformation_repository import (
+    LineageTransformationRepository,
+)
+from app.services.lineage_validation import LineageRelationshipValidationError
 
 
 class LineageTargetService:
@@ -15,6 +20,37 @@ class LineageTargetService:
     def __init__(self, session: Session) -> None:
         self.session = session
         self.repository = LineageTargetRepository(session)
+        self.flow_repository = LineageFlowRepository(session)
+        self.transformation_repository = LineageTransformationRepository(session)
+
+    def _validate_transformation(
+        self,
+        lineage_transformation_id: uuid.UUID,
+    ) -> None:
+        transformation = self.transformation_repository.get_by_id(
+            lineage_transformation_id,
+            include_inactive=True,
+        )
+        if transformation is None:
+            raise LineageRelationshipValidationError(
+                "The supplied Lineage Transformation does not exist."
+            )
+        if not transformation.is_active:
+            raise LineageRelationshipValidationError(
+                "The supplied Lineage Transformation is inactive."
+            )
+        flow = self.flow_repository.get_by_id(
+            transformation.lineage_flow_id,
+            include_inactive=True,
+        )
+        if flow is None:
+            raise LineageRelationshipValidationError(
+                "The supplied Lineage Transformation references a missing Lineage Flow."
+            )
+        if not flow.is_active:
+            raise LineageRelationshipValidationError(
+                "The supplied Lineage Transformation belongs to an inactive Lineage Flow."
+            )
 
     def get(
         self,
@@ -49,6 +85,7 @@ class LineageTargetService:
     def create(
         self,
         *,
+        lineage_transformation_id: uuid.UUID,
         target_name: str,
         target_type: str,
         system_name: str,
@@ -57,6 +94,8 @@ class LineageTargetService:
         status: str,
         created_by: str,
     ) -> DataLineageTarget:
+        self._validate_transformation(lineage_transformation_id)
+
         existing = self.repository.get_by_name(
             target_name,
             system_name,
@@ -71,6 +110,7 @@ class LineageTargetService:
 
         entity = DataLineageTarget(
             lineage_target_id=uuid.uuid4(),
+            lineage_transformation_id=lineage_transformation_id,
             target_name=target_name,
             target_type=target_type,
             system_name=system_name,
@@ -90,6 +130,7 @@ class LineageTargetService:
         entity: DataLineageTarget,
         *,
         modified_by: str,
+        lineage_transformation_id: uuid.UUID | None = None,
         target_name: str | None = None,
         target_type: str | None = None,
         system_name: str | None = None,
@@ -111,6 +152,9 @@ class LineageTargetService:
                 "already exists."
             )
 
+        if lineage_transformation_id is not None:
+            self._validate_transformation(lineage_transformation_id)
+            entity.lineage_transformation_id = lineage_transformation_id
         if target_name is not None:
             entity.target_name = target_name
         if target_type is not None:

@@ -1,0 +1,24 @@
+============================================================
+DGM — BATCH 08.8L
+Exact Alembic Workaround Removal
+Started: Mon Sep 14 09:23:46 PM IST 2026
+============================================================
+
+STEP 1 — Verify current state
+ M backend/alembic/env.py
+ M backend/app/models/lineage_mapping.py
+ M backend/app/models/lineage_target.py
+?? backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py
+
+Current workaround markers:
+38:def include_object(
+49:        if (table_name, name) in LEGACY_NULLABLE_COLUMNS:
+79:        include_object=include_object,
+STEP 1 PASS
+
+STEP 2 — Create backup
+-rw-r--r-- 1 alben alben 2920 Sep 14 21:23 backend/alembic/env.py.before-08.8L
+STEP 2 PASS
+
+STEP 3 — Remove exact workaround block
+STEP 3 FAILED — env.py was not intentionally modified.

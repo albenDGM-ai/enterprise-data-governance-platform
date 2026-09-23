@@ -1,0 +1,685 @@
+============================================================
+DGM — Batch 09.4
+Repository & Runtime Baseline Reconciliation
+============================================================
+
+=== 1. REPOSITORY IDENTITY ===
+/home/alben/Projects/enterprise-data-governance-platform
+feature/project-foundation
+/home/alben/Projects/enterprise-data-governance-platform
+
+=== 2. GIT STATUS ===
+ M backend/alembic/env.py
+ M backend/app/main.py
+ M backend/app/models/lineage_mapping.py
+ M backend/app/models/lineage_target.py
+ M backend/app/services/lineage_mapping_service.py
+ M backend/app/services/lineage_target_service.py
+ M backend/app/services/lineage_transformation_service.py
+ M docs/architecture/logical/DataLineageLogicalModel.md
+ M docs/architecture/physical/DataLineagePhysicalModel.md
+?? .agents/
+?? AGENTS.md
+?? AI_CONTEXT/
+?? "Test reports/"
+?? backend/alembic/env.py.before-08.8D
+?? backend/alembic/env.py.before-08.8E-20260914-210936
+?? backend/alembic/env.py.before-08.8E-20260914-211116
+?? backend/alembic/env.py.before-08.8J
+?? backend/alembic/env.py.before-08.8K
+?? backend/alembic/env.py.before-08.8L
+?? backend/alembic/env.py.before-08.8M
+?? backend/alembic/env.py.before-08.8N
+?? backend/alembic/env.py.before-08.8O
+?? backend/alembic/env.py.before-08.8Q
+?? backend/alembic/env.py.before-08.8S
+?? backend/alembic/env.py.before-08.8T
+?? backend/alembic/env.py.before-08.8U
+?? backend/alembic/env.py.before-08.8V
+?? backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py
+?? backend/alembic/versions/e2d453a0ad03_enforce_lineage_relationship_not_null.py
+?? backend/app/api/
+?? backend/app/models/lineage_mapping.py.before-08.8J
+?? backend/app/models/lineage_mapping.py.before_68
+?? backend/app/models/lineage_target.py.before-08.8J
+?? backend/app/models/lineage_target.py.before_68
+?? backend/app/schemas/
+?? backend/app/services/lineage_discovery_service.py
+?? backend/app/services/lineage_discovery_service.py.before_76
+?? backend/app/services/lineage_mapping_service.py.before_68
+?? backend/app/services/lineage_target_service.py.before_68
+?? backend/app/services/lineage_validation.py
+?? backend/tests/
+?? docs/architecture/05_LogicalModel.md.before_83
+?? docs/architecture/06_PhysicalModel.md.before_83
+?? docs/architecture/07_API_Design.md.before_83
+?? docs/architecture/08_UI_Design.md.before_83
+?? docs/architecture/ProductContext.md
+?? docs/architecture/api/DataLineageAPI.md.before_83
+?? docs/architecture/logical/DataLineageLogicalModel.md.before_83
+?? docs/architecture/physical/DataLineagePhysicalModel.md.before_83
+?? docs/architecture/ui/DataLineageUI.md.before_83
+
+=== 3. RUNTIME ===
+Python:
+Python 3.14.4
+
+Python executable:
+/usr/bin/python3
+
+Virtual environment:
+Python 3.14.4
+pip 25.1.1 from /home/alben/Projects/enterprise-data-governance-platform/.venv/lib/python3.14/site-packages/pip (python 3.14)
+
+Pytest:
+pytest 9.1.1
+
+Docker:
+Docker version 29.8.0, build 88096ef
+
+Node:
+v22.22.1
+
+npm:
+9.2.0
+
+=== 4. AI CONTEXT ===
+AI_CONTEXT/AGENT_COMPLETION_REPORT.md
+AI_CONTEXT/BLOCKERS.md
+AI_CONTEXT/CURRENT_WORK.md
+AI_CONTEXT/DECISIONS.md
+AI_CONTEXT/HANDOFF.md
+AI_CONTEXT/MASTER_EXECUTION_PROTOCOL.md
+AI_CONTEXT/MODEL_SWITCHING_PROTOCOL.md
+AI_CONTEXT/PROGRESS_LEDGER.md
+AI_CONTEXT/PROJECT_STATE.md
+AI_CONTEXT/project_state.yaml
+AI_CONTEXT/ROADMAP.md
+AI_CONTEXT/work-packages/WP-009-ai-development-os.md
+AI_CONTEXT/WORK_PACKAGE_TEMPLATE.md
+
+=== 5. ACTIVE WORK ===
+# Current Work
+
+## Work Package
+
+WP-009 — AI Development Operating System
+
+## Objective
+
+Create a persistent, model-independent development context that allows
+different AI coding agents to continue DGM development without restarting
+project analysis.
+
+## Scope
+
+- AI project state
+- Current work tracking
+- Model handoff
+- Decision tracking
+- Blocker tracking
+- Progress tracking
+- Work-package structure
+- Shared AI skills
+
+## Out of Scope
+
+- Application code changes
+- Database schema changes
+- API changes
+- UI changes
+- AI runtime implementation
+
+## Acceptance Criteria
+
+- [ ] AI_CONTEXT directory exists.
+- [ ] Project state exists.
+- [ ] Current work exists.
+- [ ] Handoff mechanism exists.
+- [ ] Decision log exists.
+- [ ] Blocker log exists.
+- [ ] Roadmap exists.
+- [ ] Progress ledger exists.
+- [ ] Machine-readable state exists.
+- [ ] Shared DGM skills exist.
+- [ ] Model-switching workflow is documented.
+
+## Completion Condition
+
+The project must be able to hand a bounded work package from one coding
+model to another using only repository-resident context.
+
+=== 6. HANDOFF ===
+# DGM AI Handoff
+
+## Purpose
+
+This document allows one AI coding agent to hand DGM development to another
+AI coding agent without losing project context.
+
+## Mission
+
+Continue development of the Enterprise Data Governance Platform.
+
+## Current Phase
+
+Platform Foundation
+
+## Current Workstream
+
+Lineage Governance
+
+## Current Work Package
+
+WP-009 — AI Development Operating System
+
+## Last Completed Major Work
+
+Batch 08 established lineage graph integrity and corrected the transformation
+API update contract.
+
+## Current Objective
+
+Establish the model-independent AI development operating system.
+
+## Important Architectural Rules
+
+1. Preserve the existing DGM documentation structure.
+2. Preserve existing business, conceptual, logical, physical, API, and UI
+   separation.
+3. Do not destroy or reset existing work.
+4. Do not overwrite `.before_*` files.
+5. Do not make destructive database changes without explicit approval.
+6. Lineage relationships must preserve governed graph integrity.
+7. Transformation flow ownership is immutable after creation.
+8. Governed lineage records must have valid active parent relationships.
+9. Physical migration compatibility may require nullable legacy columns.
+10. AI-generated lineage must remain subject to human governance/review.
+
+## Current Development Method
+
+Development is organized into small bounded work packages.
+
+Each work package must define:
+
+- objective
+- scope
+- exclusions
+- acceptance criteria
+- validation
+- stop conditions
+- completion artifacts
+
+## Model Switching Protocol
+
+A coding agent must:
+
+1. Read AGENTS.md.
+2. Read this HANDOFF.md.
+3. Read PROJECT_STATE.md.
+4. Read CURRENT_WORK.md.
+5. Read the active work package.
+6. Read only the relevant architecture/product documentation.
+7. Inspect the current repository state.
+8. Verify the stated state before modifying anything.
+9. Implement only the active work package.
+10. Run the required validation.
+11. Update the handoff/state documents.
+12. Produce a concise completion report.
+
+## Escalate Instead of Guessing
+
+Stop and request orchestration guidance when:
+
+- requirements conflict
+- architecture is unclear
+- a destructive migration is required
+- a major domain model decision is required
+- existing documentation conflicts materially with code
+- security/privacy implications are unclear
+- the requested change exceeds the current work package
+
+## Handoff Rule
+
+The next AI must continue from the current checkpoint.
+
+It must not restart completed work merely because it is a different model.
+
+=== 7. PROJECT STATE ===
+# DGM Project State
+
+## Project
+
+Enterprise Data Governance Platform (DGM)
+
+## Mission
+
+Build an enterprise-grade Data Governance Management platform with metadata,
+business glossary, data quality, lineage, governance workflows, and AI-powered
+governance capabilities.
+
+## Current Development Phase
+
+Platform Foundation
+
+## Current Workstream
+
+Lineage Governance
+
+## Current Batch
+
+Batch 09 — AI Development Operating System
+
+## Previous Work
+
+Batch 08 established lineage graph integrity and transformation API contract
+corrections.
+
+## Current Environment
+
+- OS: Ubuntu/Xubuntu
+- Python: 3.14.4
+- Git branch: feature/project-foundation
+- Project-local virtual environment: .venv
+- Backend: FastAPI / Python
+- ORM: SQLAlchemy
+- Migration: Alembic
+- Database target: PostgreSQL
+- Frontend target: React / TypeScript / MUI
+- AI architecture: multi-provider AI gateway
+
+## Current Objective
+
+Establish a model-independent AI-assisted development workflow so that
+different coding models can continue DGM development without losing project
+context or architectural continuity.
+
+## Current Status
+
+AI development operating system is being established.
+
+## Next Immediate Work
+
+1. Complete AI_CONTEXT structure.
+2. Create reusable DGM agent skills.
+3. Create model-independent handoff mechanism.
+4. Establish work-package execution protocol.
+5. Resume Batch 08 runtime testing.
+6. Continue DGM product implementation.
+
+## Important Principle
+
+The repository owns project knowledge.
+
+No individual AI model is the authoritative owner of DGM project context.
+
+## Source of Truth
+
+1. Product and architecture documentation
+2. AGENTS.md
+3. AI_CONTEXT
+4. Source code
+5. Tests and validation reports
+6. Git history
+
+=== 8. DECISIONS ===
+# DGM Architecture and Development Decisions
+
+## Purpose
+
+Record durable decisions that coding agents must not silently reverse.
+
+## Lineage
+
+### Transformation Ownership
+
+A lineage transformation belongs to one lineage flow.
+
+### Target Ownership
+
+A governed lineage target belongs to one lineage transformation.
+
+### Mapping Ownership
+
+A governed lineage mapping requires a lineage target.
+
+### Transformation Flow Mutability
+
+A transformation's lineage flow is immutable after creation.
+
+### Legacy Migration Strategy
+
+New relationship columns may remain nullable during the initial migration
+phase to preserve legacy-read compatibility.
+
+Hard enforcement requires governed remediation before tightening constraints.
+
+## Development
+
+### Repository as Source of Truth
+
+AI models are replaceable execution components.
+
+Project knowledge must remain in the repository.
+
+### Work Package Model
+
+AI coding work must be bounded by explicit work packages and acceptance
+criteria.
+
+### Human Architectural Control
+
+Major architectural decisions require human/orchestration review.
+
+### Git
+
+Do not create commits unless explicitly requested.
+
+=== 9. BLOCKERS ===
+# DGM Blockers
+
+## Active Blockers
+
+None recorded by the AI development operating system.
+
+## Resolved / Historical
+
+### Python Test Environment
+
+The system initially lacked Python venv support.
+
+`python3.14-venv` was subsequently installed.
+
+The project-local `.venv` requires verification before runtime tests are
+considered operational.
+
+See Test reports for detailed environment history.
+
+=== 10. ROADMAP ===
+# DGM Development Roadmap
+
+## Phase 1 — Platform Foundation
+
+- [x] Project foundation
+- [x] Core documentation structure
+- [x] Lineage domain foundation
+- [x] Lineage relationship integrity work
+- [ ] Complete lineage runtime testing
+- [ ] Complete remaining lineage governance
+- [ ] Establish AI development operating system
+- [ ] Establish multi-provider AI gateway
+
+## Phase 2 — Governance Platform
+
+- [ ] Metadata repository
+- [ ] Business glossary
+- [ ] Data quality management
+- [ ] Data lineage
+- [ ] Governance workflows
+- [ ] Impact analysis
+- [ ] Auditability
+- [ ] Versioning
+
+## Phase 3 — AI Governance
+
+- [ ] AI gateway
+- [ ] Model routing
+- [ ] Metadata Assistant
+- [ ] Business Glossary Assistant
+- [ ] Data Quality Assistant
+- [ ] Lineage Assistant
+- [ ] Governance Assistant
+- [ ] SQL Assistant
+- [ ] Documentation Assistant
+
+## Phase 4 — Enterprise Hardening
+
+- [ ] Security
+- [ ] RBAC
+- [ ] Audit controls
+- [ ] Observability
+- [ ] Performance
+- [ ] Testing
+- [ ] Deployment
+- [ ] AI governance controls
+
+=== 11. PRODUCT CONTEXT SUMMARY ===
+60:12. Data Lineage
+167:| **Data Lineage** | **70–80%** | Most mature area: models, migrations, services, validation, discovery, mapping, impact/version/snapshot foundations and tests |
+178:# 8. Data Lineage — Current Most Mature Capability
+228:- Current migration head: `e2d453a0ad03`
+230:- Batch 08 graph-integrity tests: **8/8 passing**
+235:Batch 07 contains a historical transition-compatibility test that still expects the ORM relationship columns to be nullable. The current Batch 08 and database contract require them to be non-nullable.
+367:Data Lineage                            ~70–80%
+368:AI Runtime Capability                   ~5%
+486:# 15. Immediate Priority
+488:1. Resolve the Batch 07/Batch 08 compatibility-test contract.
+520:# 17. Current Baseline Summary
+525:- Data Lineage is the most mature product capability.
+527:- Batch 08 graph-integrity tests pass 8/8.
+529:- The remaining Batch 07 failure is a historical test-contract mismatch with the newer governed relationship contract.
+
+=== 12. MIGRATION FILES ===
+backend/alembic/versions/25d007f0759a_create_data_quality_result.py
+backend/alembic/versions/25f927618c4b_create_impact_analysis.py
+backend/alembic/versions/2ee5cf35e17a_create_data_quality_assessment.py
+backend/alembic/versions/2feab630255a_create_business_glossary.py
+backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py
+backend/alembic/versions/342b1ccc2068_create_data_quality_issue.py
+backend/alembic/versions/35adef90b56f_create_lineage_version.py
+backend/alembic/versions/3612cea475b7_create_database_table.py
+backend/alembic/versions/45d5e5e0a55a_create_rule_condition_action_version_dependency_execution_context_mapping.py
+backend/alembic/versions/629dd9af1ed7_create_database_schema.py
+backend/alembic/versions/6da871e5e4ff_create_table_column.py
+backend/alembic/versions/8b3539847726_create_business_term_relationship.py
+backend/alembic/versions/923a1d298733_create_data_quality_dimension.py
+backend/alembic/versions/92e2c553f3f4_create_business_rule.py
+backend/alembic/versions/9a792fae7ed7_create_lineage_mapping.py
+backend/alembic/versions/9d6657445897_create_lineage_target.py
+backend/alembic/versions/9e41c71eb4a6_create_data_quality_exception.py
+backend/alembic/versions/afddcea9037e_create_lineage_snapshot.py
+backend/alembic/versions/bf1ab5ccdf2a_create_business_definition_acronym_synonym.py
+backend/alembic/versions/c0e77389503d_create_business_term.py
+backend/alembic/versions/c1e2cd64a9cf_create_database_view.py
+backend/alembic/versions/c62081edd60c_create_data_quality_rule.py
+backend/alembic/versions/c72c7b5269c9_create_business_category.py
+backend/alembic/versions/d11b318bfcc5_create_data_asset.py
+backend/alembic/versions/df4365b60d25_create_api_asset.py
+backend/alembic/versions/e162416e8cce_create_file_asset.py
+backend/alembic/versions/e2d453a0ad03_enforce_lineage_relationship_not_null.py
+backend/alembic/versions/e65e6d75a6d4_create_source_system.py
+backend/alembic/versions/ed60600dd4ee_create_business_rule_association.py
+backend/alembic/versions/f7b06a6d8fc1_create_lineage_process_and_flow.py
+
+=== 13. LINEAGE TESTS ===
+backend/tests/__pycache__/test_batch_07_transition_compatibility.cpython-314.pyc
+backend/tests/__pycache__/test_batch_08_graph_integrity.cpython-314.pyc
+backend/tests/test_batch_07_transition_compatibility.py
+backend/tests/test_batch_08_graph_integrity.py
+backend/tests/test_batch_08_graph_integrity.py.before-08.8T
+backend/tests/test_batch_08_graph_integrity.py.before-08.8U
+backend/tests/test_batch_08_graph_integrity.py.before-08.8V
+backend/tests/test_batch_08_graph_integrity.py.before_83
+
+=== 14. BACKEND STRUCTURE ===
+backend/app/api/__init__.py
+backend/app/api/__pycache__/__init__.cpython-312.pyc
+backend/app/api/routers/__init__.py
+backend/app/api/routers/lineage.py
+backend/app/api/routers/lineage.py.before_68
+backend/app/api/routers/lineage.py.before_74_3F
+backend/app/api/routers/lineage.py.before_83
+backend/app/core/config.py
+backend/app/core/__init__.py
+backend/app/core/__pycache__/config.cpython-312.pyc
+backend/app/core/__pycache__/__init__.cpython-312.pyc
+backend/app/db/base.py
+backend/app/db/__init__.py
+backend/app/db/__pycache__/base.cpython-312.pyc
+backend/app/db/__pycache__/__init__.cpython-312.pyc
+backend/app/db/__pycache__/session.cpython-312.pyc
+backend/app/db/session.py
+backend/app/main.py
+backend/app/models/business_glossary/acronym.py
+backend/app/models/business_glossary/business_category.py
+backend/app/models/business_glossary/business_definition.py
+backend/app/models/business_glossary/business_glossary.py
+backend/app/models/business_glossary/business_rule_association.py
+backend/app/models/business_glossary/business_term.py
+backend/app/models/business_glossary/business_term_relationship.py
+backend/app/models/business_glossary/__init__.py
+backend/app/models/business_glossary/synonym.py
+backend/app/models/business_rules/business_rule.py
+backend/app/models/business_rules/__init__.py
+backend/app/models/business_rules/rule_action.py
+backend/app/models/business_rules/rule_category.py
+backend/app/models/business_rules/rule_condition.py
+backend/app/models/business_rules/rule_dependency.py
+backend/app/models/business_rules/rule_execution_context.py
+backend/app/models/business_rules/rule_mapping.py
+backend/app/models/business_rules/rule_type.py
+backend/app/models/business_rules/rule_version.py
+backend/app/models/data_quality/data_quality_assessment.py
+backend/app/models/data_quality/data_quality_dimension.py
+backend/app/models/data_quality/data_quality_exception.py
+backend/app/models/data_quality/data_quality_issue.py
+backend/app/models/data_quality/data_quality_result.py
+backend/app/models/data_quality/data_quality_rule.py
+backend/app/models/data_quality/__init__.py
+backend/app/models/impact_analysis.py
+backend/app/models/__init__.py
+backend/app/models/lineage_flow.py
+backend/app/models/lineage_mapping.py
+backend/app/models/lineage_mapping.py.before-08.8J
+backend/app/models/lineage_mapping.py.before_68
+backend/app/models/lineage_process.py
+backend/app/models/lineage_snapshot.py
+backend/app/models/lineage_source.py
+backend/app/models/lineage_target.py
+backend/app/models/lineage_target.py.before-08.8J
+backend/app/models/lineage_target.py.before_68
+backend/app/models/lineage_transformation.py
+backend/app/models/lineage_version.py
+backend/app/models/metadata/api_asset.py
+backend/app/models/metadata/data_asset.py
+backend/app/models/metadata/database.py
+backend/app/models/metadata/database_schema.py
+backend/app/models/metadata/database_table.py
+backend/app/models/metadata/database_view.py
+backend/app/models/metadata/file_asset.py
+backend/app/models/metadata/__init__.py
+backend/app/models/metadata/source_system.py
+backend/app/models/metadata/table_column.py
+backend/app/models/__pycache__/impact_analysis.cpython-312.pyc
+backend/app/models/__pycache__/__init__.cpython-312.pyc
+backend/app/models/__pycache__/lineage_flow.cpython-312.pyc
+backend/app/models/__pycache__/lineage_mapping.cpython-312.pyc
+backend/app/models/__pycache__/lineage_process.cpython-312.pyc
+backend/app/models/__pycache__/lineage_snapshot.cpython-312.pyc
+backend/app/models/__pycache__/lineage_source.cpython-312.pyc
+backend/app/models/__pycache__/lineage_target.cpython-312.pyc
+backend/app/models/__pycache__/lineage_transformation.cpython-312.pyc
+backend/app/models/__pycache__/lineage_version.cpython-312.pyc
+backend/app/__pycache__/main.cpython-312.pyc
+backend/app/repositories/impact_analysis_repository.py
+backend/app/repositories/__init__.py
+backend/app/repositories/lineage_flow_repository.py
+backend/app/repositories/lineage_mapping_repository.py
+backend/app/repositories/lineage_process_repository.py
+backend/app/repositories/lineage_snapshot_repository.py
+backend/app/repositories/lineage_source_repository.py
+backend/app/repositories/lineage_target_repository.py
+backend/app/repositories/lineage_transformation_repository.py
+backend/app/repositories/lineage_version_repository.py
+backend/app/repositories/__pycache__/impact_analysis_repository.cpython-312.pyc
+backend/app/repositories/__pycache__/__init__.cpython-312.pyc
+backend/app/repositories/__pycache__/lineage_flow_repository.cpython-312.pyc
+backend/app/repositories/__pycache__/lineage_mapping_repository.cpython-312.pyc
+backend/app/repositories/__pycache__/lineage_process_repository.cpython-312.pyc
+backend/app/repositories/__pycache__/lineage_snapshot_repository.cpython-312.pyc
+backend/app/repositories/__pycache__/lineage_source_repository.cpython-312.pyc
+backend/app/repositories/__pycache__/lineage_target_repository.cpython-312.pyc
+backend/app/repositories/__pycache__/lineage_transformation_repository.cpython-312.pyc
+backend/app/repositories/__pycache__/lineage_version_repository.cpython-312.pyc
+backend/app/schemas/common.py
+backend/app/schemas/impact_analysis.py
+backend/app/schemas/__init__.py
+backend/app/schemas/lineage_discovery.py
+backend/app/schemas/lineage_discovery.py.before_76
+backend/app/schemas/lineage_flow.py
+backend/app/schemas/lineage_mapping.py
+backend/app/schemas/lineage_mapping.py.before_68
+backend/app/schemas/lineage_process.py
+backend/app/schemas/lineage_snapshot.py
+backend/app/schemas/lineage_source.py
+backend/app/schemas/lineage_target.py
+backend/app/schemas/lineage_target.py.before_68
+backend/app/schemas/lineage_transformation.py
+backend/app/schemas/lineage_transformation.py.before_83
+backend/app/schemas/lineage_version.py
+backend/app/schemas/__pycache__/common.cpython-312.pyc
+backend/app/schemas/__pycache__/impact_analysis.cpython-312.pyc
+backend/app/schemas/__pycache__/__init__.cpython-312.pyc
+backend/app/schemas/__pycache__/lineage_discovery.cpython-312.pyc
+backend/app/schemas/__pycache__/lineage_flow.cpython-312.pyc
+backend/app/schemas/__pycache__/lineage_mapping.cpython-312.pyc
+backend/app/schemas/__pycache__/lineage_process.cpython-312.pyc
+backend/app/schemas/__pycache__/lineage_snapshot.cpython-312.pyc
+backend/app/schemas/__pycache__/lineage_source.cpython-312.pyc
+backend/app/schemas/__pycache__/lineage_target.cpython-312.pyc
+backend/app/schemas/__pycache__/lineage_transformation.cpython-312.pyc
+backend/app/schemas/__pycache__/lineage_version.cpython-312.pyc
+backend/app/services/impact_analysis_service.py
+backend/app/services/__init__.py
+backend/app/services/lineage_discovery_service.py
+backend/app/services/lineage_discovery_service.py.before_76
+backend/app/services/lineage_flow_service.py
+backend/app/services/lineage_mapping_service.py
+backend/app/services/lineage_mapping_service.py.before_68
+backend/app/services/lineage_process_service.py
+backend/app/services/lineage_snapshot_service.py
+backend/app/services/lineage_source_service.py
+backend/app/services/lineage_target_service.py
+backend/app/services/lineage_target_service.py.before_68
+backend/app/services/lineage_transformation_service.py
+backend/app/services/lineage_validation.py
+backend/app/services/lineage_version_service.py
+backend/app/services/__pycache__/impact_analysis_service.cpython-312.pyc
+backend/app/services/__pycache__/__init__.cpython-312.pyc
+backend/app/services/__pycache__/lineage_discovery_service.cpython-312.pyc
+backend/app/services/__pycache__/lineage_flow_service.cpython-312.pyc
+backend/app/services/__pycache__/lineage_mapping_service.cpython-312.pyc
+backend/app/services/__pycache__/lineage_process_service.cpython-312.pyc
+backend/app/services/__pycache__/lineage_snapshot_service.cpython-312.pyc
+backend/app/services/__pycache__/lineage_source_service.cpython-312.pyc
+backend/app/services/__pycache__/lineage_target_service.cpython-312.pyc
+backend/app/services/__pycache__/lineage_transformation_service.cpython-312.pyc
+backend/app/services/__pycache__/lineage_version_service.cpython-312.pyc
+
+=== 15. TEST REPORTS ===
+Test reports/Batch-09.4-repository-runtime-baseline.txt
+
+=== 16. ACTIVE WORK PACKAGE ===
+AI_CONTEXT/work-packages/WP-009-ai-development-os.md
+
+=== 17. MASTER PROTOCOL CHECK ===
+PASS: MASTER_EXECUTION_PROTOCOL.md exists
+PASS: MODEL_SWITCHING_PROTOCOL.md exists
+
+=== 18. AGENT SKILLS ===
+.agents/skills/dgm-ai-agent/SKILL.md
+.agents/skills/dgm-api/SKILL.md
+.agents/skills/dgm-architecture/SKILL.md
+.agents/skills/dgm-database/SKILL.md
+.agents/skills/dgm-development/SKILL.md
+.agents/skills/dgm-documentation/SKILL.md
+.agents/skills/dgm-lineage/SKILL.md
+.agents/skills/dgm-testing/SKILL.md
+
+=== 19. WHITESPACE CHECK ===
+backend/alembic/env.py:33: trailing whitespace.
++ 
+
+============================================================
+BASELINE RECONCILIATION COMPLETE
+============================================================

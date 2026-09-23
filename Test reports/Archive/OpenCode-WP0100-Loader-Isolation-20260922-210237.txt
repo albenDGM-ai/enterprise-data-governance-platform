@@ -1,0 +1,95 @@
+============================================================
+DGM WP-010.0 — OpenCode Plugin Loader Isolation Test
+============================================================
+Tue Sep 22 09:02:37 PM IST 2026
+/home/alben/Projects/enterprise-data-governance-platform
+
+=== 1. Create temporary no-import plugin ===
+
+=== 2. Create temporary ordinary-package plugin ===
+
+=== 3. Verify temporary files ===
+.opencode/plugins/.wp0100-20260922-210237/ordinary-import.ts
+import { z } from "zod"
+
+export default {
+  id: "dgm.wp0100.ordinary-import",
+  async setup(ctx) {
+    console.log("WP0100_ORDINARY_IMPORT_PLUGIN_LOADED")
+    console.log("ZOD_TYPE:", typeof z)
+  },
+}
+.opencode/plugins/.wp0100-20260922-210237/no-import.ts
+export default {
+  id: "dgm.wp0100.no-import",
+  async setup(ctx) {
+    console.log("WP0100_NO_IMPORT_PLUGIN_LOADED")
+  },
+}
+
+=== 4. Verify ordinary dependency ===
+ZOD_PACKAGE_PRESENT
+zod@4.1.8
+
+=== 5. Verify OpenCode package dependency ===
+OPENCODE_PLUGIN_PRESENT
+@opencode/plugin@2.0.14
+
+=== 6. Start OpenCode test ===
+--- OpenCode command output ---
+[91m[1mError: [0mModel unavailable: google/gemini-3.5-flash-lite
+
+=== 7. Capture latest plugin-loader log evidence ===
+timestamp=2026-09-22T15:17:32.858Z level=INFO run=6fa42cb7 msg="loading plugin" id=/home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts entrypoint=file:///home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts http.span=206 role=server
+timestamp=2026-09-22T15:17:32.864Z level=INFO run=6fa42cb7 message="watcher subscribe" path=/home/alben/Projects/enterprise-data-governance-platform/.opencode/node_modules/@opencode/plugin type=directory ignores=0 http.span=212 role=server
+timestamp=2026-09-22T15:17:32.866Z level=INFO run=6fa42cb7 message="watcher started" path=/home/alben/Projects/enterprise-data-governance-platform/.opencode/node_modules/@opencode/plugin type=directory backend=inotify ignores=0 http.span=214 role=server
+timestamp=2026-09-22T15:17:32.867Z level=WARN run=6fa42cb7 message="failed to load plugin" target=/home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts ref=err_627bf75e cause="Cause([Die(ResolveMessage: Cannot find package '@opencode/plugin' imported from /home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts)])" http.span=215 role=server
+timestamp=2026-09-22T15:17:34.271Z level=ERROR run=6fa42cb7 message="Failed to drain Session" cause="SessionRunnerModel.ModelUnavailableError: Model unavailable: google/gemini-3.5-flash-lite\n    at <anonymous> (/$bunfs/root/chunk-9dbgd38n.js:37:21266)\n    at SessionRunnerModel.resolve (/$bunfs/root/chunk-9dbgd38n.js:115:7697)\n    at SessionRunnerModel.resolve (definition) (/$bunfs/root/chunk-9dbgd38n.js:37:21023)\n    at SessionContext.load (/$bunfs/root/chunk-4k7gm06b.js:366:2529)\n    at SessionContext.load (definition) (/$bunfs/root/chunk-9dbgd38n.js:115:7646)\n    at SessionRunner.advanceToStep (/$bunfs/root/chunk-4k7gm06b.js:366:2583)\n    at SessionRunner.advanceToStep (definition) (/$bunfs/root/chunk-4k7gm06b.js:366:729)\n    at SessionRunner.drain (/$bunfs/root/chunk-pdvyckmt.js:24:2279)\n    at SessionRunner.drain (definition) (/$bunfs/root/chunk-4k7gm06b.js:366:352)\n    at ServerProcess.start (/$bunfs/root/chunk-rtrfvtvs.js:2:6383)\n    at ServerProcess.start (definition) (/$bunfs/root/chunk-4k7gm06b.js:437:22432)" role=server sessionID=ses_f364e698bffe5vDNQzX11krlah
+timestamp=2026-09-22T15:31:22.099Z level=INFO run=6fa42cb7 msg="loading plugin" id=/home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts entrypoint=file:///home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts http.span=829447 role=server
+timestamp=2026-09-22T15:31:22.100Z level=WARN run=6fa42cb7 message="failed to load plugin" target=/home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts ref=err_ef188d91 cause="Cause([Die(ResolveMessage: Cannot find package '@opencode/plugin' imported from /home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts)])" http.span=829448 role=server
+timestamp=2026-09-22T15:31:22.802Z level=ERROR run=6fa42cb7 message="Failed to drain Session" cause="SessionRunnerModel.ModelUnavailableError: Model unavailable: google/gemini-3.5-flash-lite\n    at <anonymous> (/$bunfs/root/chunk-9dbgd38n.js:37:21266)\n    at SessionRunnerModel.resolve (/$bunfs/root/chunk-9dbgd38n.js:115:7697)\n    at SessionRunnerModel.resolve (definition) (/$bunfs/root/chunk-9dbgd38n.js:37:21023)\n    at SessionContext.load (/$bunfs/root/chunk-4k7gm06b.js:366:2529)\n    at SessionContext.load (definition) (/$bunfs/root/chunk-9dbgd38n.js:115:7646)\n    at SessionRunner.advanceToStep (/$bunfs/root/chunk-4k7gm06b.js:366:2583)\n    at SessionRunner.advanceToStep (definition) (/$bunfs/root/chunk-4k7gm06b.js:366:729)\n    at SessionRunner.drain (/$bunfs/root/chunk-pdvyckmt.js:24:2279)\n    at SessionRunner.drain (definition) (/$bunfs/root/chunk-4k7gm06b.js:366:352)\n    at ServerProcess.start (/$bunfs/root/chunk-rtrfvtvs.js:2:6383)\n    at ServerProcess.start (definition) (/$bunfs/root/chunk-4k7gm06b.js:437:22432)" role=server sessionID=ses_f3641c49fffemy1V80cqJ3V22Q
+timestamp=2026-09-22T15:32:37.832Z level=INFO run=6fa42cb7 msg="loading plugin" id=/home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts entrypoint=file:///home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts http.span=905180 role=server
+timestamp=2026-09-22T15:32:37.833Z level=WARN run=6fa42cb7 message="failed to load plugin" target=/home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts ref=err_31e27242 cause="Cause([Die(ResolveMessage: Cannot find package '@opencode/plugin' imported from /home/alben/Projects/enterprise-data-governance-platform/.opencode/plugins/quota-retry.ts)])" http.span=905181 role=server
+timestamp=2026-09-22T15:32:38.241Z level=INFO run=2d342058 message="cli starting" version=2.0.12 channel=latest local=false args="[\"run\",\"--model\",\"google/gemini-3.5-flash-lite\",\"Reply with exactly: WP0100_LOADER_TEST\"]" role=cli
+
+=== 8. Remove ONLY WP-010.0 temporary test directory ===
+TEMPORARY_TEST_DIRECTORY_REMOVED
+
+=== 9. Verify quota plugin remains untouched ===
+import { Plugin } from "@opencode/plugin"
+
+export default Plugin.define({
+  id: "dgm.quota-retry",
+
+  setup: async (ctx) => {
+    await ctx.session.hook("retry", (event) => {
+      // Retry provider rate-limit/quota responses once after 60 seconds.
+      if (event.error.status === 429 && event.attempt === 1) {
+        event.decision = {
+          retry: true,
+          delay: 60_000,
+        }
+      }
+    })
+  },
+})
+
+=== 10. Verify package configuration remains unchanged ===
+{
+  "dependencies": {
+    "@opencode/plugin": "^2.0.14"
+  }
+}
+
+=== 11. Git status ===
+?? .opencode/
+?? node_modules/
+?? package-lock.json
+?? package.json
+
+=== 12. NO COMMIT ===
+No git commit was performed.
+
+============================================================
+WP-010.0 DIAGNOSTIC COMPLETE
+============================================================

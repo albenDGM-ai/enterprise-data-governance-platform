@@ -1,0 +1,88 @@
+============================================================
+DGM — BATCH 08.8U
+Complete Lineage Nullability Alignment
+Started: Mon Sep 14 09:36:30 PM IST 2026
+============================================================
+
+STEP 1 — Verify current stale mapping assertion
+Old mapping assertion count: 1
+New mapping assertion count: 0
+STEP 1 PASS
+STEP 1 PASS
+
+STEP 2 — Backup test and env.py
+Test backup created.
+env.py backup created.
+STEP 2 PASS
+
+STEP 3 — Change mapping ORM assertion only
+Mapping ORM assertion changed True -> False.
+STEP 3 PASS
+
+STEP 4 — Verify response schemas remain nullable
+Target response annotation: uuid.UUID | None
+Mapping response annotation: uuid.UUID | None
+Response schema legacy-read compatibility: PASS
+STEP 4 PASS
+
+STEP 5 — Verify test nullability assertions
+216:    assert DataLineageTarget.__table__.c.lineage_transformation_id.nullable is True
+217:    assert DataLineageMapping.__table__.c.lineage_target_id.nullable is False
+STEP 5 PASS
+
+STEP 6 — Remove Alembic workaround by AST
+Removing include_object lines 38-52
+configure argument count: 1
+Alembic workaround removed.
+STEP 6 PASS
+
+STEP 7 — Verify env.py is clean
+Top-level functions: ['run_migrations_offline', 'run_migrations_online']
+env.py AST: CLEAN
+env.py text: CLEAN
+env.py compilation: PASS
+STEP 7 PASS
+
+STEP 8 — Verify ORM metadata
+Target nullable: False
+Mapping target nullable: False
+ORM metadata: PASS
+STEP 8 PASS
+
+STEP 9 — Alembic current
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+32b95f7a0662 (head)
+STEP 9 PASS
+
+STEP 10 — Alembic check
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.schemas
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.tables
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.types
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.constraints
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.defaults
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.comments
+No new upgrade operations detected.
+ALEMBIC CHECK: CLEAN
+STEP 10 PASS
+
+STEP 11 — Run Batch 08 graph-integrity tests
+......F.                                                                 [100%]
+=================================== FAILURES ===================================
+________________ test_legacy_null_relationships_remain_readable ________________
+
+    def test_legacy_null_relationships_remain_readable() -> None:
+>       assert DataLineageTarget.__table__.c.lineage_transformation_id.nullable is True
+E       AssertionError: assert False is True
+E        +  where False = Column('lineage_transformation_id', UUID(), ForeignKey('lineage_transformation.lineage_transformation_id'), table=<lineage_target>, nullable=False).nullable
+E        +    where Column('lineage_transformation_id', UUID(), ForeignKey('lineage_transformation.lineage_transformation_id'), table=<lineage_target>, nullable=False) = <sqlalchemy.sql.base.ReadOnlyColumnCollection object at 0x7893f6f83d80>.lineage_transformation_id
+E        +      where <sqlalchemy.sql.base.ReadOnlyColumnCollection object at 0x7893f6f83d80> = Table('lineage_target', MetaData(), Column('lineage_target_id', UUID(), table=<lineage_target>, primary_key=True, null...oolean(), table=<lineage_target>, nullable=False, server_default=DefaultClause('TRUE', for_update=False)), schema=None).c
+E        +        where Table('lineage_target', MetaData(), Column('lineage_target_id', UUID(), table=<lineage_target>, primary_key=True, null...oolean(), table=<lineage_target>, nullable=False, server_default=DefaultClause('TRUE', for_update=False)), schema=None) = DataLineageTarget.__table__
+
+backend/tests/test_batch_08_graph_integrity.py:216: AssertionError
+=========================== short test summary info ============================
+FAILED backend/tests/test_batch_08_graph_integrity.py::test_legacy_null_relationships_remain_readable
+1 failed, 7 passed in 0.78s
+TESTS FAILED — restoring both files.

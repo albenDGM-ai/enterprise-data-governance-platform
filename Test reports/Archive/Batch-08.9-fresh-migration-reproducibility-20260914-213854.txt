@@ -1,0 +1,137 @@
+============================================================
+DGM — BATCH 08.9
+Fresh Migration Reproducibility Test
+Started: Mon Sep 14 09:38:54 PM IST 2026
+============================================================
+
+STEP 1 — Verify main database identity
+Database: enterprise_governance
+User: governance_admin
+PostgreSQL: PostgreSQL 17.10 (Debian 17.10-1.pgdg13+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+Main database identity: PASS
+STEP 1 PASS
+
+STEP 2 — Inspect lineage migration definitions
+14:# revision identifiers, used by Alembic.
+15:revision: str = '32b95f7a0662'
+16:down_revision: Union[str, Sequence[str], None] = 'afddcea9037e'
+25:        sa.Column('lineage_transformation_id', sa.UUID(), nullable=True),
+27:    op.create_index('idx_lineage_target_transformation', 'lineage_target', ['lineage_transformation_id'], unique=False)
+29:        'fk_lineage_target_lineage_transformation_id',
+32:        ['lineage_transformation_id'],
+33:        ['lineage_transformation_id'],
+37:        sa.Column('lineage_target_id', sa.UUID(), nullable=True),
+39:    op.create_index('idx_lineage_mapping_target_id', 'lineage_mapping', ['lineage_target_id'], unique=False)
+41:        'fk_lineage_mapping_lineage_target_id',
+44:        ['lineage_target_id'],
+45:        ['lineage_target_id'],
+52:        'fk_lineage_mapping_lineage_target_id',
+57:    op.drop_column('lineage_mapping', 'lineage_target_id')
+59:        'fk_lineage_target_lineage_transformation_id',
+64:    op.drop_column('lineage_target', 'lineage_transformation_id')
+STEP 2 PASS
+
+STEP 3 — Create isolated temporary PostgreSQL database
+Temporary database: dgm_migration_test_20260914_213855
+Temporary database created: dgm_migration_test_20260914_213855
+STEP 3 PASS
+
+STEP 4 — Run complete Alembic upgrade on fresh database
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> e65e6d75a6d4, create source system
+INFO  [alembic.runtime.migration] Running upgrade e65e6d75a6d4 -> 016d46bca61d, create database
+INFO  [alembic.runtime.migration] Running upgrade 016d46bca61d -> 629dd9af1ed7, create database schema
+INFO  [alembic.runtime.migration] Running upgrade 629dd9af1ed7 -> 3612cea475b7, create database table
+INFO  [alembic.runtime.migration] Running upgrade 3612cea475b7 -> 6da871e5e4ff, create table column
+INFO  [alembic.runtime.migration] Running upgrade 6da871e5e4ff -> c1e2cd64a9cf, create database view
+INFO  [alembic.runtime.migration] Running upgrade c1e2cd64a9cf -> e162416e8cce, create file asset
+INFO  [alembic.runtime.migration] Running upgrade e162416e8cce -> df4365b60d25, create api asset
+INFO  [alembic.runtime.migration] Running upgrade df4365b60d25 -> d11b318bfcc5, create data asset
+INFO  [alembic.runtime.migration] Running upgrade d11b318bfcc5 -> 2feab630255a, create business glossary
+INFO  [alembic.runtime.migration] Running upgrade 2feab630255a -> c72c7b5269c9, create business category
+INFO  [alembic.runtime.migration] Running upgrade c72c7b5269c9 -> c0e77389503d, create business term
+INFO  [alembic.runtime.migration] Running upgrade c0e77389503d -> bf1ab5ccdf2a, create business definition acronym synonym
+INFO  [alembic.runtime.migration] Running upgrade bf1ab5ccdf2a -> 20bb4f730956, create rule category and rule type
+INFO  [alembic.runtime.migration] Running upgrade 20bb4f730956 -> 92e2c553f3f4, create business rule
+INFO  [alembic.runtime.migration] Running upgrade 92e2c553f3f4 -> ed60600dd4ee, create business rule association
+INFO  [alembic.runtime.migration] Running upgrade ed60600dd4ee -> 8b3539847726, create business term relationship
+INFO  [alembic.runtime.migration] Running upgrade 8b3539847726 -> 45d5e5e0a55a, create rule condition action version dependency execution context mapping
+INFO  [alembic.runtime.migration] Running upgrade 45d5e5e0a55a -> 923a1d298733, create data quality dimension
+INFO  [alembic.runtime.migration] Running upgrade 923a1d298733 -> c62081edd60c, create data quality rule
+INFO  [alembic.runtime.migration] Running upgrade c62081edd60c -> 2ee5cf35e17a, create data quality assessment
+INFO  [alembic.runtime.migration] Running upgrade 2ee5cf35e17a -> 25d007f0759a, create data quality result
+INFO  [alembic.runtime.migration] Running upgrade 25d007f0759a -> 342b1ccc2068, create data quality issue
+INFO  [alembic.runtime.migration] Running upgrade 342b1ccc2068 -> 9e41c71eb4a6, create data quality exception
+INFO  [alembic.runtime.migration] Running upgrade 9e41c71eb4a6 -> 1fd4c6984cb4, create lineage source
+INFO  [alembic.runtime.migration] Running upgrade 1fd4c6984cb4 -> 9d6657445897, create lineage target
+INFO  [alembic.runtime.migration] Running upgrade 9d6657445897 -> f7b06a6d8fc1, create lineage process and flow
+INFO  [alembic.runtime.migration] Running upgrade f7b06a6d8fc1 -> 042f36c0fcb4, create lineage transformation
+INFO  [alembic.runtime.migration] Running upgrade 042f36c0fcb4 -> 9a792fae7ed7, create lineage mapping
+INFO  [alembic.runtime.migration] Running upgrade 9a792fae7ed7 -> 25f927618c4b, create impact analysis
+INFO  [alembic.runtime.migration] Running upgrade 25f927618c4b -> 35adef90b56f, create lineage version
+INFO  [alembic.runtime.migration] Running upgrade 35adef90b56f -> afddcea9037e, create lineage snapshot
+INFO  [alembic.runtime.migration] Running upgrade afddcea9037e -> 32b95f7a0662, add lineage target relationships
+STEP 4 PASS
+
+STEP 5 — Inspect fresh database nullability
+{'table_name': 'lineage_mapping', 'column_name': 'lineage_target_id', 'is_nullable': 'YES'}
+{'table_name': 'lineage_target', 'column_name': 'lineage_transformation_id', 'is_nullable': 'YES'}
+
+Fresh migration nullability result:
+lineage_mapping.lineage_target_id = YES
+lineage_target.lineage_transformation_id = YES
+STEP 5 PASS
+
+STEP 6 — Run Alembic check against fresh database
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.schemas
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.tables
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.types
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.constraints
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.defaults
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.comments
+INFO  [alembic.autogenerate.compare.constraints] Detected NOT NULL on column 'lineage_mapping.lineage_target_id'
+INFO  [alembic.autogenerate.compare.constraints] Detected NOT NULL on column 'lineage_target.lineage_transformation_id'
+ERROR [alembic.util.messaging] New upgrade operations detected: [[('modify_nullable', None, 'lineage_mapping', 'lineage_target_id', {'existing_type': UUID(), 'existing_server_default': False, 'existing_comment': None}, True, False)], [('modify_nullable', None, 'lineage_target', 'lineage_transformation_id', {'existing_type': UUID(), 'existing_server_default': False, 'existing_comment': None}, True, False)]]
+  FAILED: New upgrade operations detected: [[('modify_nullable', None,
+  'lineage_mapping', 'lineage_target_id', {'existing_type': UUID(),
+  'existing_server_default': False, 'existing_comment': None}, True, False)],
+  [('modify_nullable', None, 'lineage_target', 'lineage_transformation_id',
+  {'existing_type': UUID(), 'existing_server_default': False,
+  'existing_comment': None}, True, False)]]
+Fresh database Alembic check: DIFFERENCE DETECTED
+
+STEP 7 — Verify migration version on fresh database
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+32b95f7a0662 (head)
+STEP 7 PASS
+
+STEP 8 — Cleanup temporary database
+Temporary database dropped: dgm_migration_test_20260914_213855
+STEP 8 PASS
+
+STEP 9 — Confirm main database was not modified
+{'table_name': 'lineage_mapping', 'column_name': 'lineage_target_id', 'is_nullable': 'NO'}
+{'table_name': 'lineage_target', 'column_name': 'lineage_transformation_id', 'is_nullable': 'NO'}
+Main database remains NOT NULL with zero NULL rows.
+Main database verification: PASS
+STEP 9 PASS
+
+STEP 10 — Final source status
+ M backend/alembic/env.py
+ M backend/app/models/lineage_mapping.py
+ M backend/app/models/lineage_target.py
+?? backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py
+?? backend/tests/test_batch_08_graph_integrity.py
+
+============================================================
+BATCH 08.9 COMPLETED
+============================================================
+Fresh migration reproducibility test completed.
+Main database was not used for migration upgrade.
+Temporary database was cleaned up.
+Report: Test reports/Batch-08.9-fresh-migration-reproducibility-20260914-213854.txt
+============================================================

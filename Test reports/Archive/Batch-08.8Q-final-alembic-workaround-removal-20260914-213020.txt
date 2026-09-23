@@ -1,0 +1,25 @@
+============================================================
+DGM — BATCH 08.8Q
+Final Alembic Workaround Removal
+Started: Mon Sep 14 09:30:20 PM IST 2026
+============================================================
+
+STEP 1 — Verify exact current source
+33:# Intentional legacy-read compatibility.
+38:def include_object(
+49:        if (table_name, name) in LEGACY_NULLABLE_COLUMNS:
+79:        include_object=include_object,
+STEP 1 PASS
+
+STEP 2 — Backup env.py
+-rw-r--r-- 1 alben alben 2920 Sep 14 21:30 backend/alembic/env.py.before-08.8Q
+STEP 2 PASS
+
+STEP 3 — Remove exact known workaround text
+Exact workaround block removed.
+Exact configure argument removed.
+STEP 3 PASS
+
+STEP 4 — Verify no workaround remains
+STOP: workaround remnants detected.
+Restoring env.py.

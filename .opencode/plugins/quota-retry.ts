@@ -1,0 +1,17 @@
+import { Plugin } from "@opencode/plugin"
+
+export default Plugin.define({
+  id: "dgm.quota-retry",
+
+  setup: async (ctx) => {
+    await ctx.session.hook("retry", (event) => {
+      // Retry provider rate-limit/quota responses once after 60 seconds.
+      if (event.error.status === 429 && event.attempt === 1) {
+        event.decision = {
+          retry: true,
+          delay: 60_000,
+        }
+      }
+    })
+  },
+})

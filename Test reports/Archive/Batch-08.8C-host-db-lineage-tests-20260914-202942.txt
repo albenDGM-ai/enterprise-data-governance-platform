@@ -1,0 +1,181 @@
+============================================================
+DGM — BATCH 08.8C
+Host Database Configuration + Batch 08 Lineage Tests
+============================================================
+Started: Mon Sep 14 08:29:42 PM IST 2026
+
+------------------------------------------------------------
+STEP 1 — Establish project context
+------------------------------------------------------------
+Project:
+/home/alben/Projects/enterprise-data-governance-platform
+
+Branch:
+feature/project-foundation
+
+Python:
+Python 3.14.4
+
+STEP 1 COMPLETE
+
+------------------------------------------------------------
+STEP 2 — Verify Docker PostgreSQL container
+------------------------------------------------------------
+NAME                  IMAGE         COMMAND                  SERVICE    CREATED       STATUS                    PORTS
+governance_postgres   postgres:17   "docker-entrypoint.s…"   postgres   4 weeks ago   Up 22 minutes (healthy)   0.0.0.0:5432->5432/tcp, [::]:5432->5432/tcp
+
+STEP 2 COMPLETE
+
+------------------------------------------------------------
+STEP 3 — Wait for PostgreSQL readiness
+------------------------------------------------------------
+PostgreSQL is READY.
+
+STEP 3 COMPLETE
+
+------------------------------------------------------------
+STEP 4 — Configure host database connection
+------------------------------------------------------------
+DATABASE_URL configured for host-side verification.
+Host: 127.0.0.1
+Port: 5432
+Database: enterprise_governance
+User: governance_admin
+
+STEP 4 COMPLETE
+
+------------------------------------------------------------
+STEP 5 — Verify host can connect to PostgreSQL
+------------------------------------------------------------
+Command 'psql' not found, but can be installed with:
+sudo apt install postgresql-client-common
+
+STEP 5 COMPLETE
+
+------------------------------------------------------------
+STEP 6 — Verify EDGP application import
+------------------------------------------------------------
+FastAPI application import: PASS
+Application title: Enterprise Data Governance Platform
+Application import verification: PASS
+
+STEP 6 COMPLETE
+
+------------------------------------------------------------
+STEP 7 — Verify Alembic current revision
+------------------------------------------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+32b95f7a0662 (head)
+
+STEP 7 COMPLETE
+
+------------------------------------------------------------
+STEP 8 — Verify Alembic migration consistency
+------------------------------------------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.schemas
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.tables
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.types
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.constraints
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.defaults
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.comments
+INFO  [alembic.autogenerate.compare.constraints] Detected NULL on column 'lineage_mapping.lineage_target_id'
+INFO  [alembic.autogenerate.compare.constraints] Detected NULL on column 'lineage_target.lineage_transformation_id'
+ERROR [alembic.util.messaging] New upgrade operations detected: [[('modify_nullable', None, 'lineage_mapping', 'lineage_target_id', {'existing_type': UUID(), 'existing_server_default': False, 'existing_comment': None}, False, True)], [('modify_nullable', None, 'lineage_target', 'lineage_transformation_id', {'existing_type': UUID(), 'existing_server_default': False, 'existing_comment': None}, False, True)]]
+  FAILED: New upgrade operations detected: [[('modify_nullable', None,
+  'lineage_mapping', 'lineage_target_id', {'existing_type': UUID(),
+  'existing_server_default': False, 'existing_comment': None}, False, True)],
+  [('modify_nullable', None, 'lineage_target', 'lineage_transformation_id',
+  {'existing_type': UUID(), 'existing_server_default': False,
+  'existing_comment': None}, False, True)]]
+
+STEP 8 COMPLETE
+
+------------------------------------------------------------
+STEP 9 — Collect Batch 08 lineage tests
+------------------------------------------------------------
+backend/tests/test_batch_08_graph_integrity.py::test_valid_mapping_uses_the_target_transformation_flow
+backend/tests/test_batch_08_graph_integrity.py::test_cross_flow_target_mapping_is_rejected_before_persistence
+backend/tests/test_batch_08_graph_integrity.py::test_cross_flow_mapping_transformation_is_rejected
+backend/tests/test_batch_08_graph_integrity.py::test_mapping_transformation_must_own_its_target
+backend/tests/test_batch_08_graph_integrity.py::test_inactive_parent_relationships_are_rejected
+backend/tests/test_batch_08_graph_integrity.py::test_update_rejects_a_cross_flow_replacement
+backend/tests/test_batch_08_graph_integrity.py::test_legacy_null_relationships_remain_readable
+backend/tests/test_batch_08_graph_integrity.py::test_transformation_update_contract_does_not_expose_flow_reassignment
+
+8 tests collected in 0.64s
+
+STEP 9 COMPLETE
+
+------------------------------------------------------------
+STEP 10 — Run focused Batch 08 test
+------------------------------------------------------------
+.                                                                        [100%]
+1 passed in 0.70s
+
+STEP 10 COMPLETE
+
+------------------------------------------------------------
+STEP 11 — Run complete Batch 08 lineage integrity suite
+------------------------------------------------------------
+........                                                                 [100%]
+8 passed in 0.73s
+
+STEP 11 COMPLETE
+
+------------------------------------------------------------
+STEP 12 — Verify database migration revision directly
+------------------------------------------------------------
+Command 'psql' not found, but can be installed with:
+sudo apt install postgresql-client-common
+
+STEP 12 COMPLETE
+
+------------------------------------------------------------
+STEP 13 — Verify Batch 08 lineage relationship columns
+------------------------------------------------------------
+Command 'psql' not found, but can be installed with:
+sudo apt install postgresql-client-common
+
+STEP 13 COMPLETE
+
+------------------------------------------------------------
+STEP 14 — Final Git status
+------------------------------------------------------------
+ M backend/app/main.py
+ M backend/app/models/lineage_mapping.py
+ M backend/app/models/lineage_target.py
+ M backend/app/services/lineage_mapping_service.py
+ M backend/app/services/lineage_target_service.py
+ M backend/app/services/lineage_transformation_service.py
+ M docs/architecture/logical/DataLineageLogicalModel.md
+ M docs/architecture/physical/DataLineagePhysicalModel.md
+?? AGENTS.md
+?? "Test reports/"
+?? backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py
+?? backend/app/api/
+?? backend/app/models/lineage_mapping.py.before_68
+?? backend/app/models/lineage_target.py.before_68
+?? backend/app/schemas/
+?? backend/app/services/lineage_discovery_service.py
+?? backend/app/services/lineage_discovery_service.py.before_76
+?? backend/app/services/lineage_mapping_service.py.before_68
+?? backend/app/services/lineage_target_service.py.before_68
+?? backend/app/services/lineage_validation.py
+?? backend/tests/
+?? docs/architecture/05_LogicalModel.md.before_83
+?? docs/architecture/06_PhysicalModel.md.before_83
+?? docs/architecture/07_API_Design.md.before_83
+?? docs/architecture/08_UI_Design.md.before_83
+?? docs/architecture/api/DataLineageAPI.md.before_83
+?? docs/architecture/logical/DataLineageLogicalModel.md.before_83
+?? docs/architecture/physical/DataLineagePhysicalModel.md.before_83
+?? docs/architecture/ui/DataLineageUI.md.before_83
+
+============================================================
+BATCH 08.8C PASSED
+============================================================
+Finished: Mon Sep 14 08:29:53 PM IST 2026
+============================================================

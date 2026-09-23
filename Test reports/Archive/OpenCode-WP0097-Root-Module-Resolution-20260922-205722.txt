@@ -1,0 +1,78 @@
+============================================================
+DGM WP-009.7 — OpenCode Root Module Resolution Test
+============================================================
+Tue Sep 22 08:57:22 PM IST 2026
+/home/alben/Projects/enterprise-data-governance-platform
+
+=== 1. Current dependency locations ===
+FOUND: .opencode/node_modules/@opencode/plugin
+@opencode/plugin@2.0.14
+FOUND: node_modules/@opencode/plugin
+@opencode/plugin@0.0.0-beta-19507
+
+=== 2. Root package.json ===
+{
+  "dependencies": {
+    "@opencode-ai/plugin": "^1.18.32",
+    "@opencode/plugin": "^0.0.0-beta-19507"
+  }
+}
+
+=== 3. Root Node ESM resolution ===
+RESOLVED: file:///home/alben/Projects/enterprise-data-governance-platform/node_modules/@opencode/plugin/dist/promise/index.js
+
+=== 4. .opencode Node ESM resolution ===
+RESOLVED: file:///home/alben/Projects/enterprise-data-governance-platform/.opencode/node_modules/@opencode/plugin/dist/promise/index.js
+
+=== 5. Direct ESM import test ===
+IMPORT_OK
+EXPORTS: Agent, Command, Connection, Credential, Integration, Location, Mcp, Model, PersistentPty, Plugin, Provider, Reference, Rpc, Skill, Vcs, WebSearch, Worktree
+PLUGIN_DEFINE: function
+
+=== 6. OpenCode plugin source ===
+import { Plugin } from "@opencode/plugin"
+
+export default Plugin.define({
+  id: "dgm.quota-retry",
+
+  setup: async (ctx) => {
+    await ctx.session.hook("retry", (event) => {
+      // Retry provider rate-limit/quota responses once after 60 seconds.
+      if (event.error.status === 429 && event.attempt === 1) {
+        event.decision = {
+          retry: true,
+          delay: 60_000,
+        }
+      }
+    })
+  },
+})
+
+=== 7. OpenCode config sources ===
+[
+  {
+    "type": "directory",
+    "path": "/home/alben/.config/opencode"
+  },
+  {
+    "type": "directory",
+    "path": "/home/alben/.opencode"
+  },
+  {
+    "type": "directory",
+    "path": "/home/alben/Projects/enterprise-data-governance-platform/.opencode"
+  }
+]
+
+=== 8. Git state for OpenCode files ===
+?? .opencode/
+?? node_modules/
+?? package-lock.json
+?? package.json
+
+=== 9. NO MODIFICATIONS PERFORMED ===
+This batch only inspected resolution behavior.
+
+============================================================
+WP-009.7 DIAGNOSTIC COMPLETE
+============================================================

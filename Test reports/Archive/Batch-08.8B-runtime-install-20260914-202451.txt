@@ -1,0 +1,442 @@
+============================================================
+DGM — BATCH 08.8B
+Sequential Project Runtime Installation + Validation
+Started: Mon Sep 14 08:24:51 PM IST 2026
+============================================================
+
+------------------------------------------------------------
+STEP 1 — Verify project and virtual environment
+------------------------------------------------------------
+Project directory:
+/home/alben/Projects/enterprise-data-governance-platform
+
+Python:
+Python 3.14.4
+
+Pip:
+pip 25.1.1 from /home/alben/Projects/enterprise-data-governance-platform/.venv/lib/python3.14/site-packages/pip (python 3.14)
+
+STEP 1 COMPLETE
+
+------------------------------------------------------------
+STEP 2 — Verify requirements file
+------------------------------------------------------------
+backend/requirements.txt:
+-rw-rw-r-- 1 alben alben 214 Aug  6 19:45 backend/requirements.txt
+
+Required runtime/test packages:
+fastapi
+uvicorn[standard]
+sqlalchemy
+alembic
+psycopg2-binary
+pydantic
+pydantic-settings
+httpx
+pytest
+pytest-asyncio
+
+STEP 2 COMPLETE
+
+------------------------------------------------------------
+STEP 3 — Install project requirements
+------------------------------------------------------------
+This step runs to completion before anything else starts.
+
+Collecting fastapi (from -r backend/requirements.txt (line 1))
+  Downloading fastapi-0.141.1-py3-none-any.whl.metadata (27 kB)
+Collecting sqlalchemy (from -r backend/requirements.txt (line 3))
+  Downloading sqlalchemy-2.0.52-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (9.6 kB)
+Collecting alembic (from -r backend/requirements.txt (line 4))
+  Downloading alembic-1.20.0-py3-none-any.whl.metadata (7.3 kB)
+Collecting psycopg2-binary (from -r backend/requirements.txt (line 5))
+  Downloading psycopg2_binary-2.9.13-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (4.9 kB)
+Collecting pydantic (from -r backend/requirements.txt (line 6))
+  Downloading pydantic-2.13.5-py3-none-any.whl.metadata (110 kB)
+Collecting pydantic-settings (from -r backend/requirements.txt (line 7))
+  Downloading pydantic_settings-2.15.0-py3-none-any.whl.metadata (3.9 kB)
+Collecting python-multipart (from -r backend/requirements.txt (line 10))
+  Downloading python_multipart-0.0.32-py3-none-any.whl.metadata (2.1 kB)
+Collecting email-validator (from -r backend/requirements.txt (line 11))
+  Downloading email_validator-2.3.0-py3-none-any.whl.metadata (26 kB)
+Collecting loguru (from -r backend/requirements.txt (line 12))
+  Downloading loguru-0.7.3-py3-none-any.whl.metadata (22 kB)
+Collecting structlog (from -r backend/requirements.txt (line 13))
+  Downloading structlog-26.1.0-py3-none-any.whl.metadata (9.7 kB)
+Collecting httpx (from -r backend/requirements.txt (line 14))
+  Downloading httpx-0.28.1-py3-none-any.whl.metadata (7.1 kB)
+Collecting orjson (from -r backend/requirements.txt (line 15))
+  Downloading orjson-3.12.0-cp314-cp314-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (41 kB)
+Collecting pytest (from -r backend/requirements.txt (line 16))
+  Downloading pytest-9.1.1-py3-none-any.whl.metadata (7.6 kB)
+Collecting pytest-asyncio (from -r backend/requirements.txt (line 17))
+  Downloading pytest_asyncio-1.4.0-py3-none-any.whl.metadata (4.1 kB)
+Collecting uvicorn[standard] (from -r backend/requirements.txt (line 2))
+  Downloading uvicorn-0.53.0-py3-none-any.whl.metadata (6.6 kB)
+Collecting python-jose[cryptography] (from -r backend/requirements.txt (line 8))
+  Downloading python_jose-3.5.0-py2.py3-none-any.whl.metadata (5.5 kB)
+Collecting passlib[bcrypt] (from -r backend/requirements.txt (line 9))
+  Downloading passlib-1.7.4-py2.py3-none-any.whl.metadata (1.7 kB)
+Collecting starlette>=0.46.0 (from fastapi->-r backend/requirements.txt (line 1))
+  Downloading starlette-1.6.0-py3-none-any.whl.metadata (6.4 kB)
+Collecting typing-extensions>=4.8.0 (from fastapi->-r backend/requirements.txt (line 1))
+  Downloading typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+Collecting typing-inspection>=0.4.2 (from fastapi->-r backend/requirements.txt (line 1))
+  Downloading typing_inspection-0.4.4-py3-none-any.whl.metadata (2.6 kB)
+Collecting annotated-doc>=0.0.2 (from fastapi->-r backend/requirements.txt (line 1))
+  Downloading annotated_doc-0.0.5-py3-none-any.whl.metadata (6.5 kB)
+Collecting click>=7.0 (from uvicorn[standard]->-r backend/requirements.txt (line 2))
+  Downloading click-8.5.0-py3-none-any.whl.metadata (2.6 kB)
+Collecting h11>=0.8 (from uvicorn[standard]->-r backend/requirements.txt (line 2))
+  Downloading h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+Collecting httptools>=0.8.0 (from uvicorn[standard]->-r backend/requirements.txt (line 2))
+  Downloading httptools-0.8.0-cp314-cp314-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (3.5 kB)
+Collecting python-dotenv>=0.13 (from uvicorn[standard]->-r backend/requirements.txt (line 2))
+  Downloading python_dotenv-1.2.3-py3-none-any.whl.metadata (29 kB)
+Collecting pyyaml>=5.1 (from uvicorn[standard]->-r backend/requirements.txt (line 2))
+  Downloading pyyaml-6.0.3-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.4 kB)
+Collecting uvloop>=0.15.1 (from uvicorn[standard]->-r backend/requirements.txt (line 2))
+  Downloading uvloop-0.22.1-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (4.9 kB)
+Collecting watchfiles>=0.20 (from uvicorn[standard]->-r backend/requirements.txt (line 2))
+  Downloading watchfiles-1.2.0-cp314-cp314-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.9 kB)
+Collecting websockets>=13.0 (from uvicorn[standard]->-r backend/requirements.txt (line 2))
+  Downloading websockets-17.1-cp314-cp314-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (6.3 kB)
+Collecting greenlet>=1 (from sqlalchemy->-r backend/requirements.txt (line 3))
+  Downloading greenlet-3.5.6-cp314-cp314-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (3.8 kB)
+Collecting Mako (from alembic->-r backend/requirements.txt (line 4))
+  Downloading mako-1.4.1-py3-none-any.whl.metadata (2.9 kB)
+Collecting annotated-types>=0.6.0 (from pydantic->-r backend/requirements.txt (line 6))
+  Downloading annotated_types-0.8.0-py3-none-any.whl.metadata (15 kB)
+Collecting pydantic-core==2.46.5 (from pydantic->-r backend/requirements.txt (line 6))
+  Downloading pydantic_core-2.46.5-cp314-cp314-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.6 kB)
+Collecting ecdsa!=0.15 (from python-jose[cryptography]->-r backend/requirements.txt (line 8))
+  Downloading ecdsa-0.19.2-py2.py3-none-any.whl.metadata (29 kB)
+Collecting rsa!=4.1.1,!=4.4,<5.0,>=4.0 (from python-jose[cryptography]->-r backend/requirements.txt (line 8))
+  Downloading rsa-4.9.1-py3-none-any.whl.metadata (5.6 kB)
+Collecting pyasn1>=0.5.0 (from python-jose[cryptography]->-r backend/requirements.txt (line 8))
+  Downloading pyasn1-0.6.4-py3-none-any.whl.metadata (8.4 kB)
+Collecting cryptography>=3.4.0 (from python-jose[cryptography]->-r backend/requirements.txt (line 8))
+  Downloading cryptography-50.0.1-cp311-abi3-manylinux_2_34_x86_64.whl.metadata (4.3 kB)
+Collecting bcrypt>=3.1.0 (from passlib[bcrypt]->-r backend/requirements.txt (line 9))
+  Downloading bcrypt-5.0.0-cp39-abi3-manylinux_2_34_x86_64.whl.metadata (10 kB)
+Collecting dnspython>=2.0.0 (from email-validator->-r backend/requirements.txt (line 11))
+  Downloading dnspython-2.8.0-py3-none-any.whl.metadata (5.7 kB)
+Collecting idna>=2.0.0 (from email-validator->-r backend/requirements.txt (line 11))
+  Downloading idna-3.19-py3-none-any.whl.metadata (9.2 kB)
+Collecting anyio (from httpx->-r backend/requirements.txt (line 14))
+  Downloading anyio-4.15.1-py3-none-any.whl.metadata (4.7 kB)
+Collecting certifi (from httpx->-r backend/requirements.txt (line 14))
+  Downloading certifi-2026.7.22-py3-none-any.whl.metadata (2.5 kB)
+Collecting httpcore==1.* (from httpx->-r backend/requirements.txt (line 14))
+  Downloading httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+Collecting iniconfig>=1.0.1 (from pytest->-r backend/requirements.txt (line 16))
+  Downloading iniconfig-2.3.0-py3-none-any.whl.metadata (2.5 kB)
+Collecting packaging>=22 (from pytest->-r backend/requirements.txt (line 16))
+  Downloading packaging-26.3-py3-none-any.whl.metadata (3.5 kB)
+Collecting pluggy<2,>=1.5 (from pytest->-r backend/requirements.txt (line 16))
+  Downloading pluggy-1.6.0-py3-none-any.whl.metadata (4.8 kB)
+Collecting pygments>=2.7.2 (from pytest->-r backend/requirements.txt (line 16))
+  Downloading pygments-2.21.0-py3-none-any.whl.metadata (2.5 kB)
+Collecting cffi>=2.0.0 (from cryptography>=3.4.0->python-jose[cryptography]->-r backend/requirements.txt (line 8))
+  Downloading cffi-2.1.1-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.5 kB)
+Collecting pycparser (from cffi>=2.0.0->cryptography>=3.4.0->python-jose[cryptography]->-r backend/requirements.txt (line 8))
+  Downloading pycparser-3.0-py3-none-any.whl.metadata (8.2 kB)
+Collecting six>=1.9.0 (from ecdsa!=0.15->python-jose[cryptography]->-r backend/requirements.txt (line 8))
+  Downloading six-1.17.0-py2.py3-none-any.whl.metadata (1.7 kB)
+Collecting MarkupSafe>=2.0 (from Mako->alembic->-r backend/requirements.txt (line 4))
+  Downloading markupsafe-3.0.3-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.7 kB)
+Downloading fastapi-0.141.1-py3-none-any.whl (131 kB)
+Downloading uvicorn-0.53.0-py3-none-any.whl (87 kB)
+Downloading sqlalchemy-2.0.52-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (3.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.3/3.3 MB 3.0 MB/s eta 0:00:00
+Downloading alembic-1.20.0-py3-none-any.whl (268 kB)
+Downloading psycopg2_binary-2.9.13-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (4.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.3/4.3 MB 3.8 MB/s eta 0:00:00
+Downloading pydantic-2.13.5-py3-none-any.whl (472 kB)
+Downloading pydantic_core-2.46.5-cp314-cp314-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 3.2 MB/s eta 0:00:00
+Downloading pydantic_settings-2.15.0-py3-none-any.whl (69 kB)
+Downloading python_jose-3.5.0-py2.py3-none-any.whl (34 kB)
+Downloading rsa-4.9.1-py3-none-any.whl (34 kB)
+Downloading passlib-1.7.4-py2.py3-none-any.whl (525 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 525.6/525.6 kB 1.6 MB/s eta 0:00:00
+Downloading python_multipart-0.0.32-py3-none-any.whl (30 kB)
+Downloading email_validator-2.3.0-py3-none-any.whl (35 kB)
+Downloading loguru-0.7.3-py3-none-any.whl (61 kB)
+Downloading structlog-26.1.0-py3-none-any.whl (73 kB)
+Downloading httpx-0.28.1-py3-none-any.whl (73 kB)
+Downloading httpcore-1.0.9-py3-none-any.whl (78 kB)
+Downloading orjson-3.12.0-cp314-cp314-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (131 kB)
+Downloading pytest-9.1.1-py3-none-any.whl (386 kB)
+Downloading pluggy-1.6.0-py3-none-any.whl (20 kB)
+Downloading pytest_asyncio-1.4.0-py3-none-any.whl (16 kB)
+Downloading annotated_doc-0.0.5-py3-none-any.whl (5.3 kB)
+Downloading annotated_types-0.8.0-py3-none-any.whl (13 kB)
+Downloading bcrypt-5.0.0-cp39-abi3-manylinux_2_34_x86_64.whl (278 kB)
+Downloading click-8.5.0-py3-none-any.whl (125 kB)
+Downloading cryptography-50.0.1-cp311-abi3-manylinux_2_34_x86_64.whl (4.7 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.7/4.7 MB 3.7 MB/s eta 0:00:00
+Downloading cffi-2.1.1-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (221 kB)
+Downloading dnspython-2.8.0-py3-none-any.whl (331 kB)
+Downloading ecdsa-0.19.2-py2.py3-none-any.whl (150 kB)
+Downloading greenlet-3.5.6-cp314-cp314-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (670 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 670.8/670.8 kB 1.9 MB/s eta 0:00:00
+Downloading h11-0.16.0-py3-none-any.whl (37 kB)
+Downloading httptools-0.8.0-cp314-cp314-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (481 kB)
+Downloading idna-3.19-py3-none-any.whl (68 kB)
+Downloading iniconfig-2.3.0-py3-none-any.whl (7.5 kB)
+Downloading packaging-26.3-py3-none-any.whl (129 kB)
+Downloading pyasn1-0.6.4-py3-none-any.whl (84 kB)
+Downloading pygments-2.21.0-py3-none-any.whl (1.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.3/1.3 MB 3.2 MB/s eta 0:00:00
+Downloading python_dotenv-1.2.3-py3-none-any.whl (22 kB)
+Downloading pyyaml-6.0.3-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (794 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 794.2/794.2 kB 1.1 MB/s eta 0:00:00
+Downloading six-1.17.0-py2.py3-none-any.whl (11 kB)
+Downloading starlette-1.6.0-py3-none-any.whl (75 kB)
+Downloading anyio-4.15.1-py3-none-any.whl (132 kB)
+Downloading typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+Downloading typing_inspection-0.4.4-py3-none-any.whl (14 kB)
+Downloading uvloop-0.22.1-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (4.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.3/4.3 MB 1.9 MB/s eta 0:00:00
+Downloading watchfiles-1.2.0-cp314-cp314-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (453 kB)
+Downloading websockets-17.1-cp314-cp314-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (224 kB)
+Downloading certifi-2026.7.22-py3-none-any.whl (136 kB)
+Downloading mako-1.4.1-py3-none-any.whl (80 kB)
+Downloading markupsafe-3.0.3-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (23 kB)
+Downloading pycparser-3.0-py3-none-any.whl (48 kB)
+Installing collected packages: passlib, websockets, uvloop, typing-extensions, structlog, six, pyyaml, python-multipart, python-dotenv, pygments, pycparser, pyasn1, psycopg2-binary, pluggy, packaging, orjson, MarkupSafe, loguru, iniconfig, idna, httptools, h11, greenlet, dnspython, click, certifi, bcrypt, annotated-types, annotated-doc, uvicorn, typing-inspection, sqlalchemy, rsa, pytest, pydantic-core, Mako, httpcore, email-validator, ecdsa, cffi, anyio, watchfiles, starlette, python-jose, pytest-asyncio, pydantic, httpx, cryptography, alembic, pydantic-settings, fastapi
+
+Successfully installed Mako-1.4.1 MarkupSafe-3.0.3 alembic-1.20.0 annotated-doc-0.0.5 annotated-types-0.8.0 anyio-4.15.1 bcrypt-5.0.0 certifi-2026.7.22 cffi-2.1.1 click-8.5.0 cryptography-50.0.1 dnspython-2.8.0 ecdsa-0.19.2 email-validator-2.3.0 fastapi-0.141.1 greenlet-3.5.6 h11-0.16.0 httpcore-1.0.9 httptools-0.8.0 httpx-0.28.1 idna-3.19 iniconfig-2.3.0 loguru-0.7.3 orjson-3.12.0 packaging-26.3 passlib-1.7.4 pluggy-1.6.0 psycopg2-binary-2.9.13 pyasn1-0.6.4 pycparser-3.0 pydantic-2.13.5 pydantic-core-2.46.5 pydantic-settings-2.15.0 pygments-2.21.0 pytest-9.1.1 pytest-asyncio-1.4.0 python-dotenv-1.2.3 python-jose-3.5.0 python-multipart-0.0.32 pyyaml-6.0.3 rsa-4.9.1 six-1.17.0 sqlalchemy-2.0.52 starlette-1.6.0 structlog-26.1.0 typing-extensions-4.16.0 typing-inspection-0.4.4 uvicorn-0.53.0 uvloop-0.22.1 watchfiles-1.2.0 websockets-17.1
+
+STEP 3 COMPLETE
+
+------------------------------------------------------------
+STEP 4 — Verify pytest installation
+------------------------------------------------------------
+pytest 9.1.1
+
+STEP 4 COMPLETE
+
+------------------------------------------------------------
+STEP 5 — Verify Alembic installation
+------------------------------------------------------------
+alembic 1.20.0
+
+STEP 5 COMPLETE
+
+------------------------------------------------------------
+STEP 6 — Verify core Python imports
+------------------------------------------------------------
+fastapi: 0.141.1
+sqlalchemy: 2.0.52
+alembic: 1.20.0
+psycopg2: 2.9.13 (dt dec pq3 ext lo64)
+pydantic: 2.13.5
+httpx: 0.28.1
+pytest: 9.1.1
+CORE IMPORTS: PASS
+
+STEP 6 COMPLETE
+
+------------------------------------------------------------
+STEP 7 — Verify EDGP application imports
+------------------------------------------------------------
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "/home/alben/Projects/enterprise-data-governance-platform/backend/app/main.py", line 5, in <module>
+    from app.api import lineage_router
+  File "/home/alben/Projects/enterprise-data-governance-platform/backend/app/api/__init__.py", line 1, in <module>
+    from app.api.routers import lineage_router
+  File "/home/alben/Projects/enterprise-data-governance-platform/backend/app/api/routers/__init__.py", line 1, in <module>
+    from app.api.routers.lineage import router as lineage_router
+  File "/home/alben/Projects/enterprise-data-governance-platform/backend/app/api/routers/lineage.py", line 6, in <module>
+    from app.db.session import get_db
+  File "/home/alben/Projects/enterprise-data-governance-platform/backend/app/db/session.py", line 7, in <module>
+    from app.core.config import settings
+  File "/home/alben/Projects/enterprise-data-governance-platform/backend/app/core/config.py", line 14, in <module>
+    settings = Settings()
+  File "/home/alben/Projects/enterprise-data-governance-platform/.venv/lib/python3.14/site-packages/pydantic_settings/main.py", line 262, in __init__
+    super().__init__(**__pydantic_self__.__class__._settings_build_values(sources, init_kwargs))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/alben/Projects/enterprise-data-governance-platform/.venv/lib/python3.14/site-packages/pydantic/main.py", line 263, in __init__
+    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+pydantic_core._pydantic_core.ValidationError: 1 validation error for Settings
+database_url
+  Field required [type=missing, input_value={}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+
+STEP 7 COMPLETE
+
+------------------------------------------------------------
+STEP 8 — Verify Batch 08 test collection
+------------------------------------------------------------
+backend/tests/test_batch_08_graph_integrity.py::test_valid_mapping_uses_the_target_transformation_flow
+backend/tests/test_batch_08_graph_integrity.py::test_cross_flow_target_mapping_is_rejected_before_persistence
+backend/tests/test_batch_08_graph_integrity.py::test_cross_flow_mapping_transformation_is_rejected
+backend/tests/test_batch_08_graph_integrity.py::test_mapping_transformation_must_own_its_target
+backend/tests/test_batch_08_graph_integrity.py::test_inactive_parent_relationships_are_rejected
+backend/tests/test_batch_08_graph_integrity.py::test_update_rejects_a_cross_flow_replacement
+backend/tests/test_batch_08_graph_integrity.py::test_legacy_null_relationships_remain_readable
+backend/tests/test_batch_08_graph_integrity.py::test_transformation_update_contract_does_not_expose_flow_reassignment
+
+8 tests collected in 1.66s
+
+STEP 8 COMPLETE
+
+------------------------------------------------------------
+STEP 9 — Verify Alembic current revision
+------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/alben/Projects/enterprise-data-governance-platform/backend/../.venv/bin/alembic", line 8, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/home/alben/Projects/enterprise-data-governance-platform/.venv/lib/python3.14/site-packages/alembic/config.py", line 1039, in main
+    CommandLine(prog=prog).main(argv=argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "/home/alben/Projects/enterprise-data-governance-platform/.venv/lib/python3.14/site-packages/alembic/config.py", line 1029, in main
+    self.run_cmd(cfg, options)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/home/alben/Projects/enterprise-data-governance-platform/.venv/lib/python3.14/site-packages/alembic/config.py", line 963, in run_cmd
+    fn(
+    ~~^
+        config,
+        ^^^^^^^
+        *[getattr(options, k, None) for k in positional],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        **{k: getattr(options, k, None) for k in kwarg},
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/alben/Projects/enterprise-data-governance-platform/.venv/lib/python3.14/site-packages/alembic/command.py", line 726, in current
+    script.run_env()
+    ~~~~~~~~~~~~~~^^
+  File "/home/alben/Projects/enterprise-data-governance-platform/.venv/lib/python3.14/site-packages/alembic/script/base.py", line 550, in run_env
+    util.load_python_file(self.dir, "env.py")
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/home/alben/Projects/enterprise-data-governance-platform/.venv/lib/python3.14/site-packages/alembic/util/pyfiles.py", line 114, in load_python_file
+    module = load_module_py(module_id, path)
+  File "/home/alben/Projects/enterprise-data-governance-platform/.venv/lib/python3.14/site-packages/alembic/util/pyfiles.py", line 132, in load_module_py
+    spec.loader.exec_module(module)  # type: ignore
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "<frozen importlib._bootstrap_external>", line 759, in exec_module
+  File "<frozen importlib._bootstrap>", line 491, in _call_with_frames_removed
+  File "/home/alben/Projects/enterprise-data-governance-platform/backend/alembic/env.py", line 8, in <module>
+    from app.core.config import settings
+  File "/home/alben/Projects/enterprise-data-governance-platform/backend/app/core/config.py", line 14, in <module>
+    settings = Settings()
+  File "/home/alben/Projects/enterprise-data-governance-platform/.venv/lib/python3.14/site-packages/pydantic_settings/main.py", line 262, in __init__
+    super().__init__(**__pydantic_self__.__class__._settings_build_values(sources, init_kwargs))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/alben/Projects/enterprise-data-governance-platform/.venv/lib/python3.14/site-packages/pydantic/main.py", line 263, in __init__
+    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+pydantic_core._pydantic_core.ValidationError: 1 validation error for Settings
+database_url
+  Field required [type=missing, input_value={}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+
+STEP 9 COMPLETE
+
+------------------------------------------------------------
+STEP 10 — Verify Alembic migration consistency
+------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/alben/Projects/enterprise-data-governance-platform/backend/../.venv/bin/alembic", line 8, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/home/alben/Projects/enterprise-data-governance-platform/.venv/lib/python3.14/site-packages/alembic/config.py", line 1039, in main
+    CommandLine(prog=prog).main(argv=argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "/home/alben/Projects/enterprise-data-governance-platform/.venv/lib/python3.14/site-packages/alembic/config.py", line 1029, in main
+    self.run_cmd(cfg, options)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/home/alben/Projects/enterprise-data-governance-platform/.venv/lib/python3.14/site-packages/alembic/config.py", line 963, in run_cmd
+    fn(
+    ~~^
+        config,
+        ^^^^^^^
+        *[getattr(options, k, None) for k in positional],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        **{k: getattr(options, k, None) for k in kwarg},
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/alben/Projects/enterprise-data-governance-platform/.venv/lib/python3.14/site-packages/alembic/command.py", line 360, in check
+    script_directory.run_env()
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/home/alben/Projects/enterprise-data-governance-platform/.venv/lib/python3.14/site-packages/alembic/script/base.py", line 550, in run_env
+    util.load_python_file(self.dir, "env.py")
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/home/alben/Projects/enterprise-data-governance-platform/.venv/lib/python3.14/site-packages/alembic/util/pyfiles.py", line 114, in load_python_file
+    module = load_module_py(module_id, path)
+  File "/home/alben/Projects/enterprise-data-governance-platform/.venv/lib/python3.14/site-packages/alembic/util/pyfiles.py", line 132, in load_module_py
+    spec.loader.exec_module(module)  # type: ignore
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "<frozen importlib._bootstrap_external>", line 759, in exec_module
+  File "<frozen importlib._bootstrap>", line 491, in _call_with_frames_removed
+  File "/home/alben/Projects/enterprise-data-governance-platform/backend/alembic/env.py", line 8, in <module>
+    from app.core.config import settings
+  File "/home/alben/Projects/enterprise-data-governance-platform/backend/app/core/config.py", line 14, in <module>
+    settings = Settings()
+  File "/home/alben/Projects/enterprise-data-governance-platform/.venv/lib/python3.14/site-packages/pydantic_settings/main.py", line 262, in __init__
+    super().__init__(**__pydantic_self__.__class__._settings_build_values(sources, init_kwargs))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/alben/Projects/enterprise-data-governance-platform/.venv/lib/python3.14/site-packages/pydantic/main.py", line 263, in __init__
+    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+pydantic_core._pydantic_core.ValidationError: 1 validation error for Settings
+database_url
+  Field required [type=missing, input_value={}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+
+STEP 10 COMPLETE
+
+------------------------------------------------------------
+STEP 11 — Final environment summary
+------------------------------------------------------------
+Python:
+Python 3.14.4
+
+Pytest:
+pytest 9.1.1
+
+Alembic:
+alembic 1.20.0
+
+Git branch:
+feature/project-foundation
+
+Git status:
+ M backend/app/main.py
+ M backend/app/models/lineage_mapping.py
+ M backend/app/models/lineage_target.py
+ M backend/app/services/lineage_mapping_service.py
+ M backend/app/services/lineage_target_service.py
+ M backend/app/services/lineage_transformation_service.py
+ M docs/architecture/logical/DataLineageLogicalModel.md
+ M docs/architecture/physical/DataLineagePhysicalModel.md
+?? AGENTS.md
+?? "Test reports/"
+?? backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py
+?? backend/app/api/
+?? backend/app/models/lineage_mapping.py.before_68
+?? backend/app/models/lineage_target.py.before_68
+?? backend/app/schemas/
+?? backend/app/services/lineage_discovery_service.py
+?? backend/app/services/lineage_discovery_service.py.before_76
+?? backend/app/services/lineage_mapping_service.py.before_68
+?? backend/app/services/lineage_target_service.py.before_68
+?? backend/app/services/lineage_validation.py
+?? backend/tests/
+?? docs/architecture/05_LogicalModel.md.before_83
+?? docs/architecture/06_PhysicalModel.md.before_83
+?? docs/architecture/07_API_Design.md.before_83
+?? docs/architecture/08_UI_Design.md.before_83
+?? docs/architecture/api/DataLineageAPI.md.before_83
+?? docs/architecture/logical/DataLineageLogicalModel.md.before_83
+?? docs/architecture/physical/DataLineagePhysicalModel.md.before_83
+?? docs/architecture/ui/DataLineageUI.md.before_83
+
+============================================================
+BATCH 08.8B COMPLETED SUCCESSFULLY
+Finished: Mon Sep 14 08:25:47 PM IST 2026
+============================================================

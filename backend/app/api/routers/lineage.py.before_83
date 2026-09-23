@@ -1,0 +1,2066 @@
+from uuid import UUID
+
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
+from sqlalchemy.orm import Session
+
+from app.db.session import get_db
+from app.schemas.lineage_discovery import (
+    LineageDiscoveryResponse,
+)
+from app.schemas.lineage_flow import (
+    LineageFlowCreate,
+    LineageFlowReplace,
+    LineageFlowResponse,
+    LineageFlowUpdate,
+)
+
+from app.schemas.lineage_mapping import (
+    LineageMappingCreate,
+    LineageMappingReplace,
+    LineageMappingResponse,
+    LineageMappingUpdate,
+)
+
+from app.schemas.lineage_process import (
+    LineageProcessCreate,
+    LineageProcessReplace,
+    LineageProcessResponse,
+    LineageProcessUpdate,
+)
+
+from app.schemas.lineage_source import (
+    LineageSourceCreate,
+    LineageSourceReplace,
+    LineageSourceResponse,
+    LineageSourceUpdate,
+)
+from app.schemas.lineage_target import (
+    LineageTargetCreate,
+    LineageTargetReplace,
+    LineageTargetResponse,
+    LineageTargetUpdate,
+)
+from app.schemas.lineage_transformation import (
+    LineageTransformationCreate,
+    LineageTransformationReplace,
+    LineageTransformationResponse,
+    LineageTransformationUpdate,
+)
+from app.services.lineage_source_service import LineageSourceService
+from app.services.lineage_mapping_service import LineageMappingService
+from app.services.lineage_process_service import LineageProcessService
+from app.services.lineage_discovery_service import LineageDiscoveryService
+from app.services.lineage_flow_service import LineageFlowService
+from app.services.lineage_target_service import LineageTargetService
+from app.services.lineage_transformation_service import (
+    LineageTransformationService,
+)
+from app.services.lineage_validation import LineageRelationshipValidationError
+
+from app.schemas.impact_analysis import (
+    ImpactAnalysisCreate,
+    ImpactAnalysisResponse,
+    ImpactAnalysisUpdate,
+)
+from app.schemas.lineage_snapshot import (
+    LineageSnapshotCreate,
+    LineageSnapshotReplace,
+    LineageSnapshotResponse,
+    LineageSnapshotUpdate,
+)
+from app.schemas.lineage_version import (
+    LineageVersionCreate,
+    LineageVersionReplace,
+    LineageVersionResponse,
+    LineageVersionUpdate,
+)
+from app.services.impact_analysis_service import ImpactAnalysisService
+from app.services.lineage_snapshot_service import LineageSnapshotService
+from app.services.lineage_version_service import LineageVersionService
+
+
+router = APIRouter(
+    prefix="/lineage",
+    tags=["Data Lineage"],
+)
+
+
+@router.get("/_health")
+def lineage_api_health():
+    return {
+        "status": "UP",
+        "service": "data-lineage-api",
+    }
+
+
+
+
+def get_flow_service(db: Session = Depends(get_db)) -> LineageFlowService:
+    return LineageFlowService(db)
+
+
+@router.post(
+    "/flows",
+    response_model=LineageFlowResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_flow(
+    payload: LineageFlowCreate,
+    x_user: str = Header(..., alias="X-User"),
+    service: LineageFlowService = Depends(get_flow_service),
+) -> LineageFlowResponse:
+    try:
+        entity = service.create(
+            lineage_source_id=payload.lineage_source_id,
+            lineage_process_id=payload.lineage_process_id,
+            flow_name=payload.flow_name,
+            flow_type=payload.flow_type,
+            direction=payload.direction,
+            frequency=payload.frequency,
+            owner=payload.owner,
+            status=payload.status,
+            created_by=x_user,
+        )
+        service.session.commit()
+        service.session.refresh(entity)
+        return entity
+    except ValueError as exc:
+        service.session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        ) from exc
+    except Exception:
+        service.session.rollback()
+        raise
+
+
+@router.get(
+    "/flows/{lineage_flow_id}",
+    response_model=LineageFlowResponse,
+)
+def get_flow(
+    lineage_flow_id: UUID,
+    include_inactive: bool = False,
+    service: LineageFlowService = Depends(get_flow_service),
+) -> LineageFlowResponse:
+    entity = service.get(
+        lineage_flow_id,
+        include_inactive=include_inactive,
+    )
+
+    if entity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Lineage Flow not found.",
+        )
+
+    return entity
+
+
+@router.get(
+    "/flows",
+    response_model=list[LineageFlowResponse],
+)
+def list_flows(
+    status: str | None = None,
+    flow_type: str | None = None,
+    direction: str | None = None,
+    owner: str | None = None,
+    lineage_source_id: UUID | None = None,
+    lineage_process_id: UUID | None = None,
+    include_inactive: bool = False,
+    service: LineageFlowService = Depends(get_flow_service),
+) -> list[LineageFlowResponse]:
+    return service.list(
+        status=status,
+        flow_type=flow_type,
+        direction=direction,
+        owner=owner,
+        lineage_source_id=lineage_source_id,
+        lineage_process_id=lineage_process_id,
+        include_inactive=include_inactive,
+    )
+
+
+@router.put(
+    "/flows/{lineage_flow_id}",
+    response_model=LineageFlowResponse,
+)
+def replace_flow(
+    lineage_flow_id: UUID,
+    payload: LineageFlowReplace,
+    x_user: str = Header(..., alias="X-User"),
+    service: LineageFlowService = Depends(get_flow_service),
+) -> LineageFlowResponse:
+    entity = service.get(lineage_flow_id)
+
+    if entity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Lineage Flow not found.",
+        )
+
+    try:
+        entity = service.update(
+            entity,
+            modified_by=x_user,
+            flow_name=payload.flow_name,
+            lineage_source_id=payload.lineage_source_id,
+            lineage_process_id=payload.lineage_process_id,
+            flow_type=payload.flow_type,
+            direction=payload.direction,
+            frequency=payload.frequency,
+            owner=payload.owner,
+            status=payload.status,
+        )
+        service.session.commit()
+        service.session.refresh(entity)
+        return entity
+    except ValueError as exc:
+        service.session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        ) from exc
+    except Exception:
+        service.session.rollback()
+        raise
+
+
+@router.patch(
+    "/flows/{lineage_flow_id}",
+    response_model=LineageFlowResponse,
+)
+def update_flow(
+    lineage_flow_id: UUID,
+    payload: LineageFlowUpdate,
+    x_user: str = Header(..., alias="X-User"),
+    service: LineageFlowService = Depends(get_flow_service),
+) -> LineageFlowResponse:
+    entity = service.get(lineage_flow_id)
+
+    if entity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Lineage Flow not found.",
+        )
+
+    try:
+        entity = service.update(
+            entity,
+            modified_by=x_user,
+            flow_name=payload.flow_name,
+            lineage_source_id=payload.lineage_source_id,
+            lineage_process_id=payload.lineage_process_id,
+            flow_type=payload.flow_type,
+            direction=payload.direction,
+            frequency=payload.frequency,
+            owner=payload.owner,
+            status=payload.status,
+        )
+        service.session.commit()
+        service.session.refresh(entity)
+        return entity
+    except ValueError as exc:
+        service.session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        ) from exc
+    except Exception:
+        service.session.rollback()
+        raise
+
+
+@router.delete(
+    "/flows/{lineage_flow_id}",
+    response_model=LineageFlowResponse,
+)
+def delete_flow(
+    lineage_flow_id: UUID,
+    x_user: str = Header(..., alias="X-User"),
+    service: LineageFlowService = Depends(get_flow_service),
+) -> LineageFlowResponse:
+    entity = service.get(lineage_flow_id)
+
+    if entity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Lineage Flow not found.",
+        )
+
+    try:
+        entity = service.delete(
+            entity,
+            modified_by=x_user,
+        )
+        service.session.commit()
+        service.session.refresh(entity)
+        return entity
+    except Exception:
+        service.session.rollback()
+        raise
+
+
+def get_process_service(db: Session = Depends(get_db)) -> LineageProcessService:
+    return LineageProcessService(db)
+
+
+@router.post(
+    "/processes",
+    response_model=LineageProcessResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_process(
+    payload: LineageProcessCreate,
+    x_user: str = Header(..., alias="X-User"),
+    service: LineageProcessService = Depends(get_process_service),
+) -> LineageProcessResponse:
+    try:
+        entity = service.create(
+            process_name=payload.process_name,
+            process_type=payload.process_type,
+            technology=payload.technology,
+            schedule=payload.schedule,
+            owner=payload.owner,
+            status=payload.status,
+            created_by=x_user,
+        )
+        service.session.commit()
+        service.session.refresh(entity)
+        return entity
+    except ValueError as exc:
+        service.session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        ) from exc
+    except Exception:
+        service.session.rollback()
+        raise
+
+
+@router.get(
+    "/processes/{lineage_process_id}",
+    response_model=LineageProcessResponse,
+)
+def get_process(
+    lineage_process_id: UUID,
+    include_inactive: bool = False,
+    service: LineageProcessService = Depends(get_process_service),
+) -> LineageProcessResponse:
+    entity = service.get(
+        lineage_process_id,
+        include_inactive=include_inactive,
+    )
+
+    if entity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Lineage Process not found.",
+        )
+
+    return entity
+
+
+@router.get(
+    "/processes",
+    response_model=list[LineageProcessResponse],
+)
+def list_processes(
+    status: str | None = None,
+    process_type: str | None = None,
+    technology: str | None = None,
+    owner: str | None = None,
+    include_inactive: bool = False,
+    service: LineageProcessService = Depends(get_process_service),
+) -> list[LineageProcessResponse]:
+    return service.list(
+        status=status,
+        process_type=process_type,
+        technology=technology,
+        owner=owner,
+        include_inactive=include_inactive,
+    )
+
+
+@router.put(
+    "/processes/{lineage_process_id}",
+    response_model=LineageProcessResponse,
+)
+def replace_process(
+    lineage_process_id: UUID,
+    payload: LineageProcessReplace,
+    x_user: str = Header(..., alias="X-User"),
+    service: LineageProcessService = Depends(get_process_service),
+) -> LineageProcessResponse:
+    entity = service.get(lineage_process_id)
+
+    if entity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Lineage Process not found.",
+        )
+
+    try:
+        entity = service.update(
+            entity,
+            modified_by=x_user,
+            process_name=payload.process_name,
+            process_type=payload.process_type,
+            technology=payload.technology,
+            schedule=payload.schedule,
+            owner=payload.owner,
+            status=payload.status,
+        )
+        service.session.commit()
+        service.session.refresh(entity)
+        return entity
+    except ValueError as exc:
+        service.session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        ) from exc
+    except Exception:
+        service.session.rollback()
+        raise
+
+
+@router.patch(
+    "/processes/{lineage_process_id}",
+    response_model=LineageProcessResponse,
+)
+def update_process(
+    lineage_process_id: UUID,
+    payload: LineageProcessUpdate,
+    x_user: str = Header(..., alias="X-User"),
+    service: LineageProcessService = Depends(get_process_service),
+) -> LineageProcessResponse:
+    entity = service.get(lineage_process_id)
+
+    if entity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Lineage Process not found.",
+        )
+
+    try:
+        entity = service.update(
+            entity,
+            modified_by=x_user,
+            process_name=payload.process_name,
+            process_type=payload.process_type,
+            technology=payload.technology,
+            schedule=payload.schedule,
+            owner=payload.owner,
+            status=payload.status,
+        )
+        service.session.commit()
+        service.session.refresh(entity)
+        return entity
+    except ValueError as exc:
+        service.session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        ) from exc
+    except Exception:
+        service.session.rollback()
+        raise
+
+
+@router.delete(
+    "/processes/{lineage_process_id}",
+    response_model=LineageProcessResponse,
+)
+def delete_process(
+    lineage_process_id: UUID,
+    x_user: str = Header(..., alias="X-User"),
+    service: LineageProcessService = Depends(get_process_service),
+) -> LineageProcessResponse:
+    entity = service.get(lineage_process_id)
+
+    if entity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Lineage Process not found.",
+        )
+
+    try:
+        entity = service.delete(
+            entity,
+            modified_by=x_user,
+        )
+        service.session.commit()
+        service.session.refresh(entity)
+        return entity
+    except Exception:
+        service.session.rollback()
+        raise
+
+
+def get_source_service(
+    db: Session = Depends(get_db),
+) -> LineageSourceService:
+    return LineageSourceService(db)
+
+
+@router.post(
+    "/sources",
+    response_model=LineageSourceResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_source(
+    payload: LineageSourceCreate,
+    x_user: str = Header(..., alias="X-User"),
+    service: LineageSourceService = Depends(get_source_service),
+):
+    try:
+        entity = service.create(
+            source_name=payload.source_name,
+            source_type=payload.source_type,
+            system_name=payload.system_name,
+            business_domain=payload.business_domain,
+            owner=payload.owner,
+            status=payload.status,
+            created_by=x_user,
+        )
+        service.session.commit()
+        return entity
+
+    except ValueError as exc:
+        service.session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        ) from exc
+
+    except Exception:
+        service.session.rollback()
+        raise
+
+
+@router.get(
+    "/sources/{lineage_source_id}",
+    response_model=LineageSourceResponse,
+)
+def get_source(
+    lineage_source_id: UUID,
+    include_inactive: bool = Query(False),
+    service: LineageSourceService = Depends(get_source_service),
+):
+    entity = service.get(
+        lineage_source_id,
+        include_inactive=include_inactive,
+    )
+
+    if entity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Lineage Source not found.",
+        )
+
+    return entity
+
+
+@router.get(
+    "/sources",
+    response_model=list[LineageSourceResponse],
+)
+def list_sources(
+    status_filter: str | None = Query(None, alias="status"),
+    source_type: str | None = Query(None),
+    system_name: str | None = Query(None),
+    business_domain: str | None = Query(None),
+    owner: str | None = Query(None),
+    include_inactive: bool = Query(False),
+    service: LineageSourceService = Depends(get_source_service),
+):
+    return service.list(
+        status=status_filter,
+        source_type=source_type,
+        system_name=system_name,
+        business_domain=business_domain,
+        owner=owner,
+        include_inactive=include_inactive,
+    )
+
+
+@router.put(
+    "/sources/{lineage_source_id}",
+    response_model=LineageSourceResponse,
+)
+def replace_source(
+    lineage_source_id: UUID,
+    payload: LineageSourceReplace,
+    x_user: str = Header(..., alias="X-User"),
+    service: LineageSourceService = Depends(get_source_service),
+):
+    entity = service.get(
+        lineage_source_id,
+        include_inactive=False,
+    )
+
+    if entity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Lineage Source not found.",
+        )
+
+    try:
+        entity = service.update(
+            entity,
+            modified_by=x_user,
+            source_name=payload.source_name,
+            source_type=payload.source_type,
+            system_name=payload.system_name,
+            business_domain=payload.business_domain,
+            owner=payload.owner,
+            status=payload.status,
+        )
+        service.session.commit()
+        return entity
+
+    except ValueError as exc:
+        service.session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        ) from exc
+
+    except Exception:
+        service.session.rollback()
+        raise
+
+
+@router.patch(
+    "/sources/{lineage_source_id}",
+    response_model=LineageSourceResponse,
+)
+def update_source(
+    lineage_source_id: UUID,
+    payload: LineageSourceUpdate,
+    x_user: str = Header(..., alias="X-User"),
+    service: LineageSourceService = Depends(get_source_service),
+):
+    entity = service.get(
+        lineage_source_id,
+        include_inactive=False,
+    )
+
+    if entity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Lineage Source not found.",
+        )
+
+    try:
+        entity = service.update(
+            entity,
+            modified_by=x_user,
+            source_name=payload.source_name,
+            source_type=payload.source_type,
+            system_name=payload.system_name,
+            business_domain=payload.business_domain,
+            owner=payload.owner,
+            status=payload.status,
+        )
+        service.session.commit()
+        return entity
+
+    except ValueError as exc:
+        service.session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        ) from exc
+
+    except Exception:
+        service.session.rollback()
+        raise
+
+
+@router.delete(
+    "/sources/{lineage_source_id}",
+    response_model=LineageSourceResponse,
+)
+def delete_source(
+    lineage_source_id: UUID,
+    x_user: str = Header(..., alias="X-User"),
+    service: LineageSourceService = Depends(get_source_service),
+):
+    entity = service.get(
+        lineage_source_id,
+        include_inactive=False,
+    )
+
+    if entity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Lineage Source not found.",
+        )
+
+    try:
+        entity = service.delete(
+            entity,
+            modified_by=x_user,
+        )
+        service.session.commit()
+        return entity
+
+    except Exception:
+        service.session.rollback()
+        raise
+
+# -----------------------------------------------------------------------------
+# Target API
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# Target API
+# -----------------------------------------------------------------------------
+
+def get_target_service(db: Session = Depends(get_db)) -> LineageTargetService:
+    return LineageTargetService(db)
+
+
+@router.post(
+    "/targets",
+    response_model=LineageTargetResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_target(
+    payload: LineageTargetCreate,
+    x_user: str = Header(..., alias="X-User"),
+    service: LineageTargetService = Depends(get_target_service),
+):
+    try:
+        entity = service.create(
+            lineage_transformation_id=payload.lineage_transformation_id,
+            target_name=payload.target_name,
+            target_type=payload.target_type,
+            system_name=payload.system_name,
+            business_domain=payload.business_domain,
+            owner=payload.owner,
+            status=payload.status,
+            created_by=x_user,
+        )
+        service.session.commit()
+        service.session.refresh(entity)
+        return entity
+    except LineageRelationshipValidationError as exc:
+        service.session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(exc),
+        ) from exc
+    except ValueError as exc:
+        service.session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        ) from exc
+    except Exception:
+        service.session.rollback()
+        raise
+
+
+@router.get(
+    "/targets/{lineage_target_id}",
+    response_model=LineageTargetResponse,
+)
+def get_target(
+    lineage_target_id: UUID,
+    include_inactive: bool = Query(False),
+    service: LineageTargetService = Depends(get_target_service),
+):
+    entity = service.get(
+        lineage_target_id,
+        include_inactive=include_inactive,
+    )
+
+    if entity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Lineage Target not found.",
+        )
+
+    return entity
+
+
+@router.get(
+    "/targets",
+    response_model=list[LineageTargetResponse],
+)
+def list_targets(
+    status_filter: str | None = Query(None, alias="status"),
+    target_type: str | None = Query(None),
+    system_name: str | None = Query(None),
+    business_domain: str | None = Query(None),
+    owner: str | None = Query(None),
+    include_inactive: bool = Query(False),
+    service: LineageTargetService = Depends(get_target_service),
+):
+    return service.list(
+        status=status_filter,
+        target_type=target_type,
+        system_name=system_name,
+        business_domain=business_domain,
+        owner=owner,
+        include_inactive=include_inactive,
+    )
+
+
+@router.put(
+    "/targets/{lineage_target_id}",
+    response_model=LineageTargetResponse,
+)
+def replace_target(
+    lineage_target_id: UUID,
+    payload: LineageTargetReplace,
+    x_user: str = Header(..., alias="X-User"),
+    service: LineageTargetService = Depends(get_target_service),
+):
+    entity = service.get(lineage_target_id)
+
+    if entity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Lineage Target not found.",
+        )
+
+    try:
+        entity = service.update(
+            entity,
+            modified_by=x_user,
+            lineage_transformation_id=payload.lineage_transformation_id,
+            target_name=payload.target_name,
+            target_type=payload.target_type,
+            system_name=payload.system_name,
+            business_domain=payload.business_domain,
+            owner=payload.owner,
+            status=payload.status,
+        )
+        service.session.commit()
+        service.session.refresh(entity)
+        return entity
+    except LineageRelationshipValidationError as exc:
+        service.session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(exc),
+        ) from exc
+    except ValueError as exc:
+        service.session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        ) from exc
+    except Exception:
+        service.session.rollback()
+        raise
+
+
+@router.patch(
+    "/targets/{lineage_target_id}",
+    response_model=LineageTargetResponse,
+)
+def update_target(
+    lineage_target_id: UUID,
+    payload: LineageTargetUpdate,
+    x_user: str = Header(..., alias="X-User"),
+    service: LineageTargetService = Depends(get_target_service),
+):
+    entity = service.get(lineage_target_id)
+
+    if entity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Lineage Target not found.",
+        )
+
+    try:
+        entity = service.update(
+            entity,
+            modified_by=x_user,
+            lineage_transformation_id=payload.lineage_transformation_id,
+            target_name=payload.target_name,
+            target_type=payload.target_type,
+            system_name=payload.system_name,
+            business_domain=payload.business_domain,
+            owner=payload.owner,
+            status=payload.status,
+        )
+        service.session.commit()
+        service.session.refresh(entity)
+        return entity
+    except LineageRelationshipValidationError as exc:
+        service.session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(exc),
+        ) from exc
+    except ValueError as exc:
+        service.session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        ) from exc
+    except Exception:
+        service.session.rollback()
+        raise
+
+
+@router.delete(
+    "/targets/{lineage_target_id}",
+    response_model=LineageTargetResponse,
+)
+def delete_target(
+    lineage_target_id: UUID,
+    x_user: str = Header(..., alias="X-User"),
+    service: LineageTargetService = Depends(get_target_service),
+):
+    entity = service.get(lineage_target_id)
+
+    if entity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Lineage Target not found.",
+        )
+
+    try:
+        entity = service.delete(
+            entity,
+            modified_by=x_user,
+        )
+        service.session.commit()
+        service.session.refresh(entity)
+        return entity
+    except Exception:
+        service.session.rollback()
+        raise
+
+
+
+# ---------------------------------------------------------------------------
+# Lineage Transformation
+# ---------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# Mapping API
+# -----------------------------------------------------------------------------
+
+
+def get_mapping_service(
+    db: Session = Depends(get_db),
+) -> LineageMappingService:
+    return LineageMappingService(db)
+
+
+@router.post(
+    "/mappings",
+    response_model=LineageMappingResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_mapping(
+    payload: LineageMappingCreate,
+    x_user: str = Header(..., alias="X-User"),
+    service: LineageMappingService = Depends(get_mapping_service),
+) -> LineageMappingResponse:
+    try:
+        entity = service.create(
+            lineage_flow_id=payload.lineage_flow_id,
+            lineage_target_id=payload.lineage_target_id,
+            lineage_transformation_id=payload.lineage_transformation_id,
+            source_attribute=payload.source_attribute,
+            target_attribute=payload.target_attribute,
+            mapping_type=payload.mapping_type,
+            status=payload.status,
+            created_by=x_user,
+        )
+        service.session.commit()
+        service.session.refresh(entity)
+        return entity
+    except LineageRelationshipValidationError as exc:
+        service.session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(exc),
+        ) from exc
+    except ValueError as exc:
+        service.session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        ) from exc
+    except Exception:
+        service.session.rollback()
+        raise
+
+
+@router.get(
+    "/mappings",
+    response_model=list[LineageMappingResponse],
+)
+def list_mappings(
+    lineage_flow_id: UUID | None = None,
+    lineage_transformation_id: UUID | None = None,
+    mapping_type: str | None = None,
+    status: str | None = None,
+    include_inactive: bool = False,
+    service: LineageMappingService = Depends(get_mapping_service),
+) -> list[LineageMappingResponse]:
+    return service.list(
+        lineage_flow_id=lineage_flow_id,
+        lineage_transformation_id=lineage_transformation_id,
+        mapping_type=mapping_type,
+        status=status,
+        include_inactive=include_inactive,
+    )
+
+
+@router.get(
+    "/mappings/{lineage_mapping_id}",
+    response_model=LineageMappingResponse,
+)
+def get_mapping(
+    lineage_mapping_id: UUID,
+    include_inactive: bool = False,
+    service: LineageMappingService = Depends(get_mapping_service),
+) -> LineageMappingResponse:
+    entity = service.get(
+        lineage_mapping_id,
+        include_inactive=include_inactive,
+    )
+
+    if entity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Lineage Mapping not found.",
+        )
+
+    return entity
+
+
+@router.put(
+    "/mappings/{lineage_mapping_id}",
+    response_model=LineageMappingResponse,
+)
+def replace_mapping(
+    lineage_mapping_id: UUID,
+    payload: LineageMappingReplace,
+    x_user: str = Header(..., alias="X-User"),
+    service: LineageMappingService = Depends(get_mapping_service),
+) -> LineageMappingResponse:
+    entity = service.get(lineage_mapping_id)
+
+    if entity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Lineage Mapping not found.",
+        )
+
+    try:
+        entity = service.update(
+            entity,
+            modified_by=x_user,
+            lineage_flow_id=payload.lineage_flow_id,
+            lineage_target_id=payload.lineage_target_id,
+            lineage_transformation_id=payload.lineage_transformation_id,
+            source_attribute=payload.source_attribute,
+            target_attribute=payload.target_attribute,
+            mapping_type=payload.mapping_type,
+            status=payload.status,
+        )
+        service.session.commit()
+        service.session.refresh(entity)
+        return entity
+    except LineageRelationshipValidationError as exc:
+        service.session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(exc),
+        ) from exc
+    except ValueError as exc:
+        service.session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        ) from exc
+    except Exception:
+        service.session.rollback()
+        raise
+
+
+@router.patch(
+    "/mappings/{lineage_mapping_id}",
+    response_model=LineageMappingResponse,
+)
+def update_mapping(
+    lineage_mapping_id: UUID,
+    payload: LineageMappingUpdate,
+    x_user: str = Header(..., alias="X-User"),
+    service: LineageMappingService = Depends(get_mapping_service),
+) -> LineageMappingResponse:
+    entity = service.get(lineage_mapping_id)
+
+    if entity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Lineage Mapping not found.",
+        )
+
+    try:
+        entity = service.update(
+            entity,
+            modified_by=x_user,
+            lineage_target_id=payload.lineage_target_id,
+            lineage_transformation_id=payload.lineage_transformation_id,
+            source_attribute=payload.source_attribute,
+            target_attribute=payload.target_attribute,
+            mapping_type=payload.mapping_type,
+            status=payload.status,
+        )
+        service.session.commit()
+        service.session.refresh(entity)
+        return entity
+    except LineageRelationshipValidationError as exc:
+        service.session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(exc),
+        ) from exc
+    except ValueError as exc:
+        service.session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        ) from exc
+    except Exception:
+        service.session.rollback()
+        raise
+
+
+@router.delete(
+    "/mappings/{lineage_mapping_id}",
+    response_model=LineageMappingResponse,
+)
+def delete_mapping(
+    lineage_mapping_id: UUID,
+    x_user: str = Header(..., alias="X-User"),
+    service: LineageMappingService = Depends(get_mapping_service),
+) -> LineageMappingResponse:
+    entity = service.get(lineage_mapping_id)
+
+    if entity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Lineage Mapping not found.",
+        )
+
+    try:
+        entity = service.delete(
+            entity,
+            modified_by=x_user,
+        )
+        service.session.commit()
+        service.session.refresh(entity)
+        return entity
+    except Exception:
+        service.session.rollback()
+        raise
+
+
+def get_transformation_service(
+    db: Session = Depends(get_db),
+) -> LineageTransformationService:
+    return LineageTransformationService(db)
+
+
+@router.post(
+    "/transformations",
+    response_model=LineageTransformationResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_transformation(
+    payload: LineageTransformationCreate,
+    x_user: str = Header(..., alias="X-User"),
+    service: LineageTransformationService = Depends(get_transformation_service),
+) -> LineageTransformationResponse:
+    try:
+        entity = service.create(
+            lineage_flow_id=payload.lineage_flow_id,
+            sequence_number=payload.sequence_number,
+            transformation_name=payload.transformation_name,
+            transformation_type=payload.transformation_type,
+            description=payload.description,
+            expression=payload.expression,
+            status=payload.status,
+            created_by=x_user,
+        )
+        service.session.commit()
+        service.session.refresh(entity)
+        return entity
+    except LineageRelationshipValidationError as exc:
+        service.session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(exc),
+        ) from exc
+    except ValueError as exc:
+        service.session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        ) from exc
+    except Exception:
+        service.session.rollback()
+        raise
+
+
+@router.get(
+    "/transformations",
+    response_model=list[LineageTransformationResponse],
+)
+def list_transformations(
+    lineage_flow_id: UUID | None = None,
+    transformation_type: str | None = None,
+    status: str | None = None,
+    include_inactive: bool = False,
+    service: LineageTransformationService = Depends(get_transformation_service),
+) -> list[LineageTransformationResponse]:
+    return service.list(
+        lineage_flow_id=lineage_flow_id,
+        transformation_type=transformation_type,
+        status=status,
+        include_inactive=include_inactive,
+    )
+
+
+@router.get(
+    "/transformations/by-flow/{lineage_flow_id}/sequence/{sequence_number}",
+    response_model=LineageTransformationResponse,
+)
+def get_transformation_by_flow_and_sequence(
+    lineage_flow_id: UUID,
+    sequence_number: int,
+    include_inactive: bool = False,
+    service: LineageTransformationService = Depends(get_transformation_service),
+) -> LineageTransformationResponse:
+    entity = service.get_by_flow_and_sequence(
+        lineage_flow_id,
+        sequence_number,
+        include_inactive=include_inactive,
+    )
+
+    if entity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Lineage Transformation not found.",
+        )
+
+    return entity
+
+
+@router.get(
+    "/transformations/{lineage_transformation_id}",
+    response_model=LineageTransformationResponse,
+)
+def get_transformation(
+    lineage_transformation_id: UUID,
+    include_inactive: bool = False,
+    service: LineageTransformationService = Depends(get_transformation_service),
+) -> LineageTransformationResponse:
+    entity = service.get(
+        lineage_transformation_id,
+        include_inactive=include_inactive,
+    )
+
+    if entity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Lineage Transformation not found.",
+        )
+
+    return entity
+
+
+@router.put(
+    "/transformations/{lineage_transformation_id}",
+    response_model=LineageTransformationResponse,
+)
+def replace_transformation(
+    lineage_transformation_id: UUID,
+    payload: LineageTransformationReplace,
+    x_user: str = Header(..., alias="X-User"),
+    service: LineageTransformationService = Depends(get_transformation_service),
+) -> LineageTransformationResponse:
+    entity = service.get(lineage_transformation_id)
+
+    if entity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Lineage Transformation not found.",
+        )
+
+    if payload.lineage_flow_id != entity.lineage_flow_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Changing lineage_flow_id is not supported by the current service contract.",
+        )
+
+    try:
+        entity = service.update(
+            entity,
+            modified_by=x_user,
+            sequence_number=payload.sequence_number,
+            transformation_name=payload.transformation_name,
+            transformation_type=payload.transformation_type,
+            description=payload.description,
+            expression=payload.expression,
+            status=payload.status,
+        )
+        service.session.commit()
+        service.session.refresh(entity)
+        return entity
+    except ValueError as exc:
+        service.session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        ) from exc
+    except Exception:
+        service.session.rollback()
+        raise
+
+
+@router.patch(
+    "/transformations/{lineage_transformation_id}",
+    response_model=LineageTransformationResponse,
+)
+def update_transformation(
+    lineage_transformation_id: UUID,
+    payload: LineageTransformationUpdate,
+    x_user: str = Header(..., alias="X-User"),
+    service: LineageTransformationService = Depends(get_transformation_service),
+) -> LineageTransformationResponse:
+    entity = service.get(lineage_transformation_id)
+
+    if entity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Lineage Transformation not found.",
+        )
+
+    if (
+        payload.lineage_flow_id is not None
+        and payload.lineage_flow_id != entity.lineage_flow_id
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Changing lineage_flow_id is not supported by the current service contract.",
+        )
+
+    try:
+        entity = service.update(
+            entity,
+            modified_by=x_user,
+            sequence_number=payload.sequence_number,
+            transformation_name=payload.transformation_name,
+            transformation_type=payload.transformation_type,
+            description=payload.description,
+            expression=payload.expression,
+            status=payload.status,
+        )
+        service.session.commit()
+        service.session.refresh(entity)
+        return entity
+    except ValueError as exc:
+        service.session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        ) from exc
+    except Exception:
+        service.session.rollback()
+        raise
+
+
+@router.delete(
+    "/transformations/{lineage_transformation_id}",
+    response_model=LineageTransformationResponse,
+)
+def delete_transformation(
+    lineage_transformation_id: UUID,
+    x_user: str = Header(..., alias="X-User"),
+    service: LineageTransformationService = Depends(get_transformation_service),
+) -> LineageTransformationResponse:
+    entity = service.get(lineage_transformation_id)
+
+    if entity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Lineage Transformation not found.",
+        )
+
+    try:
+        entity = service.delete(
+            entity,
+            modified_by=x_user,
+        )
+        service.session.commit()
+        service.session.refresh(entity)
+        return entity
+    except Exception:
+        service.session.rollback()
+        raise
+
+
+# ---------------------------------------------------------------------------
+# Impact Analysis
+# ---------------------------------------------------------------------------
+
+def get_impact_analysis_service(
+    db: Session = Depends(get_db),
+) -> ImpactAnalysisService:
+    return ImpactAnalysisService(db)
+
+
+@router.post(
+    "/impact-analyses",
+    response_model=ImpactAnalysisResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_impact_analysis(
+    payload: ImpactAnalysisCreate,
+    x_user: str = Header(..., alias="X-User"),
+    service: ImpactAnalysisService = Depends(get_impact_analysis_service),
+) -> ImpactAnalysisResponse:
+    try:
+        entity = service.create(
+            lineage_mapping_id=payload.lineage_mapping_id,
+            analysis_number=payload.analysis_number,
+            source_asset=payload.source_asset,
+            impact_scope=payload.impact_scope,
+            affected_objects=payload.affected_objects,
+            analysis_date=payload.analysis_date,
+            requested_by=payload.requested_by,
+            status=payload.status,
+            created_by=x_user,
+        )
+        service.session.commit()
+        service.session.refresh(entity)
+        return entity
+    except ValueError as exc:
+        service.session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        ) from exc
+    except Exception:
+        service.session.rollback()
+        raise
+
+
+@router.get(
+    "/impact-analyses/{impact_analysis_id}",
+    response_model=ImpactAnalysisResponse,
+)
+def get_impact_analysis(
+    impact_analysis_id: UUID,
+    service: ImpactAnalysisService = Depends(get_impact_analysis_service),
+) -> ImpactAnalysisResponse:
+    entity = service.get(impact_analysis_id)
+
+    if entity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Impact Analysis not found.",
+        )
+
+    return entity
+
+
+@router.get(
+    "/impact-analyses",
+    response_model=list[ImpactAnalysisResponse],
+)
+def list_impact_analyses(
+    lineage_mapping_id: UUID | None = None,
+    impact_scope: str | None = None,
+    status: str | None = None,
+    requested_by: str | None = None,
+    analysis_date_from: str | None = None,
+    analysis_date_to: str | None = None,
+    service: ImpactAnalysisService = Depends(get_impact_analysis_service),
+) -> list[ImpactAnalysisResponse]:
+    from datetime import datetime
+
+    date_from = (
+        datetime.fromisoformat(analysis_date_from)
+        if analysis_date_from
+        else None
+    )
+    date_to = (
+        datetime.fromisoformat(analysis_date_to)
+        if analysis_date_to
+        else None
+    )
+
+    return service.list(
+        lineage_mapping_id=lineage_mapping_id,
+        impact_scope=impact_scope,
+        status=status,
+        requested_by=requested_by,
+        analysis_date_from=date_from,
+        analysis_date_to=date_to,
+    )
+
+
+@router.put(
+    "/impact-analyses/{impact_analysis_id}",
+    response_model=ImpactAnalysisResponse,
+)
+def replace_impact_analysis(
+    impact_analysis_id: UUID,
+    payload: ImpactAnalysisCreate,
+    x_user: str = Header(..., alias="X-User"),
+    service: ImpactAnalysisService = Depends(get_impact_analysis_service),
+) -> ImpactAnalysisResponse:
+    entity = service.get(impact_analysis_id)
+
+    if entity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Impact Analysis not found.",
+        )
+
+    try:
+        entity.lineage_mapping_id = payload.lineage_mapping_id
+        entity.analysis_number = payload.analysis_number
+        entity.source_asset = payload.source_asset
+        entity.impact_scope = payload.impact_scope
+        entity.affected_objects = payload.affected_objects
+        entity.analysis_date = payload.analysis_date
+        entity.requested_by = payload.requested_by
+        entity.status = payload.status
+
+        entity = service.update(
+            entity,
+            modified_by=x_user,
+        )
+        service.session.commit()
+        service.session.refresh(entity)
+        return entity
+    except ValueError as exc:
+        service.session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        ) from exc
+    except Exception:
+        service.session.rollback()
+        raise
+
+
+@router.patch(
+    "/impact-analyses/{impact_analysis_id}",
+    response_model=ImpactAnalysisResponse,
+)
+def update_impact_analysis(
+    impact_analysis_id: UUID,
+    payload: ImpactAnalysisUpdate,
+    x_user: str = Header(..., alias="X-User"),
+    service: ImpactAnalysisService = Depends(get_impact_analysis_service),
+) -> ImpactAnalysisResponse:
+    entity = service.get(impact_analysis_id)
+
+    if entity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Impact Analysis not found.",
+        )
+
+    try:
+        entity = service.update(
+            entity,
+            modified_by=x_user,
+            source_asset=payload.source_asset,
+            impact_scope=payload.impact_scope,
+            affected_objects=payload.affected_objects,
+            analysis_date=payload.analysis_date,
+            requested_by=payload.requested_by,
+            status=payload.status,
+        )
+        service.session.commit()
+        service.session.refresh(entity)
+        return entity
+    except ValueError as exc:
+        service.session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        ) from exc
+    except Exception:
+        service.session.rollback()
+        raise
+
+
+@router.delete(
+    "/impact-analyses/{impact_analysis_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def delete_impact_analysis(
+    impact_analysis_id: UUID,
+    service: ImpactAnalysisService = Depends(get_impact_analysis_service),
+) -> None:
+    entity = service.get(impact_analysis_id)
+
+    if entity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Impact Analysis not found.",
+        )
+
+    try:
+        service.delete(entity)
+        service.session.commit()
+    except Exception:
+        service.session.rollback()
+        raise
+
+
+# ---------------------------------------------------------------------------
+# Lineage Version
+# ---------------------------------------------------------------------------
+
+def get_lineage_version_service(
+    db: Session = Depends(get_db),
+) -> LineageVersionService:
+    return LineageVersionService(db)
+
+
+@router.post(
+    "/versions",
+    response_model=LineageVersionResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_lineage_version(
+    payload: LineageVersionCreate,
+    x_user: str = Header(..., alias="X-User"),
+    service: LineageVersionService = Depends(get_lineage_version_service),
+) -> LineageVersionResponse:
+    try:
+        entity = service.create(
+            lineage_flow_id=payload.lineage_flow_id,
+            version_number=payload.version_number,
+            change_summary=payload.change_summary,
+            effective_date=payload.effective_date,
+            approved_by=payload.approved_by,
+            status=payload.status,
+            created_by=x_user,
+        )
+        service.session.commit()
+        service.session.refresh(entity)
+        return entity
+    except ValueError as exc:
+        service.session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        ) from exc
+    except Exception:
+        service.session.rollback()
+        raise
+
+
+@router.get(
+    "/versions/{lineage_version_id}",
+    response_model=LineageVersionResponse,
+)
+def get_lineage_version(
+    lineage_version_id: UUID,
+    include_inactive: bool = False,
+    service: LineageVersionService = Depends(get_lineage_version_service),
+) -> LineageVersionResponse:
+    entity = service.get(
+        lineage_version_id,
+        include_inactive=include_inactive,
+    )
+
+    if entity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Lineage Version not found.",
+        )
+
+    return entity
+
+
+@router.get(
+    "/versions",
+    response_model=list[LineageVersionResponse],
+)
+def list_lineage_versions(
+    lineage_flow_id: UUID | None = None,
+    status: str | None = None,
+    include_inactive: bool = False,
+    service: LineageVersionService = Depends(get_lineage_version_service),
+) -> list[LineageVersionResponse]:
+    return service.list(
+        lineage_flow_id=lineage_flow_id,
+        status=status,
+        include_inactive=include_inactive,
+    )
+
+
+@router.put(
+    "/versions/{lineage_version_id}",
+    response_model=LineageVersionResponse,
+)
+def replace_lineage_version(
+    lineage_version_id: UUID,
+    payload: LineageVersionReplace,
+    x_user: str = Header(..., alias="X-User"),
+    service: LineageVersionService = Depends(get_lineage_version_service),
+) -> LineageVersionResponse:
+    entity = service.get(lineage_version_id)
+
+    if entity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Lineage Version not found.",
+        )
+
+    try:
+        entity = service.update(
+            entity,
+            modified_by=x_user,
+            version_number=payload.version_number,
+            change_summary=payload.change_summary,
+            effective_date=payload.effective_date,
+            approved_by=payload.approved_by,
+            status=payload.status,
+        )
+        service.session.commit()
+        service.session.refresh(entity)
+        return entity
+    except ValueError as exc:
+        service.session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        ) from exc
+    except Exception:
+        service.session.rollback()
+        raise
+
+
+@router.patch(
+    "/versions/{lineage_version_id}",
+    response_model=LineageVersionResponse,
+)
+def update_lineage_version(
+    lineage_version_id: UUID,
+    payload: LineageVersionUpdate,
+    x_user: str = Header(..., alias="X-User"),
+    service: LineageVersionService = Depends(get_lineage_version_service),
+) -> LineageVersionResponse:
+    entity = service.get(lineage_version_id)
+
+    if entity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Lineage Version not found.",
+        )
+
+    try:
+        entity = service.update(
+            entity,
+            modified_by=x_user,
+            version_number=payload.version_number,
+            change_summary=payload.change_summary,
+            effective_date=payload.effective_date,
+            approved_by=payload.approved_by,
+            status=payload.status,
+        )
+        service.session.commit()
+        service.session.refresh(entity)
+        return entity
+    except ValueError as exc:
+        service.session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        ) from exc
+    except Exception:
+        service.session.rollback()
+        raise
+
+
+@router.delete(
+    "/versions/{lineage_version_id}",
+    response_model=LineageVersionResponse,
+)
+def delete_lineage_version(
+    lineage_version_id: UUID,
+    x_user: str = Header(..., alias="X-User"),
+    service: LineageVersionService = Depends(get_lineage_version_service),
+) -> LineageVersionResponse:
+    entity = service.get(lineage_version_id)
+
+    if entity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Lineage Version not found.",
+        )
+
+    try:
+        entity = service.archive(
+            entity,
+            modified_by=x_user,
+        )
+        service.session.commit()
+        service.session.refresh(entity)
+        return entity
+    except Exception:
+        service.session.rollback()
+        raise
+
+
+# ---------------------------------------------------------------------------
+# Lineage Snapshot
+# ---------------------------------------------------------------------------
+
+def get_lineage_snapshot_service(
+    db: Session = Depends(get_db),
+) -> LineageSnapshotService:
+    return LineageSnapshotService(db)
+
+
+@router.post(
+    "/snapshots",
+    response_model=LineageSnapshotResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_lineage_snapshot(
+    payload: LineageSnapshotCreate,
+    x_user: str = Header(..., alias="X-User"),
+    service: LineageSnapshotService = Depends(get_lineage_snapshot_service),
+) -> LineageSnapshotResponse:
+    try:
+        entity = service.create(
+            lineage_flow_id=payload.lineage_flow_id,
+            snapshot_name=payload.snapshot_name,
+            snapshot_date=payload.snapshot_date,
+            created_by=x_user,
+            status=payload.status,
+        )
+        service.session.commit()
+        service.session.refresh(entity)
+        return entity
+    except ValueError as exc:
+        service.session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        ) from exc
+    except Exception:
+        service.session.rollback()
+        raise
+
+
+@router.get(
+    "/snapshots/{lineage_snapshot_id}",
+    response_model=LineageSnapshotResponse,
+)
+def get_lineage_snapshot(
+    lineage_snapshot_id: UUID,
+    include_inactive: bool = False,
+    service: LineageSnapshotService = Depends(get_lineage_snapshot_service),
+) -> LineageSnapshotResponse:
+    entity = service.get(
+        lineage_snapshot_id,
+        include_inactive=include_inactive,
+    )
+
+    if entity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Lineage Snapshot not found.",
+        )
+
+    return entity
+
+
+@router.get(
+    "/snapshots",
+    response_model=list[LineageSnapshotResponse],
+)
+def list_lineage_snapshots(
+    lineage_flow_id: UUID | None = None,
+    status: str | None = None,
+    snapshot_date_from: str | None = None,
+    snapshot_date_to: str | None = None,
+    include_inactive: bool = False,
+    service: LineageSnapshotService = Depends(get_lineage_snapshot_service),
+) -> list[LineageSnapshotResponse]:
+    from datetime import datetime
+
+    date_from = (
+        datetime.fromisoformat(snapshot_date_from)
+        if snapshot_date_from
+        else None
+    )
+    date_to = (
+        datetime.fromisoformat(snapshot_date_to)
+        if snapshot_date_to
+        else None
+    )
+
+    return service.list(
+        lineage_flow_id=lineage_flow_id,
+        status=status,
+        snapshot_date_from=date_from,
+        snapshot_date_to=date_to,
+        include_inactive=include_inactive,
+    )
+
+
+@router.put(
+    "/snapshots/{lineage_snapshot_id}",
+    response_model=LineageSnapshotResponse,
+)
+def replace_lineage_snapshot(
+    lineage_snapshot_id: UUID,
+    payload: LineageSnapshotReplace,
+    x_user: str = Header(..., alias="X-User"),
+    service: LineageSnapshotService = Depends(get_lineage_snapshot_service),
+) -> LineageSnapshotResponse:
+    entity = service.get(lineage_snapshot_id)
+
+    if entity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Lineage Snapshot not found.",
+        )
+
+    try:
+        entity = service.update(
+            entity,
+            modified_by=x_user,
+            snapshot_name=payload.snapshot_name,
+            snapshot_date=payload.snapshot_date,
+            status=payload.status,
+        )
+        service.session.commit()
+        service.session.refresh(entity)
+        return entity
+    except ValueError as exc:
+        service.session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        ) from exc
+    except Exception:
+        service.session.rollback()
+        raise
+
+
+@router.patch(
+    "/snapshots/{lineage_snapshot_id}",
+    response_model=LineageSnapshotResponse,
+)
+def update_lineage_snapshot(
+    lineage_snapshot_id: UUID,
+    payload: LineageSnapshotUpdate,
+    x_user: str = Header(..., alias="X-User"),
+    service: LineageSnapshotService = Depends(get_lineage_snapshot_service),
+) -> LineageSnapshotResponse:
+    entity = service.get(lineage_snapshot_id)
+
+    if entity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Lineage Snapshot not found.",
+        )
+
+    try:
+        entity = service.update(
+            entity,
+            modified_by=x_user,
+            snapshot_name=payload.snapshot_name,
+            snapshot_date=payload.snapshot_date,
+            status=payload.status,
+        )
+        service.session.commit()
+        service.session.refresh(entity)
+        return entity
+    except ValueError as exc:
+        service.session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        ) from exc
+    except Exception:
+        service.session.rollback()
+        raise
+
+
+@router.delete(
+    "/snapshots/{lineage_snapshot_id}",
+    response_model=LineageSnapshotResponse,
+)
+def delete_lineage_snapshot(
+    lineage_snapshot_id: UUID,
+    x_user: str = Header(..., alias="X-User"),
+    service: LineageSnapshotService = Depends(get_lineage_snapshot_service),
+) -> LineageSnapshotResponse:
+    entity = service.get(lineage_snapshot_id)
+
+    if entity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Lineage Snapshot not found.",
+        )
+
+    try:
+        entity = service.archive(
+            entity,
+            modified_by=x_user,
+        )
+        service.session.commit()
+        service.session.refresh(entity)
+        return entity
+    except Exception:
+        service.session.rollback()
+        raise
+
+
+def get_lineage_discovery_service(
+    db: Session = Depends(get_db),
+) -> LineageDiscoveryService:
+    return LineageDiscoveryService(db)
+
+
+@router.get(
+    "/discovery",
+    response_model=list[LineageDiscoveryResponse],
+)
+def discover_lineage(
+    lineage_source_id: UUID | None = None,
+    lineage_process_id: UUID | None = None,
+    lineage_flow_id: UUID | None = None,
+    include_inactive: bool = False,
+    service: LineageDiscoveryService = Depends(
+        get_lineage_discovery_service
+    ),
+) -> list[LineageDiscoveryResponse]:
+    return service.discover(
+        lineage_source_id=lineage_source_id,
+        lineage_process_id=lineage_process_id,
+        lineage_flow_id=lineage_flow_id,
+        include_inactive=include_inactive,
+    )

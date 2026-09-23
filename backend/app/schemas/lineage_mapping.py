@@ -1,0 +1,53 @@
+from datetime import datetime
+from uuid import UUID
+
+from pydantic import ConfigDict
+
+from app.schemas.common import APIBaseSchema
+
+
+class LineageMappingCreate(APIBaseSchema):
+    lineage_flow_id: UUID
+    lineage_target_id: UUID
+    lineage_transformation_id: UUID | None = None
+    source_attribute: str
+    target_attribute: str
+    mapping_type: str
+    status: str
+
+
+class LineageMappingUpdate(APIBaseSchema):
+    lineage_target_id: UUID | None = None
+    lineage_transformation_id: UUID | None = None
+    source_attribute: str | None = None
+    target_attribute: str | None = None
+    mapping_type: str | None = None
+    status: str | None = None
+
+
+class LineageMappingReplace(APIBaseSchema):
+    lineage_flow_id: UUID
+    lineage_target_id: UUID
+    lineage_transformation_id: UUID | None = None
+    source_attribute: str
+    target_attribute: str
+    mapping_type: str
+    status: str
+
+
+class LineageMappingResponse(APIBaseSchema):
+    model_config = ConfigDict(from_attributes=True)
+
+    lineage_mapping_id: UUID
+    lineage_flow_id: UUID
+    lineage_target_id: UUID | None
+    lineage_transformation_id: UUID | None
+    source_attribute: str
+    target_attribute: str
+    mapping_type: str
+    status: str
+    created_by: str
+    created_date: datetime
+    modified_by: str | None
+    modified_date: datetime | None
+    is_active: bool

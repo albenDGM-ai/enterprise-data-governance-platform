@@ -1,0 +1,42 @@
+============================================================
+DGM — BATCH 08.8O
+Direct Alembic Environment Repair
+Started: Mon Sep 14 09:28:34 PM IST 2026
+============================================================
+
+STEP 1 — Verify current state
+ M backend/alembic/env.py
+ M backend/app/models/lineage_mapping.py
+ M backend/app/models/lineage_target.py
+?? backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py
+
+Current workaround references:
+38:def include_object(
+49:        if (table_name, name) in LEGACY_NULLABLE_COLUMNS:
+79:        include_object=include_object,
+STEP 1 PASS
+
+STEP 2 — Backup env.py
+-rw-r--r-- 1 alben alben 2920 Sep 14 21:28 backend/alembic/env.py.before-08.8O
+STEP 2 PASS
+
+STEP 3 — Remove include_object function by actual structure
+Removed include_object() lines 38 through 60.
+No other source section was targeted.
+STEP 3 PASS
+
+STEP 4 — Remove configure argument independently
+Removed configure argument at line 56.
+STEP 4 PASS
+
+STEP 5 — Remove orphaned legacy marker if present
+No orphaned legacy marker found.
+STEP 5 PASS
+
+STEP 6 — Remove only obsolete compatibility comments
+Obsolete compatibility comment lines removed: 5
+STEP 6 PASS
+
+STEP 7 — Verify all workaround markers are gone
+STOP: workaround marker remains.
+Restoring env.py.

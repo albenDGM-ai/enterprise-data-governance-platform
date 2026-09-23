@@ -1,0 +1,59 @@
+============================================================
+BATCH 08.7A — VENV CHECK
+============================================================
+Timestamp: 2026-09-14 20:12:25 IST
+
+=== HOST PYTHON ===
+Python 3.14.4
+/usr/bin/python3
+
+=== VENV ===
+drwxrwxr-x 5 alben alben 4096 Sep 12 19:54 .venv
+
+=== VENV PYTHON ===
+Python 3.14.4
+/home/alben/Projects/enterprise-data-governance-platform/.venv/bin/python
+
+=== VENV PIP ===
+/home/alben/Projects/enterprise-data-governance-platform/.venv/bin/python: No module named pip
+
+=== ENSUREPIP ===
+pip 25.1.1
+
+=== GIT BRANCH ===
+feature/project-foundation
+
+=== GIT STATUS ===
+ M backend/app/main.py
+ M backend/app/models/lineage_mapping.py
+ M backend/app/models/lineage_target.py
+ M backend/app/services/lineage_mapping_service.py
+ M backend/app/services/lineage_target_service.py
+ M backend/app/services/lineage_transformation_service.py
+ M docs/architecture/logical/DataLineageLogicalModel.md
+ M docs/architecture/physical/DataLineagePhysicalModel.md
+?? AGENTS.md
+?? "Test reports/"
+?? backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py
+?? backend/app/api/
+?? backend/app/models/lineage_mapping.py.before_68
+?? backend/app/models/lineage_target.py.before_68
+?? backend/app/schemas/
+?? backend/app/services/lineage_discovery_service.py
+?? backend/app/services/lineage_discovery_service.py.before_76
+?? backend/app/services/lineage_mapping_service.py.before_68
+?? backend/app/services/lineage_target_service.py.before_68
+?? backend/app/services/lineage_validation.py
+?? backend/tests/
+?? docs/architecture/05_LogicalModel.md.before_83
+?? docs/architecture/06_PhysicalModel.md.before_83
+?? docs/architecture/07_API_Design.md.before_83
+?? docs/architecture/08_UI_Design.md.before_83
+?? docs/architecture/api/DataLineageAPI.md.before_83
+?? docs/architecture/logical/DataLineageLogicalModel.md.before_83
+?? docs/architecture/physical/DataLineagePhysicalModel.md.before_83
+?? docs/architecture/ui/DataLineageUI.md.before_83
+
+============================================================
+REPORT: Test reports/Batch-08.7A-venv-check.txt
+============================================================

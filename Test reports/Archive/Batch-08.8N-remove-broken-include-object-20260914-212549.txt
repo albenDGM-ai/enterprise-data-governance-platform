@@ -1,0 +1,38 @@
+============================================================
+DGM — BATCH 08.8N
+Remove Broken Alembic include_object Workaround
+Started: Mon Sep 14 09:25:49 PM IST 2026
+============================================================
+
+STEP 1 — Verify current state
+ M backend/alembic/env.py
+ M backend/app/models/lineage_mapping.py
+ M backend/app/models/lineage_target.py
+?? backend/alembic/versions/32b95f7a0662_add_lineage_target_relationships.py
+
+Current include_object references:
+38:def include_object(
+49:        if (table_name, name) in LEGACY_NULLABLE_COLUMNS:
+79:        include_object=include_object,
+STEP 1 PASS
+
+STEP 2 — Backup env.py
+-rw-r--r-- 1 alben alben 2920 Sep 14 21:25 backend/alembic/env.py.before-08.8N
+STEP 2 PASS
+
+STEP 3 — Locate exact include_object function
+include_object function: [38]
+include_object configure argument: [79]
+LEGACY_NULLABLE_COLUMNS references: [49]
+Exact function and configure argument located.
+STEP 3 PASS
+
+STEP 4 — Remove exact function and configure argument
+Removed include_object function and associated comments.
+Removed configure argument.
+Removed LEGACY_NULLABLE_COLUMNS reference.
+STEP 4 PASS
+
+STEP 5 — Verify no workaround remains
+STOP: workaround remnants remain.
+Restoring env.py.

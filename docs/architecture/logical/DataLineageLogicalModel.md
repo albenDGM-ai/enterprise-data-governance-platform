@@ -155,6 +155,23 @@ Snapshot
 
 ---
 
+## 6.1 Governed Graph Invariant
+
+For governed lineage records, a Lineage Target belongs to one Lineage
+Transformation, and that Transformation belongs to one Lineage Flow. A Lineage
+Mapping that identifies a Target must identify that Target's owning Flow. If the
+optional Mapping Transformation reference is supplied, it must be the same
+Transformation that owns the Target and must belong to the Mapping's Flow.
+
+The physical relationship columns remain nullable solely for Phase 1 legacy-read
+compatibility. New governed Target and Mapping records require their applicable
+parent relationships. The Mapping Transformation reference is therefore
+redundant when a Target is present; retain it for compatibility now, and assess
+its removal in a separately approved schema and API transition after legacy data
+has been reconciled.
+
+---
+
 # 7. Logical Entity Definitions
 
 ## 7.1 Lineage Source
@@ -977,4 +994,3 @@ The module provides:
 The Data Lineage module establishes a centralized framework for enterprise lineage management while integrating seamlessly with the Metadata Repository, Business Glossary, Business Rules, Data Quality, Workflow, Reporting, and AI Services.
 
 This logical model serves as the foundation for the Data Lineage Physical Data Model, REST APIs, User Interface, Lineage Engine, Impact Analysis Engine, Reporting Services, and AI-powered lineage discovery capabilities.
-
