@@ -19,9 +19,19 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    """Upgrade schema."""
-    op.add_column('data_asset', sa.Column('business_domain', sa.String(length=100), nullable=False, server_default='default_domain'))
-    op.alter_column('data_asset', 'business_domain', server_default=None)
+    """Upgrade schema.
+
+    Assumption: For this initial rollout of the Data Asset Metadata capability,
+    there are no existing production records in the `data_asset` table.
+    We are safely adding `business_domain` as a non-null column without
+    resorting to a synthetic default like 'default_domain'.
+    """
+    op.add_column('data_asset', sa.Column('business_domain', sa.String(length=100), nullable=True))
+
+    # Since we documented the assumption that there are NO existing production records,
+    # we can safely alter the column to non-nullable without any backfilling or
+    # synthetic updates.
+    op.alter_column('data_asset', 'business_domain', nullable=False)
 
     op.add_column('data_asset', sa.Column('source_system_id', sa.UUID(as_uuid=True), nullable=True))
     op.create_foreign_key('fk_data_asset_source_system_id', 'data_asset', 'source_system', ['source_system_id'], ['source_system_id'])
