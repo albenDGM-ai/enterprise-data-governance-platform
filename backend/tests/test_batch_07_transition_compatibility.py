@@ -1,5 +1,7 @@
 """Focused static and model-contract checks for Batch 07."""
 
+import pytest
+
 from pathlib import Path
 
 from app.models.lineage_mapping import DataLineageMapping

@@ -60,5 +60,3 @@ __all__ = [
     "TableColumn",
 ]
 from app.models.lineage_snapshot import LineageSnapshot
-
-from .metadata import SourceSystem, DatabaseCatalog, DatabaseSchema, DatabaseTable
