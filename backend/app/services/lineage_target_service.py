@@ -154,6 +154,23 @@ class LineageTargetService:
 
         if lineage_transformation_id is not None:
             self._validate_transformation(lineage_transformation_id)
+            if entity.lineage_transformation_id is not None and entity.lineage_transformation_id != lineage_transformation_id:
+                old_transformation = self.transformation_repository.get_by_id(
+                    entity.lineage_transformation_id,
+                    include_inactive=True,
+                )
+                new_transformation = self.transformation_repository.get_by_id(
+                    lineage_transformation_id,
+                    include_inactive=True,
+                )
+                if (
+                    old_transformation is not None
+                    and new_transformation is not None
+                    and old_transformation.lineage_flow_id != new_transformation.lineage_flow_id
+                ):
+                    raise LineageRelationshipValidationError(
+                        "Cannot update Lineage Target to a Lineage Transformation in a different Lineage Flow."
+                    )
             entity.lineage_transformation_id = lineage_transformation_id
         if target_name is not None:
             entity.target_name = target_name
