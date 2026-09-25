@@ -56,6 +56,10 @@ from app.schemas.lineage_version import (
     LineageVersionResponse,
     LineageVersionUpdate,
 )
+from app.schemas.metadata.data_asset import (
+    DataAssetCreate,
+    DataAssetResponse,
+)
 
 __all__ = [
     "APIBaseSchema",
@@ -96,6 +100,8 @@ __all__ = [
     "LineageVersionReplace",
     "LineageVersionResponse",
     "LineageVersionUpdate",
+    "DataAssetCreate",
+    "DataAssetResponse",
 ]
 
 from app.schemas.lineage_discovery import (

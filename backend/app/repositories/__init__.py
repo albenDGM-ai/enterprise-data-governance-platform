@@ -9,6 +9,7 @@ from app.repositories.lineage_transformation_repository import (
     LineageTransformationRepository,
 )
 from app.repositories.lineage_version_repository import LineageVersionRepository
+from app.repositories.metadata_asset_repository import DataAssetRepository
 
 __all__ = [
     "ImpactAnalysisRepository",
@@ -20,4 +21,5 @@ __all__ = [
     "LineageTargetRepository",
     "LineageTransformationRepository",
     "LineageVersionRepository",
+    "DataAssetRepository",
 ]

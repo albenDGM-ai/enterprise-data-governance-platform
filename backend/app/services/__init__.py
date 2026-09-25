@@ -7,6 +7,7 @@ from app.services.lineage_source_service import LineageSourceService
 from app.services.lineage_target_service import LineageTargetService
 from app.services.lineage_transformation_service import LineageTransformationService
 from app.services.lineage_version_service import LineageVersionService
+from app.services.metadata_asset_service import DataAssetService
 
 __all__ = [
     "LineageFlowService",
@@ -18,4 +19,5 @@ __all__ = [
     "LineageTargetService",
     "LineageTransformationService",
     "LineageVersionService",
+    "DataAssetService",
 ]
