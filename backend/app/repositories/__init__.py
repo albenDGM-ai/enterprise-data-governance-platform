@@ -12,11 +12,13 @@ from app.repositories.lineage_transformation_repository import (
     LineageTransformationRepository,
 )
 from app.repositories.lineage_version_repository import LineageVersionRepository
+from app.repositories.business_glossary_repository import BusinessTermRepository
 from app.repositories.metadata_asset_repository import DataAssetRepository
 from app.repositories.source_system_repository import SourceSystemRepository
 from app.repositories.table_column_repository import TableColumnRepository
 
 __all__ = [
+    "BusinessTermRepository",
     "DatabaseRepository",
     "DatabaseSchemaRepository",
     "DatabaseTableRepository",

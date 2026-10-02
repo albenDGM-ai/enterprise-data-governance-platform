@@ -675,8 +675,8 @@ The working package sequence is:
 | Package | Capability | Status |
 |---|---|---|
 | Package 03 | Data Asset Registration & Retrieval | COMPLETE |
-| Package 04 | Core Metadata Repository Expansion | NEXT CANDIDATE |
-| Package 05 | Business Glossary Core | PLANNED |
+| Package 04 | Core Metadata Repository Expansion | COMPLETE |
+| Package 05 | Business Glossary Core | COMPLETE |
 | Package 06 | Data Quality Core | PLANNED |
 | Package 07 | Lineage Runtime Completion | PLANNED |
 | Package 08 | Basic Governance / Ownership | PLANNED |
@@ -1012,9 +1012,37 @@ Package 04 implementation, verification, evidence, merge, local synchronization,
 
 **PACKAGE 04: COMPLETE**
 
+---
+# VERIFIED PROJECT CHECKPOINT — 2026-10-02
+
+## Package 05 — Business Glossary Core
+
+**Status: COMPLETE**
+
+Package 05 established the minimum MVP Business Glossary capability focused on Business Term management and connecting business meaning to governed metadata assets (`DataAsset`).
+
+### Verification
+
+- Package-specific tests: **7 passed, 1 warning**
+- Full backend regression: **38 passed, 1 skipped, 1 warning**
+- PostgreSQL verification: **PASS**
+- `git diff --check`: **PASS**
+- Evidence artifact: `package-05-verification-report.zip`
+
+### Git
+
+- Branch: `feature/package-05-business-glossary-core`
+- Starting commit: `331a97e686fba4c3fd5b382a81701c513f411560`
+
+### Completion
+
+Package 05 implementation, verification, evidence, and tests are complete.
+
+**PACKAGE 05: COMPLETE**
+
 ### Next Package Candidate
 
-**Package 05 — Business Glossary Core** is the current next-package candidate. Before implementation, perform repository and dependency preflight against the PRD, DGM Development Operating Standard v1.1, current source code, existing glossary-related models/APIs/tests, Package 04 dependencies, and the smallest safe MVP increment.
+**Package 06 — Data Quality Core** is the current next-package candidate.
 
 ### Continuity Rule
 
