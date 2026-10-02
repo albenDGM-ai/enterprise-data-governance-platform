@@ -2,7 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class DataQualityRuleCreate(BaseModel):
@@ -50,6 +50,15 @@ class DataQualityResultCreate(BaseModel):
     quality_percentage: Decimal | None = Field(None, ge=Decimal("0.00"), le=Decimal("100.00"))
     result_status: str = Field("PASSED", max_length=30)
     execution_duration_ms: int | None = Field(None, ge=0)
+
+    @model_validator(mode="after")
+    def validate_record_counts(self) -> "DataQualityResultCreate":
+        warning_cnt = self.warning_records if self.warning_records is not None else 0
+        if warning_cnt < 0:
+            raise ValueError("warning_records must be non-negative")
+        if self.passed_records + self.failed_records > self.total_records:
+            raise ValueError("passed_records + failed_records cannot exceed total_records")
+        return self
 
 
 class DataQualityResultResponse(BaseModel):
