@@ -211,16 +211,9 @@ class DataQualityResultService:
             if result_create.target_data_asset_id != rule.target_data_asset_id:
                 raise HTTPException(
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=f"Result target_data_asset_id '{result_create.target_data_asset_id}' does not match rule target_data_asset_id '{rule.target_data_asset_id}'",
+                    detail="target_data_asset_id must match the DataQualityRule target_data_asset_id",
                 )
-            asset_exists = self.rule_repository.data_asset_exists(result_create.target_data_asset_id)
-            column_exists = self.rule_repository.column_exists(result_create.target_data_asset_id)
-            if not asset_exists and not column_exists:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Referenced DataAsset or Column with id {result_create.target_data_asset_id} not found",
-                )
-            target_asset_id = result_create.target_data_asset_id
+            target_asset_id = rule.target_data_asset_id
         else:
             target_asset_id = rule.target_data_asset_id
 
