@@ -368,3 +368,110 @@ def test_data_quality_result_retrieval_and_listing(client: TestClient, test_data
     fake_res_id = str(uuid.uuid4())
     get_fake = client.get(f"/api/v1/quality/results/{fake_res_id}")
     assert get_fake.status_code == 404
+
+
+
+def test_data_quality_result_reject_inconsistent_record_counts(client: TestClient, test_data_asset: dict):
+    rule_payload = {
+        "rule_code": f"DQ_INVARIANT_{uuid.uuid4().hex[:8].upper()}",
+        "rule_name": "Record Count Invariant Rule",
+        "target_data_asset_id": test_data_asset["data_asset_id"],
+    }
+    rule_res = client.post("/api/v1/quality/rules", json=rule_payload)
+    assert rule_res.status_code == 201
+
+    payload = {
+        "data_quality_rule_id": rule_res.json()["data_quality_rule_id"],
+        "total_records": 100,
+        "passed_records": 80,
+        "failed_records": 30,
+        "warning_records": 0,
+    }
+    response = client.post("/api/v1/quality/results", json=payload)
+    assert response.status_code == 422
+
+
+def test_data_quality_result_deterministic_quality_percentage(client: TestClient, test_data_asset: dict):
+    rule_payload = {
+        "rule_code": f"DQ_PCT_{uuid.uuid4().hex[:8].upper()}",
+        "rule_name": "Deterministic Percentage Rule",
+        "target_data_asset_id": test_data_asset["data_asset_id"],
+    }
+    rule_res = client.post("/api/v1/quality/rules", json=rule_payload)
+    assert rule_res.status_code == 201
+    rule_id = rule_res.json()["data_quality_rule_id"]
+
+    payload = {
+        "data_quality_rule_id": rule_id,
+        "total_records": 100,
+        "passed_records": 98,
+        "failed_records": 2,
+        "warning_records": 0,
+        "quality_percentage": "1.00",
+    }
+    response = client.post("/api/v1/quality/results", json=payload)
+    assert response.status_code == 201
+    assert response.json()["quality_percentage"] == "98.00"
+
+    zero_payload = {
+        "data_quality_rule_id": rule_id,
+        "total_records": 0,
+        "passed_records": 0,
+        "failed_records": 0,
+        "warning_records": 0,
+        "quality_percentage": "100.00",
+    }
+    zero_response = client.post("/api/v1/quality/results", json=zero_payload)
+    assert zero_response.status_code == 201
+    assert zero_response.json()["quality_percentage"] == "0.00"
+
+
+def test_data_quality_result_target_mismatch_rejection_and_omission(
+    client: TestClient,
+    test_data_asset: dict,
+):
+    first_rule_payload = {
+        "rule_code": f"DQ_TARGET_A_{uuid.uuid4().hex[:8].upper()}",
+        "rule_name": "Target Match Rule A",
+        "target_data_asset_id": test_data_asset["data_asset_id"],
+    }
+    first_rule_res = client.post("/api/v1/quality/rules", json=first_rule_payload)
+    assert first_rule_res.status_code == 201
+    first_rule_id = first_rule_res.json()["data_quality_rule_id"]
+
+    second_asset_payload = {
+        "asset_type": "table",
+        "asset_identifier": str(uuid.uuid4()),
+        "asset_name": f"customer_returns_{uuid.uuid4().hex[:8]}",
+        "display_name": "Customer Returns",
+        "business_domain": "Sales",
+        "owner": "sales_lead",
+        "steward": "sales_steward",
+        "classification": "confidential",
+        "critical_data_element_flag": False,
+        "status": "active",
+        "is_active": True,
+    }
+    second_asset_res = client.post("/api/v1/metadata/data-assets", json=second_asset_payload)
+    assert second_asset_res.status_code == 201
+    second_asset_id = second_asset_res.json()["data_asset_id"]
+
+    mismatch_payload = {
+        "data_quality_rule_id": first_rule_id,
+        "target_data_asset_id": second_asset_id,
+        "total_records": 10,
+        "passed_records": 10,
+        "failed_records": 0,
+    }
+    mismatch_res = client.post("/api/v1/quality/results", json=mismatch_payload)
+    assert mismatch_res.status_code == 422
+
+    omitted_payload = {
+        "data_quality_rule_id": first_rule_id,
+        "total_records": 10,
+        "passed_records": 10,
+        "failed_records": 0,
+    }
+    omitted_res = client.post("/api/v1/quality/results", json=omitted_payload)
+    assert omitted_res.status_code == 201
+    assert omitted_res.json()["target_data_asset_id"] == test_data_asset["data_asset_id"]
