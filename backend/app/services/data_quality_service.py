@@ -208,25 +208,20 @@ class DataQualityResultService:
             )
 
         if result_create.target_data_asset_id is not None:
-            asset_exists = self.rule_repository.data_asset_exists(result_create.target_data_asset_id)
-            column_exists = self.rule_repository.column_exists(result_create.target_data_asset_id)
-            if not asset_exists and not column_exists:
+            if result_create.target_data_asset_id != rule.target_data_asset_id:
                 raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Referenced DataAsset or Column with id {result_create.target_data_asset_id} not found",
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="target_data_asset_id must match the DataQualityRule target_data_asset_id",
                 )
-            target_asset_id = result_create.target_data_asset_id
+            target_asset_id = rule.target_data_asset_id
         else:
             target_asset_id = rule.target_data_asset_id
 
-        if result_create.quality_percentage is not None:
-            quality_pct = result_create.quality_percentage
+        if result_create.total_records > 0:
+            calc = (Decimal(result_create.passed_records) / Decimal(result_create.total_records)) * Decimal("100.00")
+            quality_pct = calc.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
         else:
-            if result_create.total_records > 0:
-                calc = (Decimal(result_create.passed_records) / Decimal(result_create.total_records)) * Decimal("100.00")
-                quality_pct = calc.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-            else:
-                quality_pct = Decimal("0.00")
+            quality_pct = Decimal("0.00")
 
         now = datetime.now(timezone.utc)
         assessment_id = uuid.uuid4()
