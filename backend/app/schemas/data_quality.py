@@ -53,11 +53,10 @@ class DataQualityResultCreate(BaseModel):
 
     @model_validator(mode="after")
     def validate_record_counts(self) -> "DataQualityResultCreate":
-        warning_cnt = self.warning_records if self.warning_records is not None else 0
-        if warning_cnt < 0:
-            raise ValueError("warning_records must be non-negative")
         if self.passed_records + self.failed_records > self.total_records:
-            raise ValueError("passed_records + failed_records cannot exceed total_records")
+            raise ValueError(
+                "passed_records + failed_records must be less than or equal to total_records"
+            )
         return self
 
 

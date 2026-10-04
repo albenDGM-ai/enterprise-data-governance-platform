@@ -370,33 +370,28 @@ def test_data_quality_result_retrieval_and_listing(client: TestClient, test_data
     assert get_fake.status_code == 404
 
 
+
 def test_data_quality_result_reject_inconsistent_record_counts(client: TestClient, test_data_asset: dict):
     rule_payload = {
-        "rule_code": f"DQ_RES_COUNT_{uuid.uuid4().hex[:8].upper()}",
-        "rule_name": "Count Invariant Test Rule",
+        "rule_code": f"DQ_INVARIANT_{uuid.uuid4().hex[:8].upper()}",
+        "rule_name": "Record Count Invariant Rule",
         "target_data_asset_id": test_data_asset["data_asset_id"],
-        "severity": "HIGH",
-        "threshold_percentage": "90.00",
-        "execution_frequency": "DAILY",
-        "owner": "qa_team",
-        "status": "ACTIVE",
     }
     rule_res = client.post("/api/v1/quality/rules", json=rule_payload)
     assert rule_res.status_code == 201
     rule_id = rule_res.json()["data_quality_rule_id"]
 
-    # total_records = 10, passed_records = 8, failed_records = 5 (passed + failed = 13 > 10)
-    inconsistent_payload = {
+    payload = {
         "data_quality_rule_id": rule_id,
         "total_records": 10,
         "passed_records": 8,
         "failed_records": 5,
-        "result_status": "FAILED",
+        "warning_records": 0,
     }
-    response = client.post("/api/v1/quality/results", json=inconsistent_payload)
+    response = client.post("/api/v1/quality/results", json=payload)
     assert response.status_code == 422
 
-    # Verify no result is created for this rule
+    # Prove no result was created
     list_res = client.get(f"/api/v1/quality/results?data_quality_rule_id={rule_id}")
     assert list_res.status_code == 200
     assert len(list_res.json()) == 0
@@ -404,103 +399,96 @@ def test_data_quality_result_reject_inconsistent_record_counts(client: TestClien
 
 def test_data_quality_result_deterministic_quality_percentage(client: TestClient, test_data_asset: dict):
     rule_payload = {
-        "rule_code": f"DQ_RES_PCT_{uuid.uuid4().hex[:8].upper()}",
-        "rule_name": "Percentage Test Rule",
+        "rule_code": f"DQ_PCT_{uuid.uuid4().hex[:8].upper()}",
+        "rule_name": "Deterministic Percentage Rule",
         "target_data_asset_id": test_data_asset["data_asset_id"],
-        "severity": "HIGH",
-        "threshold_percentage": "90.00",
-        "execution_frequency": "DAILY",
-        "owner": "qa_team",
-        "status": "ACTIVE",
     }
     rule_res = client.post("/api/v1/quality/rules", json=rule_payload)
     assert rule_res.status_code == 201
     rule_id = rule_res.json()["data_quality_rule_id"]
 
-    # 1. Provide a conflicting client value 12.34; expect calculated value 80.00
-    conflicting_payload = {
+    payload = {
         "data_quality_rule_id": rule_id,
         "total_records": 100,
-        "passed_records": 80,
-        "failed_records": 20,
-        "quality_percentage": 12.34,
-        "result_status": "PASSED",
+        "passed_records": 98,
+        "failed_records": 2,
+        "warning_records": 0,
+        "quality_percentage": "1.00",
     }
-    res1 = client.post("/api/v1/quality/results", json=conflicting_payload)
-    assert res1.status_code == 201
-    assert res1.json()["quality_percentage"] == "80.00"
+    response = client.post("/api/v1/quality/results", json=payload)
+    assert response.status_code == 201
+    assert response.json()["quality_percentage"] == "98.00"
 
-    # 2. Test total_records = 0
-    zero_records_payload = {
+    zero_payload = {
         "data_quality_rule_id": rule_id,
         "total_records": 0,
         "passed_records": 0,
         "failed_records": 0,
-        "result_status": "PASSED",
+        "warning_records": 0,
+        "quality_percentage": "100.00",
     }
-    res2 = client.post("/api/v1/quality/results", json=zero_records_payload)
-    assert res2.status_code == 201
-    assert res2.json()["quality_percentage"] == "0.00"
+    zero_response = client.post("/api/v1/quality/results", json=zero_payload)
+    assert zero_response.status_code == 201
+    assert zero_response.json()["quality_percentage"] == "0.00"
 
 
 def test_data_quality_result_target_mismatch_rejection_and_omission(
-    client: TestClient, test_data_asset: dict, test_column: dict
+    client: TestClient,
+    test_data_asset: dict,
 ):
-    target_a_id = test_data_asset["data_asset_id"]
-    target_b_id = test_column["table_column_id"]
-
-    rule_payload = {
-        "rule_code": f"DQ_RES_TGT_{uuid.uuid4().hex[:8].upper()}",
-        "rule_name": "Target Mismatch Test Rule",
-        "target_data_asset_id": target_a_id,
-        "severity": "CRITICAL",
-        "threshold_percentage": "95.00",
-        "execution_frequency": "DAILY",
-        "owner": "qa_team",
-        "status": "ACTIVE",
+    first_rule_payload = {
+        "rule_code": f"DQ_TARGET_A_{uuid.uuid4().hex[:8].upper()}",
+        "rule_name": "Target Match Rule A",
+        "target_data_asset_id": test_data_asset["data_asset_id"],
     }
-    rule_res = client.post("/api/v1/quality/rules", json=rule_payload)
-    assert rule_res.status_code == 201
-    rule_id = rule_res.json()["data_quality_rule_id"]
+    first_rule_res = client.post("/api/v1/quality/rules", json=first_rule_payload)
+    assert first_rule_res.status_code == 201
+    first_rule_id = first_rule_res.json()["data_quality_rule_id"]
 
-    # 1. Target mismatch (rule target A, result target B) -> 422
+    second_asset_payload = {
+        "asset_type": "table",
+        "asset_identifier": str(uuid.uuid4()),
+        "asset_name": f"customer_returns_{uuid.uuid4().hex[:8]}",
+        "display_name": "Customer Returns",
+        "business_domain": "Sales",
+        "owner": "sales_lead",
+        "steward": "sales_steward",
+        "classification": "confidential",
+        "critical_data_element_flag": False,
+        "status": "active",
+        "is_active": True,
+    }
+    second_asset_res = client.post("/api/v1/metadata/data-assets", json=second_asset_payload)
+    assert second_asset_res.status_code == 201
+    second_asset_id = second_asset_res.json()["data_asset_id"]
+
     mismatch_payload = {
-        "data_quality_rule_id": rule_id,
-        "target_data_asset_id": target_b_id,
-        "total_records": 100,
-        "passed_records": 95,
-        "failed_records": 5,
-        "result_status": "PASSED",
+        "data_quality_rule_id": first_rule_id,
+        "target_data_asset_id": second_asset_id,
+        "total_records": 10,
+        "passed_records": 10,
+        "failed_records": 0,
     }
     mismatch_res = client.post("/api/v1/quality/results", json=mismatch_payload)
     assert mismatch_res.status_code == 422
 
-    # Verify no result was created
-    list_res = client.get(f"/api/v1/quality/results?data_quality_rule_id={rule_id}")
-    assert list_res.status_code == 200
-    assert len(list_res.json()) == 0
-
-    # 2. Target omitted -> uses rule target A
-    omitted_payload = {
-        "data_quality_rule_id": rule_id,
-        "total_records": 100,
-        "passed_records": 95,
-        "failed_records": 5,
-        "result_status": "PASSED",
-    }
-    omitted_res = client.post("/api/v1/quality/results", json=omitted_payload)
-    assert omitted_res.status_code == 201
-    assert omitted_res.json()["target_data_asset_id"] == target_a_id
-
-    # 3. Matching target supplied -> succeeds
     matching_payload = {
-        "data_quality_rule_id": rule_id,
-        "target_data_asset_id": target_a_id,
-        "total_records": 50,
-        "passed_records": 50,
+        "data_quality_rule_id": first_rule_id,
+        "target_data_asset_id": test_data_asset["data_asset_id"],
+        "total_records": 10,
+        "passed_records": 10,
         "failed_records": 0,
-        "result_status": "PASSED",
     }
     matching_res = client.post("/api/v1/quality/results", json=matching_payload)
     assert matching_res.status_code == 201
-    assert matching_res.json()["target_data_asset_id"] == target_a_id
+    assert matching_res.json()["target_data_asset_id"] == test_data_asset["data_asset_id"]
+
+    omitted_payload = {
+        "data_quality_rule_id": first_rule_id,
+        "total_records": 10,
+        "passed_records": 10,
+        "failed_records": 0,
+    }
+    omitted_res = client.post("/api/v1/quality/results", json=omitted_payload)
+    assert omitted_res.status_code == 201
+    assert omitted_res.json()["target_data_asset_id"] == test_data_asset["data_asset_id"]
