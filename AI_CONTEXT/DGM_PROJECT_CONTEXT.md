@@ -954,11 +954,13 @@ Do not create a new package until the repository state has been verified.
 
 **Inspect the verified repository state and define the smallest appropriate next MVP work package.**
 
-The current planning candidate is:
+The current planning direction is:
 
-**Package 07 — Lineage Runtime Completion**
+**Package 07 — MVP Completion with Basic Frontend**
 
-but this must be verified against the actual repository before implementation.
+The next package should be treated as an MVP completion/integration package with the basic frontend explicitly included. It must be defined only after repository preflight confirms which backend capabilities still require completion and how the existing frontend foundation should be used.
+
+Lineage and Basic Governance remain MVP capabilities; they must not be omitted merely because the next package is frontend-oriented.
 
 ## Current blocker
 
@@ -1135,7 +1137,9 @@ Package 06 implementation, evidence, review fixes, PR merge, local synchronizati
 
 ### Next Package Candidate
 
-**Package 07 — Lineage Runtime Completion** is the current next-package candidate, subject to repository/product/dependency preflight before implementation.
+**Package 07 — MVP Completion with Basic Frontend** is the current next-package direction.
+
+The package must bring the five MVP capabilities together as one usable platform and include the basic UI required by the PRD. The exact bounded scope, including any remaining backend work for Lineage and Basic Governance, must be determined by repository/product/dependency preflight before implementation.
 
 ### Continuity Rule
 
@@ -1144,3 +1148,28 @@ Every concluded build/work package must update `AI_CONTEXT/DGM_PROJECT_CONTEXT.m
 Required sequence:
 
 **Implement → Verify → Evidence → PR/Merge → Local Sync → Local Verify → Update DGM_PROJECT_CONTEXT.md → Close**
+
+
+---
+# VERIFIED PRODUCT DECISION — 2026-10-06
+
+## Next Package Direction — MVP Completion with Basic Frontend
+
+The product-owner direction is that the next package should advance the project toward the **actual MVP**, with the **frontend explicitly included**, rather than treating Lineage Runtime Completion as a standalone next package.
+
+This is consistent with the PRD MVP definition: the minimum platform must allow users to operate the five core capabilities through tested APIs **and the basic UI**. The PRD defines the minimum UI areas as Metadata/Data Assets, Business Terms, Data Quality, Lineage, and Basic Governance/Ownership. fileciteturn165file0
+
+The next package is therefore provisionally named:
+
+**Package 07 — MVP Completion with Basic Frontend**
+
+Before implementation, the package must be bounded through repository preflight to determine:
+- which backend MVP capabilities are already complete;
+- what remains for Lineage and Basic Governance;
+- the existing frontend foundation and reusable components;
+- the minimum UI/API integration required for the five MVP capabilities;
+- the smallest safe acceptance criteria and test strategy.
+
+No advanced dashboards, AI chat, semantic search, executive reporting, complex workflow visualization, or other deferred functionality should be pulled into this package.
+
+**Decision status: ACCEPTED AS NEXT-PACKAGE DIRECTION; IMPLEMENTATION NOT YET STARTED.**
