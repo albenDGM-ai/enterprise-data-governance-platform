@@ -7,7 +7,7 @@
 - **Purpose of this file:** Provide one maintained, model-independent snapshot of the product, verified implementation progress, current repository state, decisions, and the next package-selection context.
 - **Status:** ACTIVE
 - **Version:** 1.0
-- **Last updated:** 2026-09-30
+- **Last updated:** 2026-10-06
 
 ---
 
@@ -677,7 +677,7 @@ The working package sequence is:
 | Package 03 | Data Asset Registration & Retrieval | COMPLETE |
 | Package 04 | Core Metadata Repository Expansion | COMPLETE |
 | Package 05 | Business Glossary Core | COMPLETE |
-| Package 06 | Data Quality Core | PLANNED |
+| Package 06 | Data Quality Core | COMPLETE |
 | Package 07 | Lineage Runtime Completion | PLANNED |
 | Package 08 | Basic Governance / Ownership | PLANNED |
 | Package 09 | Core Integration | PLANNED |
@@ -940,23 +940,23 @@ Do not create a new package until the repository state has been verified.
 
 ## Last formally completed package
 
-**Package 03 — Data Asset Registration & Retrieval**
+**Package 06 — Data Quality Core**
 
 ## Last verified local HEAD
 
-`04290c28696791a699ff236322caaab83797669f`
+`8e57317c0979c3562237648a473e0c7f9d00ba5a`
 
 ## Current branch
 
-`feature/project-foundation`
+`feature/package-06-data-quality-core`
 
 ## Immediate next planning task
 
 **Inspect the verified repository state and define the smallest appropriate next MVP work package.**
 
-The likely candidate is:
+The current planning candidate is:
 
-**Package 04 — Core Metadata Repository Expansion**
+**Package 07 — Lineage Runtime Completion**
 
 but this must be verified against the actual repository before implementation.
 
@@ -1049,3 +1049,98 @@ Package 05 implementation, verification, evidence, and tests are complete.
 Every concluded build/work package must update `AI_CONTEXT/DGM_PROJECT_CONTEXT.md` before that package is considered closed.
 
 Required sequence: Implement → Verify → Evidence → PR/Merge → Local Sync → Local Verify → Update DGM_PROJECT_CONTEXT.md → Close.
+
+
+---
+# VERIFIED PROJECT CHECKPOINT — 2026-10-06
+
+## Package 06 — Data Quality Core
+
+**Status: COMPLETE**
+
+Package 06 established the minimum MVP Data Quality capability for Data Quality Rules and Data Quality Results, including creation, retrieval/listing, validation, duplicate handling, governed Data Asset/Column targeting, and deterministic result measurement. The package intentionally does not introduce an enterprise DQ execution engine, scheduler, profiling engine, anomaly detection, AI rule generation, dashboards, notifications/SLA, or advanced scoring.
+
+### Verification
+
+- Package-specific tests: **13 passed, 3 warnings**
+- Full backend regression: **51 passed, 1 skipped, 3 warnings**
+- PostgreSQL verification: **PASS**
+- `git diff --check`: **PASS**
+- Local synchronization: **PASS**
+- Local working tree artifacts: **PRESERVED; no reset/clean/stash/add-all performed**
+
+Focused verification command:
+
+```bash
+DATABASE_URL="postgresql+psycopg2://governance_admin:governance_password@localhost:5432/enterprise_governance_test" /home/alben/Projects/enterprise-data-governance-platform/.venv/bin/pytest -q backend/tests/test_package_06_data_quality.py
+```
+
+Result:
+
+```text
+13 passed, 3 warnings in 2.65s
+```
+
+Full backend regression:
+
+```bash
+DATABASE_URL="postgresql+psycopg2://governance_admin:governance_password@localhost:5432/enterprise_governance_test" /home/alben/Projects/enterprise-data-governance-platform/.venv/bin/pytest -q backend/tests
+```
+
+Result:
+
+```text
+51 passed, 1 skipped, 3 warnings in 2.45s
+```
+
+The warnings are existing dependency/deprecation warnings and do not constitute test failures.
+
+### Review fixes verified
+
+The final Package 06 implementation includes:
+
+1. **Record-count validation**
+   - `passed_records + failed_records <= total_records`
+   - inconsistent requests are rejected with HTTP 422.
+
+2. **Deterministic quality percentage**
+   - quality percentage is computed from the persisted record counts rather than trusted from client input.
+   - calculation is rounded to two decimal places.
+   - zero total records resolve deterministically to 0.00.
+
+3. **Governed result target integrity**
+   - a result target must match the Data Quality Rule target Data Asset.
+   - omitted result target defaults to the rule target.
+   - mismatched targets are rejected.
+
+### Git
+
+- Branch: `feature/package-06-data-quality-core`
+- Verified local HEAD: `8e57317c0979c3562237648a473e0c7f9d00ba5a`
+- Local branch matched `origin/feature/package-06-data-quality-core`
+- PR #10: **MERGED**
+- Merge commit: `8e57317c0979c3562237648a473e0c7f9d00ba5a`
+
+### Local synchronization and verification
+
+The local repository was successfully switched to the Package 06 integration branch and fast-forward verification completed without changing the pre-existing uncommitted artifacts.
+
+The preserved worktree contains historical Package 03/archive artifacts and a model backup file. These remain intentionally untouched.
+
+### Completion
+
+Package 06 implementation, evidence, review fixes, PR merge, local synchronization, and local verification are complete.
+
+**PACKAGE 06: COMPLETE**
+
+### Next Package Candidate
+
+**Package 07 — Lineage Runtime Completion** is the current next-package candidate, subject to repository/product/dependency preflight before implementation.
+
+### Continuity Rule
+
+Every concluded build/work package must update `AI_CONTEXT/DGM_PROJECT_CONTEXT.md` before that package is considered closed.
+
+Required sequence:
+
+**Implement → Verify → Evidence → PR/Merge → Local Sync → Local Verify → Update DGM_PROJECT_CONTEXT.md → Close**
