@@ -263,11 +263,10 @@ SQLAlchemy
 PostgreSQL
 ```
 
-Frontend target:
+Production UI:
 
-- React
-- TypeScript
-- MUI
+- Appsmith
+- UI consumes the existing FastAPI REST APIs
 
 Backend:
 
@@ -1173,3 +1172,36 @@ Before implementation, the package must be bounded through repository preflight 
 No advanced dashboards, AI chat, semantic search, executive reporting, complex workflow visualization, or other deferred functionality should be pulled into this package.
 
 **Decision status: ACCEPTED AS NEXT-PACKAGE DIRECTION; IMPLEMENTATION NOT YET STARTED.**
+
+
+---
+# VERIFIED ARCHITECTURE DECISION — 2026-10-06
+
+## Production UI / Application Architecture
+
+The product-owner has established the production application architecture for the MVP:
+
+- **Production UI:** Appsmith
+- **Backend:** existing FastAPI architecture
+- **Database:** PostgreSQL
+- **UI data access:** FastAPI REST APIs
+
+The deterministic FastAPI governance backend remains the system of record and Appsmith is the production UI layer consuming the governed REST APIs.
+
+### Package 07 implication
+
+The next package, **Package 07 — MVP Completion with Basic Frontend**, must use **Appsmith** as the frontend/UI direction.
+
+Do not introduce React, TypeScript/MUI, a second frontend framework, or a parallel UI data-access path as part of the MVP unless the product owner explicitly changes this decision.
+
+The package preflight must inspect the repository and determine the smallest safe Appsmith integration and MVP UI scope across:
+
+1. Metadata / Data Assets
+2. Business Terms
+3. Data Quality
+4. Lineage
+5. Basic Governance / Ownership
+
+The UI must consume the existing FastAPI REST APIs rather than bypassing the backend and accessing PostgreSQL directly.
+
+**Decision status: ACCEPTED / CURRENT.**
