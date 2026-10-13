@@ -31,7 +31,7 @@ jobs:
       - name: Checkout immutable PR 18 candidate
         uses: actions/checkout@v4
         with:
-          ref: 7786a63f9d340f31e5850fafc69d39eae609d380
+          ref: d58e3ecec7b34254b2757a3f38ce77baed9ff18d
           fetch-depth: 0
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -43,7 +43,7 @@ jobs:
         shell: bash
         env:
           BASELINE_SHA: 646448b79ac1e7260a449f4b57cc48d7a734a77a
-          CANDIDATE_SHA: 7786a63f9d340f31e5850fafc69d39eae609d380
+          CANDIDATE_SHA: d58e3ecec7b34254b2757a3f38ce77baed9ff18d
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: testonly
           POSTGRES_HOST: localhost
