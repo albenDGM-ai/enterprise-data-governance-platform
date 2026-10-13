@@ -64,6 +64,8 @@ jobs:
           POSTGRES_HOST: localhost
           POSTGRES_PORT: "5432"
           POSTGRES_DB: enterprise_governance_test
+          DATABASE_URL: postgresql+psycopg2://postgres:testonly@localhost:5432/enterprise_governance_test
+          TEST_DATABASE_URL: postgresql+psycopg2://postgres:testonly@localhost:5432/enterprise_governance_test
         run: |
           set +e
           OUT="Test reports/Package-06-${SNAPSHOT}"
