@@ -1,0 +1,128 @@
+name: Temporary Package 06 snapshot validation
+
+on:
+  push:
+    branches:
+      - qa/package06-validation-20261013
+
+permissions:
+  contents: read
+
+jobs:
+  backend-validation:
+    name: "${{ matrix.snapshot }} backend tests"
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - snapshot: baseline
+            ref: 98cffda2da35f0768fc6c12991e554ada2d86f6d
+          - snapshot: candidate
+            ref: 8ac14f042e20dda4d76d970b909512224cadea6f
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: testonly
+          POSTGRES_DB: enterprise_governance_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d enterprise_governance_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Checkout immutable snapshot
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.ref }}
+          fetch-depth: 5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Run tests and create verification report
+        shell: bash
+        env:
+          SNAPSHOT: ${{ matrix.snapshot }}
+          SNAPSHOT_REF: ${{ matrix.ref }}
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: testonly
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: "5432"
+          POSTGRES_DB: enterprise_governance_test
+        run: |
+          set +e
+          OUT="Test reports/Package-06-${SNAPSHOT}"
+          mkdir -p "$OUT"
+          printf 'snapshot=%s\nref=%s\n' "$SNAPSHOT" "$SNAPSHOT_REF" > "$OUT/environment.txt"
+          python --version >> "$OUT/environment.txt" 2>&1
+          git rev-parse HEAD >> "$OUT/environment.txt" 2>&1
+          git status --short >> "$OUT/environment.txt" 2>&1
+          git diff --check "$SNAPSHOT_REF^" "$SNAPSHOT_REF" > "$OUT/diff-check.log" 2>&1
+          diff_rc=$?
+          python -m pip install -r backend/requirements.txt > "$OUT/install.log" 2>&1
+          install_rc=$?
+          focused_rc=125
+          full_rc=125
+          if [ "$install_rc" -eq 0 ]; then
+            python -m pytest backend/tests/test_package_06_data_quality.py -v --tb=short > "$OUT/focused-tests.log" 2>&1
+            focused_rc=$?
+            python -m pytest backend/tests/ -v --tb=short > "$OUT/full-backend-tests.log" 2>&1
+            full_rc=$?
+            python -m pip freeze > "$OUT/pip-freeze.txt" 2>&1
+          fi
+          {
+            echo "# Package 06 Snapshot Validation"
+            echo
+            echo "- Snapshot: $SNAPSHOT"
+            echo "- Commit: $SNAPSHOT_REF"
+            echo "- Python: $(python --version 2>&1)"
+            echo "- PostgreSQL: 17 (isolated GitHub Actions service container)"
+            echo "- Dependency install exit code: $install_rc"
+            echo "- Focused Package 06 test exit code: $focused_rc"
+            echo "- Full backend test exit code: $full_rc"
+            echo "- Commit diff-check exit code: $diff_rc"
+            echo
+            echo "Exit code 0 means pass. Exit code 125 means tests were not run because dependency installation failed."
+            echo "Full logs and environment details are included in this ZIP."
+            echo
+            echo "## Focused test summary"
+            grep -E '(^=+ .* (passed|failed|error|skipped|warning)|^FAILED |^ERROR )' "$OUT/focused-tests.log" 2>/dev/null | tail -n 40 || true
+            echo
+            echo "## Full backend summary"
+            grep -E '(^=+ .* (passed|failed|error|skipped|warning)|^FAILED |^ERROR )' "$OUT/full-backend-tests.log" 2>/dev/null | tail -n 40 || true
+            echo
+            echo "## Diff check"
+            cat "$OUT/diff-check.log"
+          } > "$OUT/report.md"
+          (cd "Test reports" && zip -qr "Package-06-${SNAPSHOT}.zip" "Package-06-${SNAPSHOT}")
+          echo "=== VERIFICATION SUMMARY ==="
+          cat "$OUT/report.md"
+          if [ "$install_rc" -ne 0 ] || [ "$focused_rc" -ne 0 ] || [ "$full_rc" -ne 0 ] || [ "$diff_rc" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Upload downloadable verification ZIP
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-06-${{ matrix.snapshot }}-verification
+          path: |
+            Test reports/Package-06-${{ matrix.snapshot }}.zip
+            Test reports/Package-06-${{ matrix.snapshot }}/report.md
+            Test reports/Package-06-${{ matrix.snapshot }}/**/*.log
+            Test reports/Package-06-${{ matrix.snapshot }}/environment.txt
+            Test reports/Package-06-${{ matrix.snapshot }}/pip-freeze.txt
+          if-no-files-found: warn
+          retention-days: 14
