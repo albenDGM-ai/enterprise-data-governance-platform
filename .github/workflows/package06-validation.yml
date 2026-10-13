@@ -69,12 +69,13 @@ jobs:
         run: |
           set +e
           OUT="Test reports/Package-06-${SNAPSHOT}"
+          STATUS_BEFORE="$(git status --short)"
           mkdir -p "$OUT"
           printf 'snapshot=%s\nref=%s\n' "$SNAPSHOT" "$SNAPSHOT_REF" > "$OUT/environment.txt"
+          printf 'status_before_tests:\n%s\n' "${STATUS_BEFORE:-clean}" >> "$OUT/environment.txt"
           python --version >> "$OUT/environment.txt" 2>&1
           git rev-parse HEAD >> "$OUT/environment.txt" 2>&1
-          git status --short >> "$OUT/environment.txt" 2>&1
-          git diff --check "$SNAPSHOT_REF^" "$SNAPSHOT_REF" > "$OUT/diff-check.log" 2>&1
+          git diff --check 98cffda2da35f0768fc6c12991e554ada2d86f6d "$SNAPSHOT_REF" > "$OUT/diff-check.log" 2>&1
           diff_rc=$?
           python -m pip install -r backend/requirements.txt > "$OUT/install.log" 2>&1
           install_rc=$?
@@ -97,7 +98,7 @@ jobs:
             echo "- Dependency install exit code: $install_rc"
             echo "- Focused Package 06 test exit code: $focused_rc"
             echo "- Full backend test exit code: $full_rc"
-            echo "- Commit diff-check exit code: $diff_rc"
+            echo "- Diff-check vs integration baseline exit code: $diff_rc"
             echo
             echo "Exit code 0 means pass. Exit code 125 means tests were not run because dependency installation failed."
             echo "Full logs and environment details are included in this ZIP."
@@ -108,7 +109,7 @@ jobs:
             echo "## Full backend summary"
             grep -E '(^=+ .* (passed|failed|error|skipped|warning)|^FAILED |^ERROR )' "$OUT/full-backend-tests.log" 2>/dev/null | tail -n 40 || true
             echo
-            echo "## Diff check"
+            echo "## Diff check vs integration baseline"
             cat "$OUT/diff-check.log"
           } > "$OUT/report.md"
           (cd "Test reports" && zip -qr "Package-06-${SNAPSHOT}.zip" "Package-06-${SNAPSHOT}")
