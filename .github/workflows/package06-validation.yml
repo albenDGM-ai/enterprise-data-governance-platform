@@ -1,6 +1,9 @@
 name: Temporary Package 06 snapshot validation
 
 on:
+  pull_request:
+    branches:
+      - qa/package06-validation-20261013
   push:
     branches:
       - qa/package06-validation-20261013
