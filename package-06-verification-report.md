@@ -52,7 +52,11 @@ The test pass validates the pinned Package 06 candidate snapshot against the cur
 
 PR #10, **Package 06: Data Quality Core**, was merged into `feature/package-06-data-quality-core` on 2026-10-04. Its merge commit is `8e57317c0979c3562237648a473e0c7f9d00ba5a`.
 
-PR #15 remains a draft for human review. Do not mark the package complete until review/merge approval, local sync, post-merge local verification, and canonical project-context update have been completed.
+PR #15, **Package 06 regression-test consolidation**, was merged into `feature/package-06-data-quality-core` on 2026-10-13. Merge commit: `4dbbeff7d89fe826a6bd7ce3e8bdb84c403f4f7f`.
+
+The code/test snapshot verified by run #38346536853 is `8ac14f042e20dda4d76d970b909512224cadea6f`; the only PR #15 commit after that snapshot changed this report. Remote merge is complete, but local synchronization, post-merge local verification, and the canonical project-context checkpoint are still pending. Do not close the reconciliation gate until those steps are complete.
+
+PR #16 (tracked `node_modules` removal) remains a separate draft and was not validated by run #38346536853.
 
 ## 7. Security and evidence
 
