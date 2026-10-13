@@ -1,0 +1,191 @@
+name: Temporary PR 18 and PR 16 candidate validation
+
+on:
+  pull_request:
+    branches:
+      - qa/package06-validation-20261013
+
+permissions:
+  contents: read
+
+jobs:
+  lineage-pr18:
+    name: PR 18 lineage integrity tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: testonly
+          POSTGRES_DB: enterprise_governance_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d enterprise_governance_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout immutable PR 18 candidate
+        uses: actions/checkout@v4
+        with:
+          ref: 7786a63f9d340f31e5850fafc69d39eae609d380
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - name: Test lineage candidate and write evidence
+        shell: bash
+        env:
+          BASELINE_SHA: 646448b79ac1e7260a449f4b57cc48d7a734a77a
+          CANDIDATE_SHA: 7786a63f9d340f31e5850fafc69d39eae609d380
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: testonly
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: "5432"
+          POSTGRES_DB: enterprise_governance_test
+          DATABASE_URL: postgresql+psycopg2://postgres:testonly@localhost:5432/enterprise_governance_test
+          TEST_DATABASE_URL: postgresql+psycopg2://postgres:testonly@localhost:5432/enterprise_governance_test
+        run: |
+          set +e
+          OUT="/tmp/pr18-lineage-verification"
+          mkdir -p "$OUT"
+          printf 'candidate_sha=%s\nbaseline_sha=%s\n' "$CANDIDATE_SHA" "$BASELINE_SHA" > "$OUT/environment.txt"
+          python --version >> "$OUT/environment.txt" 2>&1
+          git rev-parse HEAD >> "$OUT/environment.txt" 2>&1
+          git status --short >> "$OUT/environment.txt" 2>&1
+          if [ ! -s "$OUT/environment.txt" ]; then echo "Could not record environment" > "$OUT/environment.txt"; fi
+          git diff --check "$BASELINE_SHA" "$CANDIDATE_SHA" > "$OUT/diff-check.log" 2>&1
+          diff_rc=$?
+          python -m pip install -r backend/requirements.txt > "$OUT/install.log" 2>&1
+          install_rc=$?
+          focused_rc=125
+          full_rc=125
+          if [ "$install_rc" -eq 0 ]; then
+            python -m pytest backend/tests/test_batch_08_graph_integrity.py -v --tb=short > "$OUT/focused-lineage-tests.log" 2>&1
+            focused_rc=$?
+            python -m pytest backend/tests/ -v --tb=short > "$OUT/full-backend-tests.log" 2>&1
+            full_rc=$?
+            python -m pip freeze > "$OUT/pip-freeze.txt" 2>&1
+          fi
+          {
+            echo "# PR 18 Lineage Candidate Verification"
+            echo
+            echo "- Candidate: $CANDIDATE_SHA"
+            echo "- Baseline: $BASELINE_SHA"
+            echo "- Python: $(python --version 2>&1)"
+            echo "- PostgreSQL: 17 (disposable GitHub Actions service)"
+            echo "- Dependency install exit code: $install_rc"
+            echo "- Focused Batch 08 tests exit code: $focused_rc"
+            echo "- Full backend tests exit code: $full_rc"
+            echo "- git diff --check exit code: $diff_rc"
+            echo
+            echo "## Focused test summary"
+            grep -E '(^=+ .* (passed|failed|error|skipped|warning)|^FAILED |^ERROR )' "$OUT/focused-lineage-tests.log" 2>/dev/null | tail -n 50 || true
+            echo
+            echo "## Full backend summary"
+            grep -E '(^=+ .* (passed|failed|error|skipped|warning)|^FAILED |^ERROR )' "$OUT/full-backend-tests.log" 2>/dev/null | tail -n 50 || true
+            echo
+            echo "## Whitespace check"
+            cat "$OUT/diff-check.log"
+          } > "$OUT/report.md"
+          (cd /tmp && zip -qr pr18-lineage-verification.zip pr18-lineage-verification)
+          cat "$OUT/report.md"
+          if [ "$install_rc" -ne 0 ] || [ "$focused_rc" -ne 0 ] || [ "$full_rc" -ne 0 ] || [ "$diff_rc" -ne 0 ]; then exit 1; fi
+      - name: Upload PR 18 verification ZIP
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr18-lineage-verification
+          path: /tmp/pr18-lineage-verification.zip
+          if-no-files-found: error
+          retention-days: 14
+
+  dependency-pr16:
+    name: PR 16 dependency-removal checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout immutable PR 16 candidate
+        uses: actions/checkout@v4
+        with:
+          ref: ddbfc410f4e346e689a4db9ac98b81ef916deed3
+          fetch-depth: 0
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Reinstall dependencies and write evidence
+        shell: bash
+        env:
+          BASELINE_SHA: 646448b79ac1e7260a449f4b57cc48d7a734a77a
+          CANDIDATE_SHA: ddbfc410f4e346e689a4db9ac98b81ef916deed3
+        run: |
+          set +e
+          OUT="/tmp/pr16-dependency-verification"
+          mkdir -p "$OUT"
+          printf 'candidate_sha=%s\ncurrent_integration_sha=%s\n' "$CANDIDATE_SHA" "$BASELINE_SHA" > "$OUT/environment.txt"
+          node --version >> "$OUT/environment.txt" 2>&1
+          npm --version >> "$OUT/environment.txt" 2>&1
+          git rev-parse HEAD >> "$OUT/environment.txt" 2>&1
+          git status --short >> "$OUT/environment.txt" 2>&1
+          git ls-tree -r --name-only "$CANDIDATE_SHA" | grep -E '(^|/)node_modules/' > "$OUT/tracked-node-modules.txt"
+          tracked_rc=$?
+          if [ "$tracked_rc" -eq 0 ]; then echo "FAIL: tracked node_modules paths remain"; else echo "PASS: no tracked node_modules paths" > "$OUT/tracked-node-modules.txt"; tracked_rc=0; fi
+          test -f package.json && test -f package-lock.json
+          root_manifest_rc=$?
+          test -f .opencode/package.json && test -f .opencode/package-lock.json
+          opencode_manifest_rc=$?
+          npm ci --no-audit --no-fund > "$OUT/root-npm-ci.log" 2>&1
+          root_ci_rc=$?
+          (cd .opencode && npm ci --no-audit --no-fund) > "$OUT/opencode-npm-ci.log" 2>&1
+          opencode_ci_rc=$?
+          npm ls --depth=0 > "$OUT/root-npm-ls.log" 2>&1
+          root_ls_rc=$?
+          (cd .opencode && npm ls --depth=0) > "$OUT/opencode-npm-ls.log" 2>&1
+          opencode_ls_rc=$?
+          git diff --check "$BASELINE_SHA" "$CANDIDATE_SHA" > "$OUT/diff-check.log" 2>&1
+          diff_rc=$?
+          git status --short > "$OUT/status-after-install.txt"
+          if [ -s "$OUT/status-after-install.txt" ]; then status_rc=1; else status_rc=0; fi
+          {
+            echo "# PR 16 Dependency-removal Candidate Checks"
+            echo
+            echo "- Candidate: $CANDIDATE_SHA"
+            echo "- Current integration tip at validation setup: $BASELINE_SHA"
+            echo "- Node: $(node --version 2>&1)"
+            echo "- npm: $(npm --version 2>&1)"
+            echo "- No tracked node_modules paths exit code: $tracked_rc"
+            echo "- Root manifests exist exit code: $root_manifest_rc"
+            echo "- .opencode manifests exist exit code: $opencode_manifest_rc"
+            echo "- Root npm ci exit code: $root_ci_rc"
+            echo "- .opencode npm ci exit code: $opencode_ci_rc"
+            echo "- Root npm ls exit code: $root_ls_rc"
+            echo "- .opencode npm ls exit code: $opencode_ls_rc"
+            echo "- git diff --check exit code: $diff_rc"
+            echo "- Worktree clean after installs exit code: $status_rc"
+            echo
+            echo "The candidate is an older commit based on 98cffda; a passing result here does not remove the separate requirement to rebuild/rebase and re-run checks against the current integration tip before merge."
+            echo
+            echo "## Tracked dependency paths"
+            cat "$OUT/tracked-node-modules.txt"
+            echo
+            echo "## Whitespace check"
+            cat "$OUT/diff-check.log"
+          } > "$OUT/report.md"
+          (cd /tmp && zip -qr pr16-dependency-verification.zip pr16-dependency-verification)
+          cat "$OUT/report.md"
+          if [ "$tracked_rc" -ne 0 ] || [ "$root_manifest_rc" -ne 0 ] || [ "$opencode_manifest_rc" -ne 0 ] || [ "$root_ci_rc" -ne 0 ] || [ "$opencode_ci_rc" -ne 0 ] || [ "$root_ls_rc" -ne 0 ] || [ "$opencode_ls_rc" -ne 0 ] || [ "$diff_rc" -ne 0 ] || [ "$status_rc" -ne 0 ]; then exit 1; fi
+      - name: Upload PR 16 dependency verification ZIP
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr16-dependency-verification
+          path: /tmp/pr16-dependency-verification.zip
+          if-no-files-found: error
+          retention-days: 14
