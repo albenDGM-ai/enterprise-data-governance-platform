@@ -136,7 +136,7 @@ jobs:
           git status --short >> "$OUT/environment.txt" 2>&1
           git ls-tree -r --name-only "$CANDIDATE_SHA" | grep -E '(^|/)node_modules/' > "$OUT/tracked-node-modules.txt"
           tracked_rc=$?
-          if [ "$tracked_rc" -eq 0 ]; then echo "FAIL: tracked node_modules paths remain"; else echo "PASS: no tracked node_modules paths" > "$OUT/tracked-node-modules.txt"; tracked_rc=0; fi
+          if [ "$tracked_rc" -eq 0 ]; then printf 'FAIL: tracked node_modules paths remain\\n' >> "$OUT/tracked-node-modules.txt"; tracked_rc=1; else echo "PASS: no tracked node_modules paths" > "$OUT/tracked-node-modules.txt"; tracked_rc=0; fi
           test -f package.json && test -f package-lock.json
           root_manifest_rc=$?
           test -f .opencode/package.json && test -f .opencode/package-lock.json
