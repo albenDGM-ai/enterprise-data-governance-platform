@@ -1,3 +1,6 @@
+from app.repositories.database_repository import DatabaseRepository
+from app.repositories.database_schema_repository import DatabaseSchemaRepository
+from app.repositories.database_table_repository import DatabaseTableRepository
 from app.repositories.impact_analysis_repository import ImpactAnalysisRepository
 from app.repositories.lineage_flow_repository import LineageFlowRepository
 from app.repositories.lineage_mapping_repository import LineageMappingRepository
@@ -9,8 +12,16 @@ from app.repositories.lineage_transformation_repository import (
     LineageTransformationRepository,
 )
 from app.repositories.lineage_version_repository import LineageVersionRepository
+from app.repositories.business_glossary_repository import BusinessTermRepository
+from app.repositories.metadata_asset_repository import DataAssetRepository
+from app.repositories.source_system_repository import SourceSystemRepository
+from app.repositories.table_column_repository import TableColumnRepository
 
 __all__ = [
+    "BusinessTermRepository",
+    "DatabaseRepository",
+    "DatabaseSchemaRepository",
+    "DatabaseTableRepository",
     "ImpactAnalysisRepository",
     "LineageFlowRepository",
     "LineageMappingRepository",
@@ -20,4 +31,7 @@ __all__ = [
     "LineageTargetRepository",
     "LineageTransformationRepository",
     "LineageVersionRepository",
+    "DataAssetRepository",
+    "SourceSystemRepository",
+    "TableColumnRepository",
 ]

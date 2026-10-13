@@ -2,6 +2,7 @@ import uuid
 
 from sqlalchemy import (
     Boolean,
+    ForeignKey,
     Index,
     String,
     Text,
@@ -44,6 +45,17 @@ class DataAsset(Base):
 
     description: Mapped[str | None] = mapped_column(
         Text,
+        nullable=True,
+    )
+
+    business_domain: Mapped[str] = mapped_column(
+        String(100),
+        nullable=False,
+    )
+
+    source_system_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("source_system.source_system_id"),
         nullable=True,
     )
 

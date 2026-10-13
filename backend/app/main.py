@@ -2,7 +2,12 @@ from fastapi import Depends, FastAPI
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from app.api import lineage_router
+from app.api import (
+    business_glossary_router,
+    data_quality_router,
+    lineage_router,
+    metadata_asset_router,
+)
 from app.db.session import get_db
 
 
@@ -13,6 +18,21 @@ app = FastAPI(
 
 app.include_router(
     lineage_router,
+    prefix="/api/v1",
+)
+
+app.include_router(
+    metadata_asset_router,
+    prefix="/api/v1",
+)
+
+app.include_router(
+    business_glossary_router,
+    prefix="/api/v1",
+)
+
+app.include_router(
+    data_quality_router,
     prefix="/api/v1",
 )
 

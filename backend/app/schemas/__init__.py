@@ -56,8 +56,18 @@ from app.schemas.lineage_version import (
     LineageVersionResponse,
     LineageVersionUpdate,
 )
+from app.schemas.business_glossary import (
+    BusinessTermCreate,
+    BusinessTermResponse,
+)
+from app.schemas.metadata.data_asset import (
+    DataAssetCreate,
+    DataAssetResponse,
+)
 
 __all__ = [
+    "BusinessTermCreate",
+    "BusinessTermResponse",
     "APIBaseSchema",
     "AuditResponseSchema",
     "UUIDResponseSchema",
@@ -96,6 +106,8 @@ __all__ = [
     "LineageVersionReplace",
     "LineageVersionResponse",
     "LineageVersionUpdate",
+    "DataAssetCreate",
+    "DataAssetResponse",
 ]
 
 from app.schemas.lineage_discovery import (

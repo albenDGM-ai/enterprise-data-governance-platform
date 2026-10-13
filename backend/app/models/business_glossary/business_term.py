@@ -29,6 +29,12 @@ class BusinessTerm(Base):
         nullable=False,
     )
 
+    data_asset_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("data_asset.data_asset_id"),
+        nullable=True,
+    )
+
     business_term_name: Mapped[str] = mapped_column(
         String(255),
         nullable=False,
@@ -110,4 +116,5 @@ class BusinessTerm(Base):
         Index("idx_business_domain", "business_domain"),
         Index("idx_business_term_owner", "owner"),
         Index("idx_business_term_status", "status"),
+        Index("idx_business_term_data_asset", "data_asset_id"),
     )
