@@ -184,6 +184,35 @@ def test_inactive_parent_relationships_are_rejected() -> None:
         )
 
 
+def test_target_update_rejects_a_cross_flow_replacement() -> None:
+    flow_a_id, flow_b_id, trans_a_id, trans_b_id, target_id = (uuid4() for _ in range(5))
+    service = LineageTargetService(session=object())
+    service.repository = StubRepository()
+    service.flow_repository = StubRepository({
+        flow_a_id: SimpleNamespace(lineage_flow_id=flow_a_id, is_active=True),
+        flow_b_id: SimpleNamespace(lineage_flow_id=flow_b_id, is_active=True),
+    })
+    service.transformation_repository = StubRepository({
+        trans_a_id: record(trans_a_id, lineage_flow_id=flow_a_id),
+        trans_b_id: record(trans_b_id, lineage_flow_id=flow_b_id),
+    })
+
+    entity = SimpleNamespace(
+        lineage_target_id=target_id,
+        lineage_transformation_id=trans_a_id,
+        target_name="t1",
+        system_name="s1",
+    )
+
+    with pytest.raises(LineageRelationshipValidationError, match="different Lineage Flow"):
+        service.update(
+            entity,
+            modified_by="batch-08-test",
+            lineage_transformation_id=trans_b_id,
+        )
+
+    assert service.repository.updated == []
+
 def test_update_rejects_a_cross_flow_replacement() -> None:
     flow_a_id, flow_b_id, transformation_a_id, transformation_b_id, target_a_id, target_b_id = (
         uuid4() for _ in range(6)
