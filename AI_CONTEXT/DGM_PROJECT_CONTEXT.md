@@ -1205,3 +1205,39 @@ The package preflight must inspect the repository and determine the smallest saf
 The UI must consume the existing FastAPI REST APIs rather than bypassing the backend and accessing PostgreSQL directly.
 
 **Decision status: ACCEPTED / CURRENT.**
+
+
+---
+# VERIFIED REMOTE REPOSITORY MAINTENANCE CHECKPOINT — 2026-10-13
+
+## Merged and validated changes
+
+### PR #18 — Lineage target flow integrity
+- Status: MERGED
+- Merge commit: `1b1bfadb2968c019a8c8350d5fbb5cda8f0fbdb5`
+- Validated candidate: `d58e3ecec7b34254b2757a3f38ce77baed9ff18d`
+- Automated evidence: [GitHub Actions run #38351259874](https://github.com/albenDGM-ai/enterprise-data-governance-platform/actions/runs/38351259874)
+- Focused Batch 08 tests: 10 passed.
+- Full backend suite: 53 passed, 1 existing migration-compatibility test skipped.
+- `git diff --check`: PASS.
+- Scope: lineage target service and lineage graph-integrity tests only.
+
+### PR #16 — Tracked Node dependency cleanup
+- Status: MERGED
+- Merge commit: `4a03f3eccae0bb36803f66da59004bd71506b2b1`
+- Validated candidate: `d8fee74d285eddfa722e110b9560cad9ccbca674`
+- Automated evidence: [GitHub Actions run #38351259874](https://github.com/albenDGM-ai/enterprise-data-governance-platform/actions/runs/38351259874)
+- Verified no tracked paths remain under `node_modules/` or `.opencode/node_modules/`.
+- Root and `.opencode` `npm ci` and `npm ls --depth=0`: PASS.
+- `git diff --check` and clean post-install worktree: PASS.
+- Package manifests and lockfiles retained. Historical dependency blobs were not purged from prior commits.
+
+## Integration state and remaining gates
+- Canonical integration branch: `feature/package-06-data-quality-core`
+- Remote HEAD after both merges: `4a03f3eccae0bb36803f66da59004bd71506b2b1`
+- Recursive tree audit: 443 entries; zero tracked `node_modules` paths; required manifests, lineage files, `.gitignore`, and this context file are present.
+- Local DGM synchronization and local post-merge verification remain pending; remote CI must not be represented as proof of local container verification.
+- Temporary QA trigger PRs #19, #20, and #21 were closed, and the temporary candidate-validation workflow file was removed from the QA branch. Remote branch-reference deletion remains to be completed with an authenticated GitHub branch-delete operation.
+- PR #1 is closed as superseded; its divergent branch and PR #18's pre-merge branch are retained pending safe branch cleanup.
+
+Continue to follow the existing sequence: implement/merge, verify, capture evidence, synchronize local checkout, run local checks, update this context, and only then close the work item.
