@@ -379,16 +379,22 @@ def test_data_quality_result_reject_inconsistent_record_counts(client: TestClien
     }
     rule_res = client.post("/api/v1/quality/rules", json=rule_payload)
     assert rule_res.status_code == 201
+    rule_id = rule_res.json()["data_quality_rule_id"]
 
     payload = {
-        "data_quality_rule_id": rule_res.json()["data_quality_rule_id"],
-        "total_records": 100,
-        "passed_records": 80,
-        "failed_records": 30,
+        "data_quality_rule_id": rule_id,
+        "total_records": 10,
+        "passed_records": 8,
+        "failed_records": 5,
         "warning_records": 0,
     }
     response = client.post("/api/v1/quality/results", json=payload)
     assert response.status_code == 422
+
+    # Prove no result was created
+    list_res = client.get(f"/api/v1/quality/results?data_quality_rule_id={rule_id}")
+    assert list_res.status_code == 200
+    assert len(list_res.json()) == 0
 
 
 def test_data_quality_result_deterministic_quality_percentage(client: TestClient, test_data_asset: dict):
@@ -465,6 +471,17 @@ def test_data_quality_result_target_mismatch_rejection_and_omission(
     }
     mismatch_res = client.post("/api/v1/quality/results", json=mismatch_payload)
     assert mismatch_res.status_code == 422
+
+    matching_payload = {
+        "data_quality_rule_id": first_rule_id,
+        "target_data_asset_id": test_data_asset["data_asset_id"],
+        "total_records": 10,
+        "passed_records": 10,
+        "failed_records": 0,
+    }
+    matching_res = client.post("/api/v1/quality/results", json=matching_payload)
+    assert matching_res.status_code == 201
+    assert matching_res.json()["target_data_asset_id"] == test_data_asset["data_asset_id"]
 
     omitted_payload = {
         "data_quality_rule_id": first_rule_id,
