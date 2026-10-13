@@ -1,134 +1,59 @@
 # Package 06 — Data Quality Core Verification Report
 
-- **Package:** Package 06 — Data Quality Core Follow-up
-- **Repository:** albenDGM-ai/enterprise-data-governance-platform
-- **Branch:** `feature/package-06-data-quality-core-6750737879796466013-2894790425576169439`
-- **PR Base Branch:** `feature/package-06-data-quality-core`
-- **Implementation Commit:** `89cbaea` (technical review fixes)
-- **Status:** PASS
-- **PR:** #10 (open and unmerged)
+- **Repository:** `albenDGM-ai/enterprise-data-governance-platform`
+- **Integration branch:** `feature/package-06-data-quality-core`
+- **Integration baseline SHA:** `98cffda2da35f0768fc6c12991e554ada2d86f6d`
+- **Package 06 consolidation snapshot tested:** `8ac14f042e20dda4d76d970b909512224cadea6f`
+- **Verification run:** [GitHub Actions run #38346536853](https://github.com/albenDGM-ai/enterprise-data-governance-platform/actions/runs/38346536853)
+- **Result:** PASS — focused and full backend test suites passed on both immutable snapshots.
 
----
+## 1. Scope and safety
 
-## 1. Implementation Summary
+The verification compared the integration baseline with the Package 06 consolidation candidate from PR #15. Each snapshot ran in its own GitHub Actions job, with an isolated PostgreSQL 17 service container. No developer machine, local DGM container, production database, integration branch, or PR #15 head was changed by the test run.
 
-Resolved the 3 technical review findings on PR #10:
+The tested candidate commit is `8ac14f042e20dda4d76d970b909512224cadea6f`. This report update is documentation-only, made after test completion; it does not claim that the updated report-file commit itself was executed. Local post-merge verification remains pending.
 
-1. **Data Quality Result Count Invariants**
-   - Added Pydantic v2 model validation on `DataQualityResultCreate`.
-   - Rejects negative record counts through field constraints.
-   - Rejects `passed_records + failed_records > total_records` with HTTP 422 before persistence.
+## 2. Environment and commands
 
-2. **Quality Percentage Determinism**
-   - Backend always calculates `quality_percentage` as `(passed_records / total_records) * 100`.
-   - Result is rounded to 2 decimal places using `ROUND_HALF_UP`.
-   - Returns `0.00` when `total_records == 0`.
-   - Any client-supplied `quality_percentage` is ignored.
+- Python: **3.12.15**
+- PostgreSQL service: **17.11**
+- Dependency installation: `python -m pip install -r backend/requirements.txt` — exit code **0**
+- Focused suite: `python -m pytest backend/tests/test_package_06_data_quality.py -v --tb=short`
+- Full backend suite: `python -m pytest backend/tests/ -v --tb=short`
+- Whitespace check: `git diff --check 98cffda2da35f0768fc6c12991e554ada2d86f6d 8ac14f042e20dda4d76d970b909512224cadea6f` for the candidate full diff.
 
-3. **Result Target / Rule Target Matching**
-   - When `target_data_asset_id` is supplied, it must equal the rule's `target_data_asset_id`; otherwise HTTP 422.
-   - When omitted, the result target defaults to the rule target.
+## 3. Fresh results
 
----
+| Check | Integration baseline (`98cffda`) | Package 06 candidate (`8ac14f0`) |
+|---|---:|---:|
+| Dependency installation | PASS | PASS |
+| Focused Package 06 tests | **13 passed**, 2 warnings | **13 passed**, 2 warnings |
+| Full backend tests | **51 passed, 1 skipped**, 2 warnings | **51 passed, 1 skipped**, 2 warnings |
+| Diff whitespace check | PASS | PASS |
+| Pre-test working tree | Clean | Clean |
 
-## 2. Changed Files
+All relevant steps completed successfully in the final verification run. Both test jobs uploaded downloadable verification artifacts in the linked GitHub Actions run.
 
-- `backend/app/schemas/data_quality.py`
-- `backend/app/services/data_quality_service.py`
-- `backend/tests/test_package_06_data_quality.py`
-- `package-06-verification-report.md`
+## 4. Existing warning and skip details
 
----
+The two warnings are deprecation warnings, not test failures:
+1. FastAPI's TestClient import reports that using `httpx` with `starlette.testclient` is deprecated and recommends `httpx2`.
+2. `HTTP_422_UNPROCESSABLE_ENTITY` is deprecated; the framework recommends `HTTP_422_UNPROCESSABLE_CONTENT`.
 
-## 3. Database Environment
+The single skipped test is `backend/tests/test_batch_07_transition_compatibility.py::test_migration_uses_nullable_columns_named_foreign_keys_and_indexes`. It is a pre-existing migration-compatibility test skip and occurred on both snapshots.
 
-- **Database:** PostgreSQL 16
-- **Database Name:** `enterprise_governance_test`
-- **User / Credentials:** `governance_admin:governance_password@localhost:5432/enterprise_governance_test`
-- **Persistence Verification:** Tests were executed against the canonical PostgreSQL test harness.
+## 5. Changes exercised by the candidate
 
----
+PR #15 synchronizes Package 06 regression coverage and corrects report history; it does not change production services, schemas, migrations, dependencies, or deployment configuration. Additional assertions verify that an invalid record-count submission returns HTTP 422 without persisting a result and that a matching rule/result target is accepted.
 
-## 4. Test Commands
+The test pass validates the pinned Package 06 candidate snapshot against the current integration baseline. It does not validate the separate dependency-removal proposal in PR #16, nor does it replace the required local verification after an approved merge.
 
-### Focused Package 06 Tests
-```bash
-DATABASE_URL="postgresql+psycopg2://governance_admin:governance_password@localhost:5432/enterprise_governance_test" backend/.venv/bin/pytest -v backend/tests/test_package_06_data_quality.py
-```
+## 6. Corrected pull-request history
 
-### Full Backend Regression Suite
-```bash
-DATABASE_URL="postgresql+psycopg2://governance_admin:governance_password@localhost:5432/enterprise_governance_test" backend/.venv/bin/pytest -q backend/tests
-```
+PR #10, **Package 06: Data Quality Core**, was merged into `feature/package-06-data-quality-core` on 2026-10-04. Its merge commit is `8e57317c0979c3562237648a473e0c7f9d00ba5a`.
 
-### Git Diff Check
-```bash
-git diff --check
-```
+PR #15 remains a draft for human review. Do not mark the package complete until review/merge approval, local sync, post-merge local verification, and canonical project-context update have been completed.
 
----
+## 7. Security and evidence
 
-## 5. Focused Test Results
-
-```text
-============================= test session starts ==============================
-platform linux -- Python 3.12.13, pytest-9.1.1, pluggy-1.6.0 -- /app/backend/.venv/bin/python3
-cachedir: .pytest_cache
-rootdir: /app
-configfile: pytest.ini
-plugins: anyio-4.15.1, asyncio-1.4.0
-asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=function
-collecting ... collected 13 items
-
-backend/tests/test_package_06_data_quality.py::test_data_quality_rule_creation PASSED [  7%]
-backend/tests/test_package_06_data_quality.py::test_data_quality_rule_retrieval PASSED [ 15%]
-backend/tests/test_package_06_data_quality.py::test_data_quality_rule_listing PASSED [ 23%]
-backend/tests/test_package_06_data_quality.py::test_data_quality_rule_validation_failure PASSED [ 30%]
-backend/tests/test_package_06_data_quality.py::test_data_quality_rule_duplicate_handling PASSED [ 38%]
-backend/tests/test_package_06_data_quality.py::test_data_quality_rule_not_found PASSED [ 46%]
-backend/tests/test_package_06_data_quality.py::test_data_quality_rule_asset_and_column_relationship PASSED [ 53%]
-backend/tests/test_package_06_data_quality.py::test_data_quality_result_creation PASSED [ 61%]
-backend/tests/test_package_06_data_quality.py::test_data_quality_result_invalid_rule_reference PASSED [ 69%]
-backend/tests/test_package_06_data_quality.py::test_data_quality_result_retrieval_and_listing PASSED [ 76%]
-backend/tests/test_package_06_data_quality.py::test_data_quality_result_reject_inconsistent_record_counts PASSED [ 84%]
-backend/tests/test_package_06_data_quality.py::test_data_quality_result_deterministic_quality_percentage PASSED [ 92%]
-backend/tests/test_package_06_data_quality.py::test_data_quality_result_target_mismatch_rejection_and_omission PASSED [100%]
-
-======================== 13 passed, 2 warnings in 2.06s ========================
-```
-
----
-
-## 6. Full Regression Results
-
-```text
-s...................................................                     [100%]
-51 passed, 1 skipped, 2 warnings in 2.74s
-```
-
----
-
-## 7. Git Diff Check Result
-
-```text
-git diff --check: (clean, 0 whitespace or formatting errors)
-```
-
----
-
-## 8. Warnings and Skips
-
-- **Warnings:**
-  - `StarletteDeprecationWarning`: Using `httpx` with `starlette.testclient` is deprecated.
-  - `StarletteDeprecationWarning`: `HTTP_422_UNPROCESSABLE_ENTITY` deprecation notice.
-- **Skips:**
-  - `1 skipped`: `test_migration_uses_nullable_columns_named_foreign_keys_and_indexes` (pre-existing migration test skip).
-
----
-
-## 9. Final Result
-
-- **Result:** PASS
-- **PR #10:** Open and unmerged.
-- **AI_CONTEXT/DGM_PROJECT_CONTEXT.md:** Not updated to COMPLETE.
-- **Package 06:** Remains pending PR review/merge and post-merge local verification.
+Database credentials are not included in this report. The workflow used test-only credentials for its disposable PostgreSQL service. The final workflow run contains separate baseline and candidate ZIP artifacts with the actual test logs, environment details, and pip freeze output.
