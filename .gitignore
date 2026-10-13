@@ -216,3 +216,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# JavaScript dependency installations (restore with the package manager)
+node_modules/
+.opencode/node_modules/
