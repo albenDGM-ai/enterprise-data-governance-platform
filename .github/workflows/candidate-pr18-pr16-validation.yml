@@ -114,7 +114,7 @@ jobs:
       - name: Checkout immutable PR 16 candidate
         uses: actions/checkout@v4
         with:
-          ref: ddbfc410f4e346e689a4db9ac98b81ef916deed3
+          ref: d8fee74d285eddfa722e110b9560cad9ccbca674
           fetch-depth: 0
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -124,7 +124,7 @@ jobs:
         shell: bash
         env:
           BASELINE_SHA: 646448b79ac1e7260a449f4b57cc48d7a734a77a
-          CANDIDATE_SHA: ddbfc410f4e346e689a4db9ac98b81ef916deed3
+          CANDIDATE_SHA: d8fee74d285eddfa722e110b9560cad9ccbca674
         run: |
           set +e
           OUT="/tmp/pr16-dependency-verification"
